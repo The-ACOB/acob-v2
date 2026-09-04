@@ -84,18 +84,32 @@ export async function updateParticipantProfileAction(
       error: parsed.error.issues[0]?.message ?? "Invalid input.",
     };
 
-  const participant = await db.participant.findUnique({ where: { userId } });
-  if (!participant)
-    return { ok: false, error: "Participant profile not found." };
-
   const v = parsed.data;
   await db.$transaction([
-    db.profile.update({ where: { userId }, data: { fullName: v.fullName } }),
-    db.participant.update({
+    db.profile.update({
       where: { userId },
-      data: {
+      data: { fullName: v.fullName, phone: v.phone || null },
+    }),
+    db.participant.upsert({
+      where: { userId },
+      create: {
+        userId,
+        gender: v.gender || null,
         institution: v.institution || null,
         gradeLevel: v.gradeLevel || null,
+        academicLevel: v.academicLevel || null,
+        district: v.district || null,
+        address: v.address || null,
+        city: v.city || null,
+      },
+      update: {
+        gender: v.gender || null,
+        institution: v.institution || null,
+        gradeLevel: v.gradeLevel || null,
+        academicLevel: v.academicLevel || null,
+        district: v.district || null,
+        address: v.address || null,
+        city: v.city || null,
       },
     }),
   ]);

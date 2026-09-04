@@ -9,6 +9,20 @@ export const olympiadSchema = z.object({
   endAt: z.string().optional().or(z.literal("")),
   negativeMarkingEnabled: z.boolean().optional(),
   negativeMarkingValue: z.number().min(0).max(10).optional(),
+  eligibilityMode: z.enum(["open", "criteria"]).optional(),
+  eligibilityGradeLevel: z.string().trim().max(50).optional().or(z.literal("")),
+  eligibilityInstitution: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .or(z.literal("")),
+  eligibilityAcademicLevel: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .or(z.literal("")),
 });
 
 export const optionSchema = z.object({

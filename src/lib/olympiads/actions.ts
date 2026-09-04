@@ -66,6 +66,10 @@ export async function createOlympiadAction(
       endAt: v.endAt ? new Date(v.endAt) : null,
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
       negativeMarkingValue: v.negativeMarkingValue ?? 0,
+      eligibilityMode: v.eligibilityMode ?? "open",
+      eligibilityGradeLevel: v.eligibilityGradeLevel || null,
+      eligibilityInstitution: v.eligibilityInstitution || null,
+      eligibilityAcademicLevel: v.eligibilityAcademicLevel || null,
       createdBy: actor.id,
     },
   });
@@ -132,6 +136,10 @@ export async function updateOlympiadAction(
       endAt: v.endAt ? new Date(v.endAt) : null,
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
       negativeMarkingValue: v.negativeMarkingValue ?? 0,
+      eligibilityMode: v.eligibilityMode ?? "open",
+      eligibilityGradeLevel: v.eligibilityGradeLevel || null,
+      eligibilityInstitution: v.eligibilityInstitution || null,
+      eligibilityAcademicLevel: v.eligibilityAcademicLevel || null,
     },
   });
 

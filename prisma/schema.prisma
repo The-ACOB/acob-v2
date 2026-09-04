@@ -265,6 +265,11 @@ enum AmbassadorStatus {
 model Participant {
   id          String   @id @default(uuid())
   userId      String   @unique @map("user_id")
+  gender      String?
+  district    String?
+  address     String?
+  city        String?
+  academicLevel String? @map("academic_level")
   institution String?
   gradeLevel  String?  @map("grade_level")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -436,6 +441,10 @@ model Olympiad {
   publishAt              DateTime?      @map("publish_at")
   negativeMarkingEnabled Boolean        @default(false) @map("negative_marking_enabled")
   negativeMarkingValue   Float          @default(0) @map("negative_marking_value")
+  eligibilityMode        String         @default("open") @map("eligibility_mode")
+  eligibilityGradeLevel  String?        @map("eligibility_grade_level")
+  eligibilityInstitution String?        @map("eligibility_institution")
+  eligibilityAcademicLevel String?      @map("eligibility_academic_level")
   resultsPublishedAt     DateTime?      @map("results_published_at")
   createdBy              String         @map("created_by")
   createdAt              DateTime       @default(now()) @map("created_at")

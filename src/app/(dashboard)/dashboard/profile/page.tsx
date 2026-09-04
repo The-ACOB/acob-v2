@@ -30,8 +30,14 @@ export default async function ProfilePage() {
         userId={session.id}
         defaultValues={{
           fullName: profile.fullName,
+          phone: profile.phone ?? "",
+          gender: participant.gender ?? "",
           institution: participant.institution ?? "",
           gradeLevel: participant.gradeLevel ?? "",
+          academicLevel: participant.academicLevel ?? "",
+          district: participant.district ?? "",
+          address: participant.address ?? "",
+          city: participant.city ?? "",
         }}
       />
     </div>

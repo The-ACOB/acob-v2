@@ -57,6 +57,10 @@ export default async function EditOlympiadPage({
             endAt: olympiad.endAt,
             negativeMarkingEnabled: olympiad.negativeMarkingEnabled,
             negativeMarkingValue: olympiad.negativeMarkingValue,
+            eligibilityMode: olympiad.eligibilityMode as "open" | "criteria",
+            eligibilityGradeLevel: olympiad.eligibilityGradeLevel ?? "",
+            eligibilityInstitution: olympiad.eligibilityInstitution ?? "",
+            eligibilityAcademicLevel: olympiad.eligibilityAcademicLevel ?? "",
           }}
           onSubmit={submit}
           submitLabel="Save changes"

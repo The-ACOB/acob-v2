@@ -39,8 +39,16 @@ export type NavSection = {
  * navigation" so each role sees a dashboard shaped around their job,
  * not a shared admin template with everything visible.
  */
-const OVERVIEW: NavItem = { href: "/dashboard", label: "Overview", icon: LayoutDashboard };
-const NOTIFICATIONS: NavItem = { href: "/dashboard/notifications", label: "Notifications", icon: Bell };
+const OVERVIEW: NavItem = {
+  href: "/dashboard",
+  label: "Overview",
+  icon: LayoutDashboard,
+};
+const NOTIFICATIONS: NavItem = {
+  href: "/dashboard/notifications",
+  label: "Notifications",
+  icon: Bell,
+};
 
 const EXECUTIVE_SECTION: NavSection = {
   label: "Executive",
@@ -51,19 +59,36 @@ const EXECUTIVE_SECTION: NavSection = {
 };
 
 const COMMAND_CENTER_SECTIONS: NavSection[] = [
-  { label: "People", items: [{ href: "/dashboard/participants", label: "Participants", icon: Users }] },
+  {
+    label: "People",
+    items: [
+      { href: "/dashboard/participants", label: "Participants", icon: Users },
+    ],
+  },
   {
     label: "Olympiads",
     items: [
-      { href: "/dashboard/olympiads", label: "Olympiads & Questions", icon: Trophy },
-      { href: "/dashboard/results", label: "Results & Rankings", icon: BarChart3 },
+      {
+        href: "/dashboard/olympiads",
+        label: "Olympiads & Questions",
+        icon: Trophy,
+      },
+      {
+        href: "/dashboard/results",
+        label: "Results & Rankings",
+        icon: BarChart3,
+      },
     ],
   },
   {
     label: "Recognition",
     items: [
       { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-      { href: "/dashboard/recommendation-letters", label: "Recommendation Letters", icon: FileText },
+      {
+        href: "/dashboard/recommendation-letters",
+        label: "Recommendation Letters",
+        icon: FileText,
+      },
     ],
   },
   {
@@ -78,7 +103,11 @@ const COMMAND_CENTER_SECTIONS: NavSection[] = [
     label: "Content & Careers",
     items: [
       { href: "/dashboard/resources", label: "Resources", icon: FileText },
-      { href: "/dashboard/study-guides", label: "Study Guides", icon: BookOpen },
+      {
+        href: "/dashboard/study-guides",
+        label: "Study Guides",
+        icon: BookOpen,
+      },
       { href: "/dashboard/tutorials", label: "Tutorials", icon: MonitorPlay },
       { href: "/dashboard/podcasts", label: "Podcasts", icon: Mic },
       { href: "/dashboard/careers", label: "Careers", icon: Briefcase },
@@ -100,7 +129,12 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   CTO: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     EXECUTIVE_SECTION,
-    { label: "Organization", items: [{ href: "/dashboard/participants", label: "Participants", icon: Users }] },
+    {
+      label: "Organization",
+      items: [
+        { href: "/dashboard/participants", label: "Participants", icon: Users },
+      ],
+    },
   ],
   HR_PR: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
@@ -121,7 +155,11 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       label: "Operations",
       items: [
         { href: "/dashboard/careers", label: "Careers", icon: Briefcase },
-        { href: "/dashboard/popups", label: "Popup Management", icon: MonitorPlay },
+        {
+          href: "/dashboard/popups",
+          label: "Popup Management",
+          icon: MonitorPlay,
+        },
       ],
     },
   ],
@@ -131,8 +169,16 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       label: "Media",
       items: [
         { href: "/dashboard/podcasts", label: "Inside Excellence", icon: Mic },
-        { href: "/dashboard/study-guides", label: "Study Guides", icon: BookOpen },
-        { href: "/dashboard/tutorials", label: "Video Tutorials", icon: MonitorPlay },
+        {
+          href: "/dashboard/study-guides",
+          label: "Study Guides",
+          icon: BookOpen,
+        },
+        {
+          href: "/dashboard/tutorials",
+          label: "Video Tutorials",
+          icon: MonitorPlay,
+        },
         { href: "/dashboard/resources", label: "Resources", icon: FileText },
         { href: "/dashboard/popups", label: "Popup Content", icon: ImageIcon },
       ],
@@ -144,7 +190,11 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       label: "Support",
       items: [
         { href: "/dashboard/contact", label: "Contact Messages", icon: Inbox },
-        { href: "/dashboard/support", label: "Support Conversations", icon: MessageCircle },
+        {
+          href: "/dashboard/support",
+          label: "Support Conversations",
+          icon: MessageCircle,
+        },
       ],
     },
   ],
@@ -152,18 +202,30 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
       label: "Olympiads",
-      items: [{ href: "/dashboard/olympiads", label: "Olympiads", icon: Trophy }],
+      items: [
+        { href: "/dashboard/olympiads", label: "Olympiads", icon: Trophy },
+      ],
     },
     {
       label: "Recognition",
       items: [
         { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-        { href: "/dashboard/recommendation-letters", label: "Recommendation Letters", icon: FileText },
+        {
+          href: "/dashboard/recommendation-letters",
+          label: "Recommendation Letters",
+          icon: FileText,
+        },
       ],
     },
     {
       label: "Reference",
-      items: [{ href: "/dashboard/resources", label: "Resources", icon: GraduationCap }],
+      items: [
+        {
+          href: "/dashboard/resources",
+          label: "Resources",
+          icon: GraduationCap,
+        },
+      ],
     },
   ],
   AMBASSADOR: [
@@ -171,27 +233,44 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     {
       label: "Olympiads",
       items: [
-        { href: "/dashboard/olympiads", label: "Active Olympiads", icon: Trophy },
+        {
+          href: "/dashboard/olympiads",
+          label: "Active Olympiads",
+          icon: Trophy,
+        },
         { href: "/dashboard/results", label: "Results", icon: BarChart3 },
       ],
     },
     {
       label: "Referrals",
       items: [
-        { href: "/dashboard/register-participant", label: "Register Participant", icon: UserPlus },
-        { href: "/dashboard/referrals", label: "Referred Participants", icon: Users },
+        {
+          href: "/dashboard/register-participant",
+          label: "Register Participant",
+          icon: UserPlus,
+        },
+        {
+          href: "/dashboard/referrals",
+          label: "Referred Participants",
+          icon: Users,
+        },
       ],
     },
     {
       label: "Recognition",
       items: [
         { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-        { href: "/dashboard/recommendation-letters", label: "Recommendation Letters", icon: FileText },
+        {
+          href: "/dashboard/recommendation-letters",
+          label: "Recommendation Letters",
+          icon: FileText,
+        },
       ],
     },
     {
       label: "Account",
       items: [
+        { href: "/dashboard/profile", label: "My Profile", icon: Users },
         { href: "/dashboard/messages", label: "Messages", icon: MessageCircle },
       ],
     },
@@ -201,7 +280,11 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     {
       label: "Olympiads",
       items: [
-        { href: "/dashboard/olympiads", label: "Active Olympiads", icon: Trophy },
+        {
+          href: "/dashboard/olympiads",
+          label: "Active Olympiads",
+          icon: Trophy,
+        },
         { href: "/dashboard/results", label: "Results", icon: BarChart3 },
       ],
     },
@@ -209,7 +292,11 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       label: "Recognition",
       items: [
         { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-        { href: "/dashboard/recommendation-letters", label: "Recommendation Letters", icon: FileText },
+        {
+          href: "/dashboard/recommendation-letters",
+          label: "Recommendation Letters",
+          icon: FileText,
+        },
       ],
     },
     {
@@ -223,13 +310,34 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
 
 /** A user's dashboard nav is the union of every role they hold, deduped by href, in a stable role-priority order. */
 export function resolveNavSections(roleKeys: string[]): NavSection[] {
-  const priority: RoleKey[] = ["CEO", "COO", "CTO", "HR_PR", "CONTENT_MEDIA", "SUPPORT", "ACADEMIC", "AMBASSADOR", "PARTICIPANT"];
-  const primaryRole = priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
+  const priority: RoleKey[] = [
+    "CEO",
+    "COO",
+    "CTO",
+    "HR_PR",
+    "CONTENT_MEDIA",
+    "SUPPORT",
+    "ACADEMIC",
+    "AMBASSADOR",
+    "PARTICIPANT",
+  ];
+  const primaryRole =
+    priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
   return NAV_BY_ROLE[primaryRole] ?? NAV_BY_ROLE.PARTICIPANT;
 }
 
 export function primaryRoleLabel(roleKeys: string[]): string {
-  const priority: RoleKey[] = ["CEO", "COO", "CTO", "HR_PR", "CONTENT_MEDIA", "SUPPORT", "ACADEMIC", "AMBASSADOR", "PARTICIPANT"];
+  const priority: RoleKey[] = [
+    "CEO",
+    "COO",
+    "CTO",
+    "HR_PR",
+    "CONTENT_MEDIA",
+    "SUPPORT",
+    "ACADEMIC",
+    "AMBASSADOR",
+    "PARTICIPANT",
+  ];
   const key = priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
   const labels: Record<RoleKey, string> = {
     CEO: "Chief Executive Officer",

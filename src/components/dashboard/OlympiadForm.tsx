@@ -54,6 +54,10 @@ export function OlympiadForm({
       endAt: toLocalInputValue(defaultValues?.endAt ?? null),
       negativeMarkingEnabled: defaultValues?.negativeMarkingEnabled ?? false,
       negativeMarkingValue: defaultValues?.negativeMarkingValue ?? 0,
+      eligibilityMode: defaultValues?.eligibilityMode ?? "open",
+      eligibilityGradeLevel: defaultValues?.eligibilityGradeLevel ?? "",
+      eligibilityInstitution: defaultValues?.eligibilityInstitution ?? "",
+      eligibilityAcademicLevel: defaultValues?.eligibilityAcademicLevel ?? "",
     },
   });
 
@@ -122,6 +126,43 @@ export function OlympiadForm({
             {...register("durationMinutes", { valueAsNumber: true })}
           />
         </FormField>
+      </div>
+
+      <div className="flex flex-col gap-4 border-t border-border pt-5">
+        <FormField
+          label="Eligibility"
+          htmlFor="eligibilityMode"
+          error={errors.eligibilityMode?.message}
+        >
+          <select
+            id="eligibilityMode"
+            className={fieldClasses}
+            {...register("eligibilityMode")}
+          >
+            <option value="open">Open to all participants</option>
+            <option value="criteria">Match the criteria below</option>
+          </select>
+        </FormField>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <input
+            aria-label="Eligible class or grade"
+            placeholder="Class / grade"
+            className={fieldClasses}
+            {...register("eligibilityGradeLevel")}
+          />
+          <input
+            aria-label="Eligible institution"
+            placeholder="Institution"
+            className={fieldClasses}
+            {...register("eligibilityInstitution")}
+          />
+          <input
+            aria-label="Eligible academic level"
+            placeholder="Academic level"
+            className={fieldClasses}
+            {...register("eligibilityAcademicLevel")}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

@@ -83,10 +83,58 @@ export default async function ParticipantProfilePage({
         </div>
         <div>
           <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            Phone
+          </dt>
+          <dd className="mt-1 text-sm text-secondary">
+            {profile?.phone ?? "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            Gender
+          </dt>
+          <dd className="mt-1 text-sm text-secondary">
+            {participant?.gender ?? "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
             Grade level
           </dt>
           <dd className="mt-1 text-sm text-secondary">
             {participant?.gradeLevel ?? "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            Academic level
+          </dt>
+          <dd className="mt-1 text-sm text-secondary">
+            {participant?.academicLevel ?? "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            District
+          </dt>
+          <dd className="mt-1 text-sm text-secondary">
+            {participant?.district ?? "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            City / Upazila
+          </dt>
+          <dd className="mt-1 text-sm text-secondary">
+            {participant?.city ?? "—"}
+          </dd>
+        </div>
+        <div className="sm:col-span-2">
+          <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+            Address
+          </dt>
+          <dd className="mt-1 whitespace-pre-wrap text-sm text-secondary">
+            {participant?.address ?? "—"}
           </dd>
         </div>
         <div>
@@ -120,8 +168,14 @@ export default async function ParticipantProfilePage({
         userId={userId}
         defaultValues={{
           fullName: profile?.fullName ?? "",
+          phone: profile?.phone ?? "",
+          gender: participant?.gender ?? "",
           institution: participant?.institution ?? "",
           gradeLevel: participant?.gradeLevel ?? "",
+          academicLevel: participant?.academicLevel ?? "",
+          district: participant?.district ?? "",
+          address: participant?.address ?? "",
+          city: participant?.city ?? "",
         }}
       />
     </div>

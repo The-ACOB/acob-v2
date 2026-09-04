@@ -13,7 +13,11 @@ const EXAM_ROLES = ["PARTICIPANT", "AMBASSADOR"];
 async function resolveEffectiveOlympiad(id: string): Promise<Olympiad | null> {
   const olympiad = await db.olympiad.findUnique({ where: { id } });
   if (!olympiad) return null;
-  if (olympiad.status === "draft" && olympiad.publishAt && olympiad.publishAt.getTime() <= Date.now()) {
+  if (
+    olympiad.status === "draft" &&
+    olympiad.publishAt &&
+    olympiad.publishAt.getTime() <= Date.now()
+  ) {
     return db.olympiad.update({ where: { id }, data: { status: "published" } });
   }
   return olympiad;
@@ -26,7 +30,26 @@ function isWithinExamWindow(olympiad: Olympiad): boolean {
   return true;
 }
 
-export async function startAttemptAction(olympiadId: string): Promise<ActionResult<{ attemptId: string }>> {
+async function isEligible(
+  olympiad: Olympiad,
+  userId: string,
+): Promise<boolean> {
+  if (olympiad.eligibilityMode === "open") return true;
+  const participant = await db.participant.findUnique({ where: { userId } });
+  if (!participant) return false;
+  return (
+    (!olympiad.eligibilityGradeLevel ||
+      participant.gradeLevel === olympiad.eligibilityGradeLevel) &&
+    (!olympiad.eligibilityInstitution ||
+      participant.institution === olympiad.eligibilityInstitution) &&
+    (!olympiad.eligibilityAcademicLevel ||
+      participant.academicLevel === olympiad.eligibilityAcademicLevel)
+  );
+}
+
+export async function startAttemptAction(
+  olympiadId: string,
+): Promise<ActionResult<{ attemptId: string }>> {
   let session;
   try {
     session = await requireAuth();
@@ -36,12 +59,22 @@ export async function startAttemptAction(olympiadId: string): Promise<ActionResu
   }
 
   if (!session.roleKeys.some((r) => EXAM_ROLES.includes(r))) {
-    return { ok: false, error: "Only participants and ambassadors can take Olympiads." };
+    return {
+      ok: false,
+      error: "Only participants and ambassadors can take Olympiads.",
+    };
   }
 
   const olympiad = await resolveEffectiveOlympiad(olympiadId);
   if (!olympiad || olympiad.status !== "published") {
     return { ok: false, error: "This Olympiad is not currently available." };
+  }
+
+  if (!(await isEligible(olympiad, session.id))) {
+    return {
+      ok: false,
+      error: "You are not eligible to attempt this Olympiad.",
+    };
   }
 
   const existing = await db.attempt.findUnique({
@@ -57,12 +90,17 @@ export async function startAttemptAction(olympiadId: string): Promise<ActionResu
   }
 
   if (!isWithinExamWindow(olympiad)) {
-    return { ok: false, error: "This Olympiad is not open for new attempts right now." };
+    return {
+      ok: false,
+      error: "This Olympiad is not open for new attempts right now.",
+    };
   }
 
   const startedAt = new Date();
   const deadlineAt = computeDeadline(olympiad, startedAt);
-  const attempt = await db.attempt.create({ data: { olympiadId, userId: session.id, deadlineAt } });
+  const attempt = await db.attempt.create({
+    data: { olympiadId, userId: session.id, deadlineAt },
+  });
 
   return { ok: true, data: { attemptId: attempt.id } };
 }
@@ -75,7 +113,7 @@ export async function saveAnswerAction(
   attemptId: string,
   questionId: string,
   selectedOptionId: string | null,
-  timeSpentDeltaSeconds: number
+  timeSpentDeltaSeconds: number,
 ): Promise<ActionResult> {
   let session;
   try {
@@ -90,7 +128,9 @@ export async function saveAnswerAction(
     return { ok: false, error: "Attempt not found." };
   }
 
-  const olympiad = await db.olympiad.findUnique({ where: { id: attempt.olympiadId } });
+  const olympiad = await db.olympiad.findUnique({
+    where: { id: attempt.olympiadId },
+  });
   if (!olympiad) return { ok: false, error: "Olympiad not found." };
 
   const current = await autoSubmitIfExpired(attempt, olympiad);
@@ -98,13 +138,22 @@ export async function saveAnswerAction(
     return { ok: false, error: "Time has expired for this attempt." };
   }
 
-  const question: { id: string; olympiadId: string; options: { id: string }[] } | null =
-    await db.question.findUnique({ where: { id: questionId }, include: { options: true } });
+  const question: {
+    id: string;
+    olympiadId: string;
+    options: { id: string }[];
+  } | null = await db.question.findUnique({
+    where: { id: questionId },
+    include: { options: true },
+  });
   if (!question || question.olympiadId !== attempt.olympiadId) {
     return { ok: false, error: "Question does not belong to this attempt." };
   }
 
-  if (selectedOptionId && !question.options.some((o) => o.id === selectedOptionId)) {
+  if (
+    selectedOptionId &&
+    !question.options.some((o) => o.id === selectedOptionId)
+  ) {
     return { ok: false, error: "Invalid option for this question." };
   }
 
@@ -112,14 +161,18 @@ export async function saveAnswerAction(
     where: { attemptId_questionId: { attemptId, questionId } },
   });
 
-  const changed = Boolean(existingAnswer && existingAnswer.selectedOptionId !== selectedOptionId);
+  const changed = Boolean(
+    existingAnswer && existingAnswer.selectedOptionId !== selectedOptionId,
+  );
   const now = new Date();
 
   await db.attemptAnswer.upsert({
     where: { attemptId_questionId: { attemptId, questionId } },
     update: {
       selectedOptionId,
-      timeSpentSeconds: (existingAnswer?.timeSpentSeconds ?? 0) + Math.max(0, Math.round(timeSpentDeltaSeconds)),
+      timeSpentSeconds:
+        (existingAnswer?.timeSpentSeconds ?? 0) +
+        Math.max(0, Math.round(timeSpentDeltaSeconds)),
       changeCount: (existingAnswer?.changeCount ?? 0) + (changed ? 1 : 0),
       lastInteractionAt: now,
     },
@@ -143,7 +196,9 @@ export async function saveAnswerAction(
  * participant only ever learns their score from the results page,
  * and only once the Olympiad's results have been officially published.
  */
-export async function submitAttemptAction(attemptId: string): Promise<ActionResult> {
+export async function submitAttemptAction(
+  attemptId: string,
+): Promise<ActionResult> {
   let session;
   try {
     session = await requireAuth();
@@ -157,7 +212,9 @@ export async function submitAttemptAction(attemptId: string): Promise<ActionResu
     return { ok: false, error: "Attempt not found." };
   }
 
-  const olympiad = await db.olympiad.findUnique({ where: { id: attempt.olympiadId } });
+  const olympiad = await db.olympiad.findUnique({
+    where: { id: attempt.olympiadId },
+  });
   if (!olympiad) return { ok: false, error: "Olympiad not found." };
 
   const current = await autoSubmitIfExpired(attempt, olympiad);
@@ -169,13 +226,22 @@ export async function submitAttemptAction(attemptId: string): Promise<ActionResu
     id: string;
     marks: number;
     options: { id: string; isCorrect: boolean }[];
-  }[] = await db.question.findMany({ where: { olympiadId: attempt.olympiadId }, include: { options: true } });
-
-  const answers: { questionId: string; selectedOptionId: string | null }[] = await db.attemptAnswer.findMany({
-    where: { attemptId },
+  }[] = await db.question.findMany({
+    where: { olympiadId: attempt.olympiadId },
+    include: { options: true },
   });
 
-  const result = scoreAttempt(questions, answers, olympiad.negativeMarkingEnabled, olympiad.negativeMarkingValue);
+  const answers: { questionId: string; selectedOptionId: string | null }[] =
+    await db.attemptAnswer.findMany({
+      where: { attemptId },
+    });
+
+  const result = scoreAttempt(
+    questions,
+    answers,
+    olympiad.negativeMarkingEnabled,
+    olympiad.negativeMarkingValue,
+  );
   const submittedAt = new Date();
 
   await db.attempt.update({
@@ -188,7 +254,9 @@ export async function submitAttemptAction(attemptId: string): Promise<ActionResu
       correctCount: result.correctCount,
       incorrectCount: result.incorrectCount,
       unansweredCount: result.unansweredCount,
-      timeSpentSeconds: Math.round((submittedAt.getTime() - attempt.startedAt.getTime()) / 1000),
+      timeSpentSeconds: Math.round(
+        (submittedAt.getTime() - attempt.startedAt.getTime()) / 1000,
+      ),
     },
   });
 
@@ -196,8 +264,16 @@ export async function submitAttemptAction(attemptId: string): Promise<ActionResu
     if (!answers.some((a) => a.questionId === questionId)) continue; // don't create rows for unanswered questions
     await db.attemptAnswer.upsert({
       where: { attemptId_questionId: { attemptId, questionId } },
-      update: { isCorrect: outcome.isCorrect, marksAwarded: outcome.marksAwarded },
-      create: { attemptId, questionId, isCorrect: outcome.isCorrect, marksAwarded: outcome.marksAwarded },
+      update: {
+        isCorrect: outcome.isCorrect,
+        marksAwarded: outcome.marksAwarded,
+      },
+      create: {
+        attemptId,
+        questionId,
+        isCorrect: outcome.isCorrect,
+        marksAwarded: outcome.marksAwarded,
+      },
     });
   }
 
@@ -237,7 +313,9 @@ export async function getExamData(attemptId: string): Promise<
     return { ok: false, error: "Attempt not found." };
   }
 
-  const olympiad = await db.olympiad.findUnique({ where: { id: attempt.olympiadId } });
+  const olympiad = await db.olympiad.findUnique({
+    where: { id: attempt.olympiadId },
+  });
   if (!olympiad) return { ok: false, error: "Olympiad not found." };
 
   const current = await autoSubmitIfExpired(attempt, olympiad);
@@ -252,7 +330,10 @@ export async function getExamData(attemptId: string): Promise<
     marks: number;
     order: number;
     options: { id: string; text: string; isCorrect: boolean }[];
-  }[] = await db.question.findMany({ where: { olympiadId: attempt.olympiadId }, include: { options: true } });
+  }[] = await db.question.findMany({
+    where: { olympiadId: attempt.olympiadId },
+    include: { options: true },
+  });
 
   const questions: SanitizedQuestion[] = rawQuestions
     .sort((a, b) => a.order - b.order)
@@ -265,15 +346,20 @@ export async function getExamData(attemptId: string): Promise<
       options: q.options.map((o) => ({ id: o.id, text: o.text })), // isCorrect deliberately omitted
     }));
 
-  const answers: { questionId: string; selectedOptionId: string | null }[] = await db.attemptAnswer.findMany({
-    where: { attemptId: current.id },
-  });
+  const answers: { questionId: string; selectedOptionId: string | null }[] =
+    await db.attemptAnswer.findMany({
+      where: { attemptId: current.id },
+    });
   const existingAnswers: Record<string, string | null> = {};
   for (const a of answers) existingAnswers[a.questionId] = a.selectedOptionId;
 
   return {
     ok: true,
-    attempt: { id: current.id, deadlineAt: current.deadlineAt.toISOString(), status: current.status },
+    attempt: {
+      id: current.id,
+      deadlineAt: current.deadlineAt.toISOString(),
+      status: current.status,
+    },
     questions,
     existingAnswers,
   };
