@@ -27,7 +27,10 @@ async function uniqueSlug(title: string): Promise<string> {
   return slug;
 }
 
-export async function createContentAction(kind: (typeof CONTENT_KINDS)[number], input: unknown): Promise<ActionResult> {
+export async function createContentAction(
+  kind: (typeof CONTENT_KINDS)[number],
+  input: unknown,
+): Promise<ActionResult> {
   let actor;
   try {
     actor = await requirePermission("content:create");
@@ -38,7 +41,10 @@ export async function createContentAction(kind: (typeof CONTENT_KINDS)[number], 
 
   const parsed = contentSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const v = parsed.data;
   const slug = await uniqueSlug(v.title);
@@ -55,12 +61,23 @@ export async function createContentAction(kind: (typeof CONTENT_KINDS)[number], 
     },
   });
 
-  await recordAudit({ actorId: actor.id, action: "content:created", targetType: "content", targetId: slug, metadata: { kind } });
+  await recordAudit({
+    actorId: actor.id,
+    action: "content:created",
+    targetType: "content",
+    targetId: slug,
+    metadata: { kind },
+  });
   revalidatePath(`/dashboard/${kindToPath(kind)}`);
+  revalidatePath(`/${kindToPath(kind)}`);
   return { ok: true };
 }
 
-export async function updateContentAction(id: string, kind: (typeof CONTENT_KINDS)[number], input: unknown): Promise<ActionResult> {
+export async function updateContentAction(
+  id: string,
+  kind: (typeof CONTENT_KINDS)[number],
+  input: unknown,
+): Promise<ActionResult> {
   let actor;
   try {
     actor = await requirePermission("content:update");
@@ -71,26 +88,41 @@ export async function updateContentAction(id: string, kind: (typeof CONTENT_KIND
 
   const parsed = contentSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const v = parsed.data;
 
   await db.content.update({
     where: { id },
-    data: { title: v.title, description: v.description || null, body: v.body || null, externalUrl: v.externalUrl || null },
+    data: {
+      title: v.title,
+      description: v.description || null,
+      body: v.body || null,
+      externalUrl: v.externalUrl || null,
+    },
   });
 
-  await recordAudit({ actorId: actor.id, action: "content:updated", targetType: "content", targetId: id });
+  await recordAudit({
+    actorId: actor.id,
+    action: "content:updated",
+    targetType: "content",
+    targetId: id,
+  });
   revalidatePath(`/dashboard/${kindToPath(kind)}`);
+  revalidatePath(`/${kindToPath(kind)}`);
   return { ok: true };
 }
 
 export async function setContentStatusAction(
   id: string,
   kind: (typeof CONTENT_KINDS)[number],
-  status: "published" | "unpublished" | "archived"
+  status: "published" | "unpublished" | "archived",
 ): Promise<ActionResult> {
-  const permission = status === "archived" ? "content:delete" : "content:publish";
+  const permission =
+    status === "archived" ? "content:delete" : "content:publish";
   let actor;
   try {
     actor = await requirePermission(permission);
@@ -101,7 +133,8 @@ export async function setContentStatusAction(
 
   await db.content.update({
     where: { id },
-    data: status === "published" ? { status, publishedAt: new Date() } : { status },
+    data:
+      status === "published" ? { status, publishedAt: new Date() } : { status },
   });
 
   await recordAudit({
@@ -112,6 +145,7 @@ export async function setContentStatusAction(
   });
 
   revalidatePath(`/dashboard/${kindToPath(kind)}`);
+  revalidatePath(`/${kindToPath(kind)}`);
   return { ok: true };
 }
 

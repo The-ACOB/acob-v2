@@ -72,6 +72,11 @@ export async function updateParticipantProfileAction(
   try {
     actor = await requireAuth();
     if (actor.id !== userId) await requirePermission("participant:update");
+    if (actor.id === userId && !actor.roleKeys.includes("PARTICIPANT"))
+      return {
+        ok: false,
+        error: "Only participant accounts can edit participant profile fields.",
+      };
   } catch (err) {
     if (err instanceof AuthError) return { ok: false, error: err.message };
     throw err;

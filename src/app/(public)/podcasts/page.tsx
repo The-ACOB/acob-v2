@@ -6,6 +6,7 @@ import { MetadataLabel } from "@/components/ui/MetadataLabel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AnimatedSeparator } from "@/components/ui/Separator";
 import { PageHero } from "@/components/sections/PageHero";
+import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/podcasts" },
@@ -14,7 +15,11 @@ export const metadata: Metadata = {
     "Inside Excellence is ACOB's podcast — conversations on curiosity, reasoning, and what it takes to think well under a hard problem.",
 };
 
-export default function PodcastsPage() {
+export default async function PodcastsPage() {
+  const episodes = await db.content.findMany({
+    where: { kind: "podcast", status: "published" },
+    orderBy: { publishedAt: "desc" },
+  });
   return (
     <>
       <PageHero
@@ -53,12 +58,37 @@ export default function PodcastsPage() {
               Listen in
             </h2>
           </Reveal>
-          <Reveal weight="minor" order={1} className="mt-10">
-            <EmptyState
-              title="The first episodes are in production"
-              description="Inside Excellence will publish here and on major podcast platforms once the first season is ready."
-            />
-          </Reveal>
+          {episodes.length === 0 ? (
+            <Reveal weight="minor" order={1} className="mt-10">
+              <EmptyState
+                title="The first episodes are in production"
+                description="Published episodes will appear here."
+              />
+            </Reveal>
+          ) : (
+            <div className="mt-10 flex flex-col divide-y divide-border border-t border-border">
+              {episodes.map((episode) => (
+                <article key={episode.id} className="py-6">
+                  <h3 className="font-display text-2xl text-primary">
+                    {episode.title}
+                  </h3>
+                  {episode.description ? (
+                    <p className="mt-2 text-sm text-secondary">
+                      {episode.description}
+                    </p>
+                  ) : null}
+                  {episode.externalUrl ? (
+                    <a
+                      href={episode.externalUrl}
+                      className="mt-3 inline-block text-sm text-accent underline"
+                    >
+                      Listen
+                    </a>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          )}
         </Container>
       </Section>
     </>

@@ -10,7 +10,9 @@ import type { Attempt, Olympiad } from "@prisma/client";
  * makes the exam timer authoritative rather than advisory.
  */
 export function computeDeadline(olympiad: Olympiad, startedAt: Date): Date {
-  const byDuration = new Date(startedAt.getTime() + olympiad.durationMinutes * 60 * 1000);
+  const byDuration = new Date(
+    startedAt.getTime() + olympiad.durationMinutes * 60 * 1000,
+  );
   if (olympiad.endAt && olympiad.endAt.getTime() < byDuration.getTime()) {
     return olympiad.endAt;
   }
@@ -23,7 +25,10 @@ export function computeDeadline(olympiad: Olympiad, startedAt: Date): Date {
  * deployment, so every attempt-touching read/write calls this first.
  * If the attempt is still within its window, this is a no-op.
  */
-export async function autoSubmitIfExpired(attempt: Attempt, olympiad: Olympiad): Promise<Attempt> {
+export async function autoSubmitIfExpired(
+  attempt: Attempt,
+  olympiad: Olympiad,
+): Promise<Attempt> {
   if (attempt.status !== "in_progress") return attempt;
   if (Date.now() < attempt.deadlineAt.getTime()) return attempt;
 
@@ -31,17 +36,21 @@ export async function autoSubmitIfExpired(attempt: Attempt, olympiad: Olympiad):
     id: string;
     marks: number;
     options: { id: string; isCorrect: boolean }[];
-  }[] = await db.question.findMany({ where: { olympiadId: attempt.olympiadId }, include: { options: true } });
-
-  const answers: { questionId: string; selectedOptionId: string | null }[] = await db.attemptAnswer.findMany({
-    where: { attemptId: attempt.id },
+  }[] = await db.question.findMany({
+    where: { olympiadId: attempt.olympiadId },
+    include: { options: true },
   });
+
+  const answers: { questionId: string; selectedOptionId: string | null }[] =
+    await db.attemptAnswer.findMany({
+      where: { attemptId: attempt.id },
+    });
 
   const result = scoreAttempt(
     questions,
     answers,
     olympiad.negativeMarkingEnabled,
-    olympiad.negativeMarkingValue
+    olympiad.negativeMarkingValue,
   );
 
   const updated = await db.attempt.update({
@@ -54,7 +63,11 @@ export async function autoSubmitIfExpired(attempt: Attempt, olympiad: Olympiad):
       correctCount: result.correctCount,
       incorrectCount: result.incorrectCount,
       unansweredCount: result.unansweredCount,
-      timeSpentSeconds: Math.round((attempt.deadlineAt.getTime() - attempt.startedAt.getTime()) / 1000),
+      timeSpentSeconds: Math.round(
+        (attempt.deadlineAt.getTime() - attempt.startedAt.getTime()) / 1000,
+      ),
+      autoSubmissionReason: "time_expired",
+      autoSubmittedAt: new Date(),
     },
   });
 

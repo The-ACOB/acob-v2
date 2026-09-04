@@ -49,6 +49,7 @@ model User {
   messagesSent             Message[]                @relation("MessageSender")
   olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
   attempts                 Attempt[]                @relation("AttemptUser")
+  olympiadRegistrations    OlympiadRegistration[]
   certificatesReceived     Certificate[]            @relation("CertificateRecipient")
   certificatesIssued       Certificate[]            @relation("CertificateIssuer")
   certificatesRevoked      Certificate[]            @relation("CertificateRevoker")
@@ -453,6 +454,7 @@ model Olympiad {
   creator   User       @relation("OlympiadCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   questions Question[]
   attempts  Attempt[]
+  registrations OlympiadRegistration[]
   certificates Certificate[]
 
   @@map("olympiads")
@@ -514,6 +516,9 @@ model Attempt {
   timeSpentSeconds  Int?          @map("time_spent_seconds")
   rank              Int?
   scoreLocked       Boolean       @default(false) @map("score_locked")
+  integrityViolationCount Int      @default(0) @map("integrity_violation_count")
+  autoSubmissionReason String?     @map("auto_submission_reason")
+  autoSubmittedAt  DateTime?       @map("auto_submitted_at")
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
@@ -523,6 +528,20 @@ model Attempt {
 
   @@unique([olympiadId, userId])
   @@map("attempts")
+}
+
+model OlympiadRegistration {
+  id          String   @id @default(uuid())
+  olympiadId  String   @map("olympiad_id")
+  userId      String   @map("user_id")
+  registeredAt DateTime @default(now()) @map("registered_at")
+
+  olympiad Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([olympiadId, userId])
+  @@index([userId])
+  @@map("olympiad_registrations")
 }
 
 /**

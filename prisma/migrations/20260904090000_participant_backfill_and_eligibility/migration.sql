@@ -17,3 +17,4 @@ FROM "user_roles" ur
 JOIN "roles" r ON r."id" = ur."role_id"
 LEFT JOIN "participants" p ON p."user_id" = ur."user_id"
 WHERE r."key" = 'PARTICIPANT' AND p."user_id" IS NULL;
+

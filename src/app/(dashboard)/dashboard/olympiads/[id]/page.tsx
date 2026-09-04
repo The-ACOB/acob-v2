@@ -36,7 +36,10 @@ export default async function OlympiadDetailPage({
   }
 
   const { id } = await params;
-  const olympiad = await db.olympiad.findUnique({ where: { id } });
+  const olympiad = await db.olympiad.findUnique({
+    where: { id },
+    include: { _count: { select: { registrations: true } } },
+  });
   if (!olympiad) notFound();
 
   const questions: QuestionRow[] = await db.question.findMany({
@@ -143,6 +146,10 @@ export default async function OlympiadDetailPage({
           <h2 className="mb-4 font-display text-lg text-primary">
             Participants & Results
           </h2>
+          <p className="mb-4 text-sm text-secondary">
+            {olympiad._count.registrations} registered participant
+            {olympiad._count.registrations === 1 ? "" : "s"}
+          </p>
           <DataTable
             columns={columns}
             rows={attempts}

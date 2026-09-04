@@ -6,6 +6,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/env";
+import { NavigationProgress } from "@/components/layout/NavigationProgress";
 
 const siteUrl = getSiteUrl();
 
@@ -105,6 +106,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-dvh bg-background font-sans text-primary antialiased">
+        <NavigationProgress />
         <AmbientBackground />
         {children}
       </body>
