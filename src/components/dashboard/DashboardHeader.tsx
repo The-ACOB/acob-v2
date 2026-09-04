@@ -2,6 +2,7 @@ import { MobileSidebar } from "./MobileSidebar";
 import { CommandMenu } from "./CommandMenu";
 import { NotificationsMenu, type NotificationItem } from "./NotificationsMenu";
 import { AccountMenu } from "@/components/layout/AccountMenu";
+import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 
 export function DashboardHeader({
   roleKeys,
@@ -25,6 +26,7 @@ export function DashboardHeader({
 
       <div className="flex items-center gap-3">
         <NotificationsMenu notifications={notifications} />
+        <ThemeSwitcher />
         <AccountMenu user={user} />
       </div>
     </header>

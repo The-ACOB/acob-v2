@@ -58,6 +58,7 @@ export function OlympiadForm({
       eligibilityGradeLevel: defaultValues?.eligibilityGradeLevel ?? "",
       eligibilityInstitution: defaultValues?.eligibilityInstitution ?? "",
       eligibilityAcademicLevel: defaultValues?.eligibilityAcademicLevel ?? "",
+      participationMode: defaultValues?.participationMode ?? "individual",
     },
   });
 
@@ -129,6 +130,20 @@ export function OlympiadForm({
       </div>
 
       <div className="flex flex-col gap-4 border-t border-border pt-5">
+        <FormField
+          label="Participation"
+          htmlFor="participationMode"
+          error={errors.participationMode?.message}
+        >
+          <select
+            id="participationMode"
+            className={fieldClasses}
+            {...register("participationMode")}
+          >
+            <option value="individual">Individual</option>
+            <option value="team">Team</option>
+          </select>
+        </FormField>
         <FormField
           label="Eligibility"
           htmlFor="eligibilityMode"

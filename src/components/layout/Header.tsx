@@ -9,6 +9,7 @@ import { logoutAction } from "@/lib/auth/actions";
 import { AccountMenu } from "./AccountMenu";
 import { NAV_LINKS } from "./nav-links";
 import { cn } from "@/lib/utils";
+import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 
 type HeaderUser = { email: string; fullName: string | null } | null;
 
@@ -46,7 +47,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
         "sticky top-0 z-50 w-full transition-colors duration-300",
         scrolled || open
           ? "border-b border-border bg-background/90 backdrop-blur-md"
-          : "border-b border-transparent bg-transparent"
+          : "border-b border-transparent bg-transparent",
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center justify-between gap-6 px-6 sm:px-8 lg:px-10">
@@ -59,7 +60,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
               href={link.href}
               className={cn(
                 "text-[13px] font-medium tracking-tight",
-                pathname === link.href && "text-primary after:w-full"
+                pathname === link.href && "text-primary after:w-full",
               )}
             >
               {link.label}
@@ -68,7 +69,10 @@ export function Header({ user = null }: { user?: HeaderUser }) {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-5 lg:flex">
-          <TextLink href="/verify" className="text-[13px] font-medium tracking-tight text-muted">
+          <TextLink
+            href="/verify"
+            className="text-[13px] font-medium tracking-tight text-muted"
+          >
             Verify
           </TextLink>
           {user ? (
@@ -81,6 +85,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
               Sign in
             </TextLink>
           )}
+          <ThemeSwitcher />
         </div>
 
         <button
@@ -94,13 +99,13 @@ export function Header({ user = null }: { user?: HeaderUser }) {
           <span
             className={cn(
               "h-px w-5 bg-primary transition-transform duration-300",
-              open && "translate-y-[3px] rotate-45"
+              open && "translate-y-[3px] rotate-45",
             )}
           />
           <span
             className={cn(
               "h-px w-5 bg-primary transition-transform duration-300",
-              open && "-translate-y-[3px] -rotate-45"
+              open && "-translate-y-[3px] -rotate-45",
             )}
           />
         </button>
@@ -116,7 +121,10 @@ export function Header({ user = null }: { user?: HeaderUser }) {
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden border-t border-border bg-background lg:hidden"
           >
-            <nav aria-label="Mobile" className="flex flex-col gap-1 px-6 py-6 sm:px-8">
+            <nav
+              aria-label="Mobile"
+              className="flex flex-col gap-1 px-6 py-6 sm:px-8"
+            >
               {NAV_LINKS.map((link, i) => (
                 <motion.div
                   key={link.href}
@@ -134,13 +142,19 @@ export function Header({ user = null }: { user?: HeaderUser }) {
               ))}
 
               <div className="mt-4 flex flex-col gap-4 border-t border-border pt-5">
-                <TextLink href="/verify" className="text-sm font-medium tracking-tight text-secondary after:hidden">
+                <TextLink
+                  href="/verify"
+                  className="text-sm font-medium tracking-tight text-secondary after:hidden"
+                >
                   Verify a certificate
                 </TextLink>
 
                 {user ? (
                   <>
-                    <TextLink href="/dashboard" className="text-sm font-medium tracking-tight after:hidden">
+                    <TextLink
+                      href="/dashboard"
+                      className="text-sm font-medium tracking-tight after:hidden"
+                    >
                       Dashboard
                     </TextLink>
                     <form action={logoutAction}>

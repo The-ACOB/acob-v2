@@ -7,6 +7,7 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/env";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const siteUrl = getSiteUrl();
 
@@ -106,9 +107,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-dvh bg-background font-sans text-primary antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('acob-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
         <NavigationProgress />
         <AmbientBackground />
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

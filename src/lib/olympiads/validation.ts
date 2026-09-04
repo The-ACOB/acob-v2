@@ -23,6 +23,7 @@ export const olympiadSchema = z.object({
     .max(100)
     .optional()
     .or(z.literal("")),
+  participationMode: z.enum(["individual", "team"]).optional(),
 });
 
 export const optionSchema = z.object({

@@ -61,6 +61,9 @@ export default async function EditOlympiadPage({
             eligibilityGradeLevel: olympiad.eligibilityGradeLevel ?? "",
             eligibilityInstitution: olympiad.eligibilityInstitution ?? "",
             eligibilityAcademicLevel: olympiad.eligibilityAcademicLevel ?? "",
+            participationMode: olympiad.participationMode as
+              | "individual"
+              | "team",
           }}
           onSubmit={submit}
           submitLabel="Save changes"
