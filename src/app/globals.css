@@ -124,6 +124,38 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 85% 0%, var(--color-glow), transparent 34rem),
+    linear-gradient(135deg, var(--color-background), var(--color-elevated));
+  background-attachment: fixed;
+}
+
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(circle at 82% 0%, #d8c8a833, transparent 34rem),
+    linear-gradient(135deg, #f5f3ee, #ebe8e1);
+}
+
+@keyframes acob-orbital-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-10px, 8px, 0) rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="light"] .acob-light-lift {
+    animation: acob-orbital-drift 12s ease-in-out infinite;
+  }
 }
 
 ::selection {

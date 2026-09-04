@@ -29,7 +29,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute right-[-10%] top-[-8%] h-[600px] w-[600px] opacity-70 sm:h-[760px] sm:w-[760px] lg:right-[-6%] lg:top-[-12%]"
+          className="acob-light-lift pointer-events-none absolute right-[-10%] top-[-8%] h-[600px] w-[600px] opacity-70 sm:h-[760px] sm:w-[760px] lg:right-[-6%] lg:top-[-12%]"
         >
           <ParallaxOrbital className="h-full w-full" />
         </div>
@@ -45,7 +45,9 @@ export default function HomePage() {
                 className="h-6 w-auto opacity-80"
                 aria-hidden
               />
-              <MetadataLabel>Applied Cognitio Olympiad Bangladesh</MetadataLabel>
+              <MetadataLabel>
+                Applied Cognitio Olympiad Bangladesh
+              </MetadataLabel>
             </div>
           </Reveal>
 
@@ -53,14 +55,18 @@ export default function HomePage() {
             <WordReveal text="Curiosity" delay={0.1} />
             <br />
             <WordReveal text="over" delay={0.34} />{" "}
-            <WordReveal text="memorisation." delay={0.42} className="text-accent italic" />
+            <WordReveal
+              text="memorisation."
+              delay={0.42}
+              className="text-accent italic"
+            />
           </h1>
 
           <Reveal weight="standard" order={1}>
             <p className="mt-8 max-w-xl text-lg leading-relaxed text-secondary">
               We design academic Olympiads that don&apos;t reward how fast a
-              student can recall an answer — they reward how well a student
-              can reason their way to one.
+              student can recall an answer — they reward how well a student can
+              reason their way to one.
             </p>
           </Reveal>
 
@@ -111,26 +117,26 @@ export default function HomePage() {
                 <p className="text-lg leading-relaxed text-secondary">
                   ACOB was founded in 2025 on a simple belief: education should
                   do more than measure what a student can remember. A student
-                  can answer a question correctly without ever wondering why
-                  the answer is correct — and pass an examination without
-                  becoming curious about the subject itself.
+                  can answer a question correctly without ever wondering why the
+                  answer is correct — and pass an examination without becoming
+                  curious about the subject itself.
                 </p>
               </Reveal>
               <Reveal weight="standard" order={2}>
                 <p className="text-lg leading-relaxed text-secondary">
                   That gap, between knowing and understanding, is where
-                  curiosity tends to disappear. ACOB exists to close it — through
-                  academic challenges, learning resources, and opportunities
-                  that push students to question, reason, apply, experiment,
-                  and understand.
+                  curiosity tends to disappear. ACOB exists to close it —
+                  through academic challenges, learning resources, and
+                  opportunities that push students to question, reason, apply,
+                  experiment, and understand.
                 </p>
               </Reveal>
               <Reveal weight="standard" order={3}>
                 <p className="text-lg leading-relaxed text-primary">
                   Our Olympiads aren&apos;t designed to reward speed or
                   memorisation. They&apos;re designed to celebrate curiosity,
-                  intelligence, critical thinking, reasoning, and the ability
-                  to apply knowledge.
+                  intelligence, critical thinking, reasoning, and the ability to
+                  apply knowledge.
                 </p>
               </Reveal>
               <Reveal weight="minor" order={4}>
@@ -156,8 +162,8 @@ export default function HomePage() {
                 Competitions built around reasoning, not recall.
               </h2>
               <p className="mt-5 text-base leading-relaxed text-secondary">
-                Every ACOB Olympiad is written to test how a student thinks,
-                not just what they&apos;ve memorised. Full details on this
+                Every ACOB Olympiad is written to test how a student thinks, not
+                just what they&apos;ve memorised. Full details on this
                 year&apos;s tracks, subjects, and registration open here soon.
               </p>
             </Reveal>
@@ -201,8 +207,8 @@ export default function HomePage() {
                 The ACOB podcast.
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-secondary">
-                Conversations with educators, researchers, and past
-                Olympiad participants on what curiosity actually looks like.
+                Conversations with educators, researchers, and past Olympiad
+                participants on what curiosity actually looks like.
               </p>
               <TextLink href="/podcasts" className="mt-5 inline-block text-sm">
                 Listen in →
@@ -218,7 +224,10 @@ export default function HomePage() {
                 Ambassadors carry ACOB&apos;s philosophy into their own schools
                 and communities.
               </p>
-              <TextLink href="/ambassadors" className="mt-5 inline-block text-sm">
+              <TextLink
+                href="/ambassadors"
+                className="mt-5 inline-block text-sm"
+              >
                 Learn more →
               </TextLink>
             </Reveal>
@@ -236,7 +245,11 @@ export default function HomePage() {
               Ready to compete on how you think?
             </h2>
           </Reveal>
-          <Reveal weight="standard" order={1} className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <Reveal
+            weight="standard"
+            order={1}
+            className="mt-8 flex flex-col gap-4 sm:flex-row"
+          >
             <Button href="/olympiads" variant="primary">
               Explore Olympiads
             </Button>

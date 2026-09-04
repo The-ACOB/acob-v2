@@ -142,6 +142,10 @@ export function Header({ user = null }: { user?: HeaderUser }) {
               ))}
 
               <div className="mt-4 flex flex-col gap-4 border-t border-border pt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-secondary">Appearance</span>
+                  <ThemeSwitcher />
+                </div>
                 <TextLink
                   href="/verify"
                   className="text-sm font-medium tracking-tight text-secondary after:hidden"
