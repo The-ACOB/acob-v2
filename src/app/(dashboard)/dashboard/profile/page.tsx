@@ -42,6 +42,7 @@ export default async function ProfilePage() {
         defaultValues={{
           email: session.email,
           fullName: profile.fullName,
+          bio: profile.bio ?? "",
           phone: profile.phone ?? "",
           gender: participant?.gender ?? "",
           institution: participant?.institution ?? "",

@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { ParticipantProfileActions } from "@/components/dashboard/ParticipantProfileActions";
 import { ParticipantProfileForm } from "@/components/dashboard/ParticipantProfileForm";
+import { RoleManagementForm } from "@/components/dashboard/RoleManagementForm";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata: Metadata = { title: "Participant Profile" };
@@ -34,9 +35,12 @@ export default async function ParticipantProfilePage({
     db.participant.findUnique({ where: { userId } }),
   ]);
 
-  const isAmbassador = Boolean(
-    await db.ambassador.findUnique({ where: { userId } }),
+  const isAmbassador = user.userRoles.some(
+    (assignment) => assignment.role.key === "AMBASSADOR",
   );
+  const primaryRole =
+    user.userRoles.find((assignment) => assignment.role.key !== "PARTICIPANT")
+      ?.role.key ?? "PARTICIPANT";
 
   return (
     <div>
@@ -169,6 +173,7 @@ export default async function ParticipantProfilePage({
         allowEmailEdit={false}
         defaultValues={{
           fullName: profile?.fullName ?? "",
+          bio: profile?.bio ?? "",
           phone: profile?.phone ?? "",
           gender: participant?.gender ?? "",
           institution: participant?.institution ?? "",
@@ -179,6 +184,9 @@ export default async function ParticipantProfilePage({
           city: participant?.city ?? "",
         }}
       />
+      {actor.roleKeys.includes("CEO") && actor.id !== userId ? (
+        <RoleManagementForm userId={userId} currentRole={primaryRole} />
+      ) : null}
     </div>
   );
 }

@@ -24,10 +24,12 @@ export function ParticipantProfileForm({
   defaultValues: Values;
 }) {
   const { toast } = useToast();
+  const [saved, setSaved] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(updateParticipantProfileSchema),
@@ -38,6 +40,7 @@ export function ParticipantProfileForm({
     setServerError(null);
     const result = await updateParticipantProfileAction(userId, values);
     if (!result.ok) return setServerError(result.error);
+    setSaved(true);
     toast("success", "Profile updated");
   };
 
@@ -74,6 +77,14 @@ export function ParticipantProfileForm({
       ) : null}
       <FormField label="Phone" htmlFor="phone" error={errors.phone?.message}>
         <input id="phone" className={fieldClasses} {...register("phone")} />
+      </FormField>
+      <FormField label="Bio" htmlFor="bio" error={errors.bio?.message}>
+        <textarea
+          id="bio"
+          rows={3}
+          className={`${fieldClasses} resize-none`}
+          {...register("bio")}
+        />
       </FormField>
       {showParticipantFields ? (
         <FormField
@@ -166,6 +177,24 @@ export function ParticipantProfileForm({
       >
         {isSubmitting ? "Saving…" : "Save profile"}
       </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={isSubmitting}
+        onClick={() => {
+          reset(defaultValues);
+          setServerError(null);
+          setSaved(false);
+        }}
+        className="w-fit text-xs"
+      >
+        Cancel
+      </Button>
+      {saved ? (
+        <p className="text-xs text-success" role="status">
+          Saved successfully
+        </p>
+      ) : null}
     </form>
   );
 }

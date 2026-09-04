@@ -89,6 +89,9 @@ export async function updateParticipantProfileAction(
     };
 
   const v = parsed.data;
+  const targetParticipant = await db.participant.findUnique({
+    where: { userId },
+  });
   if (v.email && v.email !== actor.email) {
     if (actor.id !== userId)
       return { ok: false, error: "You cannot change another user's email." };
@@ -130,11 +133,21 @@ export async function updateParticipantProfileAction(
       };
   }
   await db.$transaction([
-    db.profile.update({
+    db.profile.upsert({
       where: { userId },
-      data: { fullName: v.fullName, phone: v.phone || null },
+      create: {
+        userId,
+        fullName: v.fullName,
+        phone: v.phone || null,
+        bio: v.bio || null,
+      },
+      update: {
+        fullName: v.fullName,
+        phone: v.phone || null,
+        bio: v.bio || null,
+      },
     }),
-    ...(actor.roleKeys.includes("PARTICIPANT") || actor.id !== userId
+    ...(actor.roleKeys.includes("PARTICIPANT") || targetParticipant
       ? [
           db.participant.upsert({
             where: { userId },
@@ -201,10 +214,27 @@ export async function requestAmbassadorPromotionAction(
     if (!ambassadorRole)
       return { ok: false, error: "Ambassador role is not configured." };
 
-    await db.userRole.upsert({
-      where: { userId_roleId: { userId, roleId: ambassadorRole.id } },
-      create: { userId, roleId: ambassadorRole.id, assignedBy: actor.id },
-      update: { assignedBy: actor.id, assignedAt: new Date() },
+    const participant = await db.participant.findUnique({ where: { userId } });
+    await db.$transaction(async (tx) => {
+      await tx.userRole.upsert({
+        where: { userId_roleId: { userId, roleId: ambassadorRole.id } },
+        create: { userId, roleId: ambassadorRole.id, assignedBy: actor.id },
+        update: { assignedBy: actor.id, assignedAt: new Date() },
+      });
+      await tx.ambassador.upsert({
+        where: { userId },
+        create: {
+          userId,
+          institution: participant?.institution ?? null,
+          status: "active",
+          approvedBy: actor.id,
+        },
+        update: {
+          status: "active",
+          approvedBy: actor.id,
+          institution: participant?.institution ?? undefined,
+        },
+      });
     });
     await recordAudit({
       actorId: actor.id,

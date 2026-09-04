@@ -19,19 +19,52 @@ type ApprovalRequestRow = {
  * always runs as the approving executive's authority, never the
  * original requester's.
  */
-export async function executeApprovedRequest(request: ApprovalRequestRow, approverId: string) {
-  if (request.type === "ambassador_promotion" && request.targetType === "user") {
-    const ambassadorRole = await db.role.findUnique({ where: { key: "AMBASSADOR" } });
+export async function executeApprovedRequest(
+  request: ApprovalRequestRow,
+  approverId: string,
+) {
+  if (
+    request.type === "ambassador_promotion" &&
+    request.targetType === "user"
+  ) {
+    const ambassadorRole = await db.role.findUnique({
+      where: { key: "AMBASSADOR" },
+    });
     if (!ambassadorRole) return;
 
-    try {
-      await db.userRole.create({
-        data: { userId: request.targetId, roleId: ambassadorRole.id, assignedBy: approverId },
+    const participant = await db.participant.findUnique({
+      where: { userId: request.targetId },
+    });
+    await db.$transaction(async (tx) => {
+      await tx.userRole.upsert({
+        where: {
+          userId_roleId: {
+            userId: request.targetId,
+            roleId: ambassadorRole.id,
+          },
+        },
+        create: {
+          userId: request.targetId,
+          roleId: ambassadorRole.id,
+          assignedBy: approverId,
+        },
+        update: { assignedBy: approverId, assignedAt: new Date() },
       });
-    } catch {
-      // Already holds the role — nothing further to do.
-      return;
-    }
+      await tx.ambassador.upsert({
+        where: { userId: request.targetId },
+        create: {
+          userId: request.targetId,
+          institution: participant?.institution ?? null,
+          status: "active",
+          approvedBy: approverId,
+        },
+        update: {
+          status: "active",
+          approvedBy: approverId,
+          institution: participant?.institution ?? undefined,
+        },
+      });
+    });
 
     await recordAudit({
       actorId: approverId,

@@ -16,6 +16,7 @@ export const updateParticipantProfileSchema = z.object({
     .optional(),
   fullName: z.string().trim().min(2, "Enter the participant's full name."),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
+  bio: z.string().trim().max(1000).optional().or(z.literal("")),
   gender: z.string().trim().max(50).optional().or(z.literal("")),
   institution: z.string().trim().max(200).optional().or(z.literal("")),
   gradeLevel: z.string().trim().max(50).optional().or(z.literal("")),

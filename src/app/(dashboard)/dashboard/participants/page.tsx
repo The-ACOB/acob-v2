@@ -18,6 +18,7 @@ type Row = {
   gradeLevel: string | null;
   email: string;
   fullName: string | null;
+  roles: string[];
 };
 
 export default async function ParticipantsPage({
@@ -25,8 +26,9 @@ export default async function ParticipantsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  let actor;
   try {
-    await requirePermission("participant:view");
+    actor = await requirePermission("participant:view");
   } catch (err) {
     if (err instanceof AuthError) redirect("/dashboard");
     throw err;
@@ -52,14 +54,46 @@ export default async function ParticipantsPage({
     include: { user: { include: { profile: true } } },
   });
 
-  const rows: Row[] = participants.map((p) => ({
+  let rows: Row[] = participants.map((p) => ({
     id: p.id,
     userId: p.userId,
     institution: p.institution,
     gradeLevel: p.gradeLevel,
     email: p.user.email,
     fullName: p.user.profile?.fullName ?? null,
+    roles: [],
   }));
+
+  if (actor.roleKeys.includes("CEO")) {
+    const users = await db.user.findMany({
+      where: query
+        ? {
+            OR: [
+              { email: { contains: query, mode: "insensitive" } },
+              {
+                profile: { fullName: { contains: query, mode: "insensitive" } },
+              },
+            ],
+          }
+        : undefined,
+      take: 100,
+      include: {
+        profile: true,
+        participant: true,
+        userRoles: { include: { role: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    rows = users.map((user) => ({
+      id: user.participant?.id ?? user.id,
+      userId: user.id,
+      institution: user.participant?.institution ?? null,
+      gradeLevel: user.participant?.gradeLevel ?? null,
+      email: user.email,
+      fullName: user.profile?.fullName ?? null,
+      roles: user.userRoles.map((assignment) => assignment.role.key),
+    }));
+  }
 
   const columns: Column<Row>[] = [
     {
@@ -67,6 +101,7 @@ export default async function ParticipantsPage({
       cell: (r) => <span className="text-primary">{r.fullName ?? "—"}</span>,
     },
     { header: "Email", cell: (r) => r.email },
+    { header: "Roles", cell: (r) => r.roles.join(", ") || "—" },
     { header: "Institution", cell: (r) => r.institution ?? "—" },
     {
       header: "Grade",
