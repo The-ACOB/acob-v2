@@ -1,0 +1,724 @@
+// ACOB — Prisma schema
+// Mirrors the entity design established in Phase 2, ported from Drizzle.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------
+// Users & profiles
+// ---------------------------------------------------------------
+
+enum UserStatus {
+  active
+  suspended
+
+  @@map("user_status")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String    @map("password_hash")
+  status          UserStatus @default(active)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  profile                  Profile?
+  sessions                 Session[]
+  passwordResetTokens      PasswordResetToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  notifications            Notification[]
+  notificationPreference   NotificationPreference?
+  userRoles                UserRole[]               @relation("UserRoleUser")
+  rolesAssigned            UserRole[]               @relation("UserRoleAssignedBy")
+  approvalRequestsMade     ApprovalRequest[]        @relation("ApprovalRequester")
+  approvalRequestsReviewed ApprovalRequest[]        @relation("ApprovalReviewer")
+  auditLogs                AuditLog[]
+  participant              Participant?
+  ambassador               Ambassador?
+  ambassadorApprovals      Ambassador[]             @relation("AmbassadorApprover")
+  contactSubmissions       ContactSubmission[]
+  contactReplies           ContactReply[]
+  conversations            Conversation[]           @relation("ConversationParticipant")
+  messagesSent             Message[]                @relation("MessageSender")
+  olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
+  attempts                 Attempt[]                @relation("AttemptUser")
+  certificatesReceived     Certificate[]            @relation("CertificateRecipient")
+  certificatesIssued       Certificate[]            @relation("CertificateIssuer")
+  certificatesRevoked      Certificate[]            @relation("CertificateRevoker")
+  lettersReceived          RecommendationLetter[]   @relation("LetterRecipient")
+  lettersIssued            RecommendationLetter[]   @relation("LetterIssuer")
+  lettersRevoked           RecommendationLetter[]   @relation("LetterRevoker")
+  contentAuthored          Content[]                @relation("ContentAuthor")
+  careerListingsCreated    CareerListing[]          @relation("CareerListingCreator")
+  popupsCreated            Popup[]                  @relation("PopupCreator")
+
+  @@map("users")
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  fullName  String   @map("full_name")
+  phone     String?
+  avatarUrl String?  @map("avatar_url")
+  bio       String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ---------------------------------------------------------------
+// Roles & permissions
+// ---------------------------------------------------------------
+
+model Role {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  label     String
+  rank      Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId     String   @map("user_id")
+  roleId     String   @map("role_id")
+  assignedBy String?  @map("assigned_by")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  user           User  @relation("UserRoleUser", fields: [userId], references: [id], onDelete: Cascade)
+  role           Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedByUser User? @relation("UserRoleAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ---------------------------------------------------------------
+// Sessions & tokens
+// ---------------------------------------------------------------
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address") @db.Inet
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
+}
+
+// ---------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  type      String
+  title     String
+  body      String?
+  metadata  Json?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId       String   @id @map("user_id")
+  emailEnabled Boolean  @default(true) @map("email_enabled")
+  inAppEnabled Boolean  @default(true) @map("in_app_enabled")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+// ---------------------------------------------------------------
+// Approvals & audit
+// ---------------------------------------------------------------
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+
+  @@map("approval_status")
+}
+
+model ApprovalRequest {
+  id          String         @id @default(uuid())
+  type        String
+  targetType  String         @map("target_type")
+  targetId    String         @map("target_id")
+  requestedBy String         @map("requested_by")
+  status      ApprovalStatus @default(pending)
+  reviewedBy  String?        @map("reviewed_by")
+  reviewedAt  DateTime?      @map("reviewed_at")
+  reason      String?
+  metadata    Json?
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  requester User  @relation("ApprovalRequester", fields: [requestedBy], references: [id], onDelete: Cascade)
+  reviewer  User? @relation("ApprovalReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@map("approval_requests")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?  @map("actor_id")
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address") @db.Inet
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------
+// Participants & ambassadors
+// ---------------------------------------------------------------
+
+enum AmbassadorStatus {
+  pending
+  active
+  inactive
+
+  @@map("ambassador_status")
+}
+
+model Participant {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  institution String?
+  gradeLevel  String?  @map("grade_level")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referral AmbassadorReferral?
+
+  @@map("participants")
+}
+
+model Ambassador {
+  id          String           @id @default(uuid())
+  userId      String           @unique @map("user_id")
+  institution String?
+  region      String?
+  status      AmbassadorStatus @default(pending)
+  approvedBy  String?          @map("approved_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approver  User?                @relation("AmbassadorApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  referrals AmbassadorReferral[]
+
+  @@map("ambassadors")
+}
+
+model AmbassadorReferral {
+  id            String   @id @default(uuid())
+  ambassadorId  String   @map("ambassador_id")
+  participantId String   @unique @map("participant_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  ambassador  Ambassador  @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@map("ambassador_referrals")
+}
+
+// ---------------------------------------------------------------
+// Contact & support messaging
+// ---------------------------------------------------------------
+
+enum ContactStatus {
+  open
+  resolved
+
+  @@map("contact_status")
+}
+
+/**
+ * A public contact-form submission. `userId` is set when the submitter
+ * was signed in at the time — otherwise the conversation exists purely
+ * by name/email, and any staff reply goes out by email only (there's
+ * no dashboard for an anonymous visitor to read it in-app).
+ */
+model ContactSubmission {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  category  String
+  message   String
+  userId    String?       @map("user_id")
+  status    ContactStatus @default(open)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  user    User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  replies ContactReply[]
+
+  @@map("contact_submissions")
+}
+
+/**
+ * A staff reply to a contact submission. `staffUserId` is recorded for
+ * accountability but is never surfaced to the recipient — replies are
+ * always shown/sent as "ACOB Support Team".
+ */
+model ContactReply {
+  id           String   @id @default(uuid())
+  submissionId String   @map("submission_id")
+  staffUserId  String   @map("staff_user_id")
+  body         String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  submission ContactSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  staffUser  User              @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@map("contact_replies")
+}
+
+enum ConversationStatus {
+  open
+  resolved
+
+  @@map("conversation_status")
+}
+
+/**
+ * A support thread belonging to exactly one registered participant or
+ * ambassador. There is no concept of messaging an individual staff
+ * member directly — a conversation is always with "ACOB Support",
+ * and any support-permission holder may pick it up.
+ */
+model Conversation {
+  id                String             @id @default(uuid())
+  participantUserId String             @map("participant_user_id")
+  status            ConversationStatus @default(open)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  participant User      @relation("ConversationParticipant", fields: [participantUserId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  senderUserId   String   @map("sender_user_id")
+  body           String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// ---------------------------------------------------------------
+// Olympiad exam engine
+// ---------------------------------------------------------------
+
+enum OlympiadStatus {
+  draft
+  published
+  unpublished
+
+  @@map("olympiad_status")
+}
+
+enum QuestionDifficulty {
+  easy
+  medium
+  hard
+
+  @@map("question_difficulty")
+}
+
+enum AttemptStatus {
+  in_progress
+  submitted
+  expired_auto_submitted
+
+  @@map("attempt_status")
+}
+
+model Olympiad {
+  id                     String         @id @default(uuid())
+  title                  String
+  slug                   String         @unique
+  description            String?
+  subject                String?
+  status                 OlympiadStatus @default(draft)
+  durationMinutes        Int            @map("duration_minutes")
+  startAt                DateTime?      @map("start_at")
+  endAt                  DateTime?      @map("end_at")
+  publishAt              DateTime?      @map("publish_at")
+  negativeMarkingEnabled Boolean        @default(false) @map("negative_marking_enabled")
+  negativeMarkingValue   Float          @default(0) @map("negative_marking_value")
+  resultsPublishedAt     DateTime?      @map("results_published_at")
+  createdBy              String         @map("created_by")
+  createdAt              DateTime       @default(now()) @map("created_at")
+  updatedAt              DateTime       @updatedAt @map("updated_at")
+
+  creator   User       @relation("OlympiadCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  Attempt[]
+  certificates Certificate[]
+
+  @@map("olympiads")
+}
+
+model Question {
+  id          String             @id @default(uuid())
+  olympiadId  String             @map("olympiad_id")
+  text        String
+  imageUrl    String?            @map("image_url")
+  subject     String?
+  difficulty  QuestionDifficulty @default(medium)
+  marks       Float              @default(1)
+  order       Int
+  explanation String?
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  olympiad Olympiad         @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  options  QuestionOption[]
+  answers  AttemptAnswer[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(uuid())
+  questionId String  @map("question_id")
+  text       String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  order      Int
+
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
+
+  @@map("question_options")
+}
+
+/**
+ * One attempt per participant per Olympiad (enforced by the unique
+ * constraint below). `deadlineAt` is computed once, server-side, when
+ * the attempt starts — every subsequent read or write re-checks
+ * against this stored deadline rather than trusting anything the
+ * client sends, which is what makes the exam timer authoritative.
+ */
+model Attempt {
+  id                String        @id @default(uuid())
+  olympiadId        String        @map("olympiad_id")
+  userId            String        @map("user_id")
+  status            AttemptStatus @default(in_progress)
+  startedAt         DateTime      @default(now()) @map("started_at")
+  deadlineAt        DateTime      @map("deadline_at")
+  submittedAt       DateTime?     @map("submitted_at")
+  score             Float?
+  totalMarks        Float?        @map("total_marks")
+  correctCount      Int?          @map("correct_count")
+  incorrectCount    Int?          @map("incorrect_count")
+  unansweredCount   Int?          @map("unanswered_count")
+  timeSpentSeconds  Int?          @map("time_spent_seconds")
+  rank              Int?
+  scoreLocked       Boolean       @default(false) @map("score_locked")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  olympiad Olympiad        @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  user     User            @relation("AttemptUser", fields: [userId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
+
+  @@unique([olympiadId, userId])
+  @@map("attempts")
+}
+
+/**
+ * `timeSpentSeconds` and `changeCount` are updated via debounced
+ * client pings (see lib/exam), not on every keystroke — a handful of
+ * writes per question, not one per millisecond.
+ */
+model AttemptAnswer {
+  id                 String    @id @default(uuid())
+  attemptId          String    @map("attempt_id")
+  questionId         String    @map("question_id")
+  selectedOptionId   String?   @map("selected_option_id")
+  isCorrect          Boolean?  @map("is_correct")
+  marksAwarded       Float?    @map("marks_awarded")
+  timeSpentSeconds   Int       @default(0) @map("time_spent_seconds")
+  changeCount        Int       @default(0) @map("change_count")
+  firstAnsweredAt    DateTime? @map("first_answered_at")
+  lastInteractionAt  DateTime? @map("last_interaction_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  attempt        Attempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId])
+  @@map("attempt_answers")
+}
+
+// ---------------------------------------------------------------
+// Certificates & recommendation letters
+// ---------------------------------------------------------------
+
+enum CertificateAchievement {
+  prime
+  elite
+  merit
+  honourable_mention
+  participation
+
+  @@map("certificate_achievement")
+}
+
+enum CertificateStatus {
+  valid
+  revoked
+
+  @@map("certificate_status")
+}
+
+/**
+ * Two identifiers by design: `certificateId` is the short, readable
+ * ID printed on the certificate itself (what a person types into the
+ * verify form); `verificationToken` is a long, cryptographically
+ * random string embedded only in the QR code. Knowing one does not
+ * make the other guessable, and neither is a sequential counter.
+ */
+model Certificate {
+  id                String                 @id @default(uuid())
+  certificateId     String                 @unique @map("certificate_id")
+  verificationToken String                 @unique @map("verification_token")
+  userId            String                 @map("user_id")
+  olympiadId        String                 @map("olympiad_id")
+  attemptId         String?                @map("attempt_id")
+  achievement       CertificateAchievement
+  status            CertificateStatus      @default(valid)
+  fileUrl           String?                @map("file_url")
+  issuedBy          String                 @map("issued_by")
+  issuedAt          DateTime               @default(now()) @map("issued_at")
+  revokedBy         String?                @map("revoked_by")
+  revokedAt         DateTime?              @map("revoked_at")
+  createdAt         DateTime               @default(now()) @map("created_at")
+  updatedAt         DateTime               @updatedAt @map("updated_at")
+
+  recipient User     @relation("CertificateRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  issuer    User     @relation("CertificateIssuer", fields: [issuedBy], references: [id], onDelete: Cascade)
+  revoker   User?    @relation("CertificateRevoker", fields: [revokedBy], references: [id], onDelete: SetNull)
+  olympiad  Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+
+  @@map("certificates")
+}
+
+enum LetterStatus {
+  draft
+  published
+  revoked
+
+  @@map("letter_status")
+}
+
+model RecommendationLetter {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  title       String       @default("Letter of Recommendation")
+  body        String?
+  fileUrl     String?      @map("file_url")
+  status      LetterStatus @default(draft)
+  issuedBy    String       @map("issued_by")
+  publishedAt DateTime?    @map("published_at")
+  revokedBy   String?      @map("revoked_by")
+  revokedAt   DateTime?    @map("revoked_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  recipient User  @relation("LetterRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  issuer    User  @relation("LetterIssuer", fields: [issuedBy], references: [id], onDelete: Cascade)
+  revoker   User? @relation("LetterRevoker", fields: [revokedBy], references: [id], onDelete: SetNull)
+
+  @@map("recommendation_letters")
+}
+
+// ---------------------------------------------------------------
+// Content (Inside Excellence, Study Guides, Video Tutorials, Resources)
+// ---------------------------------------------------------------
+
+enum ContentKind {
+  podcast
+  study_guide
+  video_tutorial
+  resource
+
+  @@map("content_kind")
+}
+
+enum ContentStatus {
+  draft
+  published
+  unpublished
+  archived
+
+  @@map("content_status")
+}
+
+/**
+ * "Delete" never hard-removes a row — it sets status to `archived`.
+ * That's the safeguard against destroying published material by
+ * accident; nothing in this app performs a real DELETE on content.
+ */
+model Content {
+  id          String        @id @default(uuid())
+  kind        ContentKind
+  title       String
+  slug        String        @unique
+  description String?
+  body        String?
+  externalUrl String?       @map("external_url")
+  status      ContentStatus @default(draft)
+  publishedAt DateTime?     @map("published_at")
+  createdBy   String        @map("created_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  author User @relation("ContentAuthor", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("content")
+}
+
+// ---------------------------------------------------------------
+// Careers
+// ---------------------------------------------------------------
+
+enum CareerStatus {
+  draft
+  published
+  closed
+
+  @@map("career_status")
+}
+
+model CareerListing {
+  id           String       @id @default(uuid())
+  title        String
+  department   String?
+  description  String
+  requirements String?
+  status       CareerStatus @default(draft)
+  publishAt    DateTime?    @map("publish_at")
+  deadline     DateTime?
+  createdBy    String       @map("created_by")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  creator User @relation("CareerListingCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("career_listings")
+}
+
+// ---------------------------------------------------------------
+// Popups
+// ---------------------------------------------------------------
+
+model Popup {
+  id        String    @id @default(uuid())
+  content   String
+  ctaLabel  String?   @map("cta_label")
+  ctaUrl    String?   @map("cta_url")
+  active    Boolean   @default(false)
+  startAt   DateTime? @map("start_at")
+  endAt     DateTime? @map("end_at")
+  priority  Int       @default(0)
+  createdBy String    @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  creator User @relation("PopupCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("popups")
+}

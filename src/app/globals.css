@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* ============================================================
+   ACOB DESIGN TOKENS
+   Centralized CSS variables. Change values here to re-theme
+   the entire application — nothing below should hardcode color.
+   ============================================================ */
+:root {
+  /* Surface */
+  --color-background: #08080a;
+  --color-elevated: #121214;
+  --color-elevated-2: #19191c;
+
+  /* Text */
+  --color-text-primary: #f7f7f5;
+  --color-text-secondary: #9a9a9d;
+  --color-text-muted: #616164;
+
+  /* Structure */
+  --color-border: #232326;
+  --color-border-strong: #333336;
+
+  /* Accent — monochrome: white carries every emphasis, glow, and highlight */
+  --color-accent: #ffffff;
+  --color-accent-soft: #ffffff14;
+  --color-accent-strong: #e4e4e2;
+  --color-glow: #ffffff1f;
+
+  /* Semantic — desaturated so status reads without breaking the monochrome palette */
+  --color-success: #9fb8a8;
+  --color-warning: #c9bd94;
+  --color-error: #bd9d97;
+
+  /* Motion */
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 180ms;
+  --duration-base: 420ms;
+  --duration-slow: 900ms;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-elevated: var(--color-elevated);
+  --color-elevated-2: var(--color-elevated-2);
+  --color-primary: var(--color-text-primary);
+  --color-secondary: var(--color-text-secondary);
+  --color-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-accent-strong: var(--color-accent-strong);
+  --color-glow: var(--color-glow);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-background);
+}
+
+/* Visible, deliberate focus states everywhere */
+:focus-visible {
+  outline: 1.5px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Scrollbar — quiet, editorial */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--color-background);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Prevent any accidental horizontal scroll from atmospheric/decorative layers */
+html,
+body {
+  overflow-x: clip;
+  max-width: 100%;
+}
