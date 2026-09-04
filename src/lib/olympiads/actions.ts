@@ -140,7 +140,6 @@ export async function updateOlympiadAction(
       eligibilityGradeLevel: v.eligibilityGradeLevel || null,
       eligibilityInstitution: v.eligibilityInstitution || null,
       eligibilityAcademicLevel: v.eligibilityAcademicLevel || null,
-      participationMode: v.participationMode ?? "individual",
     },
   });
 

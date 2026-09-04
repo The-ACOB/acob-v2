@@ -51,9 +51,6 @@ model User {
   olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
   attempts                 Attempt[]                @relation("AttemptUser")
   olympiadRegistrations    OlympiadRegistration[]
-  teamsOwned               Team[]                 @relation("TeamCaptain")
-  teamMemberships          TeamMember[]
-  teamInvitations           TeamInvitation[]       @relation("TeamInvitee")
   certificatesReceived     Certificate[]            @relation("CertificateRecipient")
   certificatesIssued       Certificate[]            @relation("CertificateIssuer")
   certificatesRevoked      Certificate[]            @relation("CertificateRevoker")
@@ -63,6 +60,7 @@ model User {
   contentAuthored          Content[]                @relation("ContentAuthor")
   careerListingsCreated    CareerListing[]          @relation("CareerListingCreator")
   popupsCreated            Popup[]                  @relation("PopupCreator")
+  organisationTeamMembers  OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
 
   @@map("users")
 }
@@ -450,7 +448,6 @@ model Olympiad {
   eligibilityGradeLevel  String?        @map("eligibility_grade_level")
   eligibilityInstitution String?        @map("eligibility_institution")
   eligibilityAcademicLevel String?      @map("eligibility_academic_level")
-  participationMode       String         @default("individual") @map("participation_mode")
   resultsPublishedAt     DateTime?      @map("results_published_at")
   createdBy              String         @map("created_by")
   createdAt              DateTime       @default(now()) @map("created_at")
@@ -460,7 +457,6 @@ model Olympiad {
   questions Question[]
   attempts  Attempt[]
   registrations OlympiadRegistration[]
-  teamRegistrations TeamRegistration[]
   certificates Certificate[]
 
   @@map("olympiads")
@@ -530,8 +526,6 @@ model Attempt {
 
   olympiad Olympiad        @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
   user     User            @relation("AttemptUser", fields: [userId], references: [id], onDelete: Cascade)
-  team     Team?           @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  teamId   String?         @map("team_id")
   answers  AttemptAnswer[]
 
   @@unique([olympiadId, userId])
@@ -552,64 +546,24 @@ model OlympiadRegistration {
   @@map("olympiad_registrations")
 }
 
-model Team {
+model OrganisationTeamMember {
   id          String   @id @default(uuid())
   name        String
-  captainId   String   @map("captain_id")
-  maxMembers  Int      @default(4) @map("max_members")
+  title       String
+  bio         String?
+  imageUrl    String?  @map("image_url")
+  displayOrder Int     @default(0) @map("display_order")
+  active      Boolean  @default(true)
+  linkedinUrl String?  @map("linkedin_url")
+  websiteUrl  String?  @map("website_url")
+  createdBy   String   @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  captain User @relation("TeamCaptain", fields: [captainId], references: [id], onDelete: Cascade)
-  members TeamMember[]
-  invitations TeamInvitation[]
-    registrations TeamRegistration[]
-    attempts Attempt[]
+  creator User @relation("OrganisationTeamMemberCreator", fields: [createdBy], references: [id], onDelete: Cascade)
 
-  @@map("teams")
-}
-
-model TeamMember {
-  id       String   @id @default(uuid())
-  teamId   String   @map("team_id")
-  userId   String   @map("user_id")
-  status   String   @default("active")
-  joinedAt DateTime @default(now()) @map("joined_at")
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, userId])
-  @@index([userId])
-  @@map("team_members")
-}
-
-model TeamInvitation {
-  id        String   @id @default(uuid())
-  teamId    String   @map("team_id")
-  inviteeId String   @map("invitee_id")
-  status    String   @default("pending")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  invitee User @relation("TeamInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, inviteeId])
-  @@index([inviteeId, status])
-  @@map("team_invitations")
-}
-
-model TeamRegistration {
-  id         String   @id @default(uuid())
-  olympiadId String   @map("olympiad_id")
-  teamId     String   @map("team_id")
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  olympiad Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  @@unique([olympiadId, teamId])
-  @@map("team_registrations")
+  @@index([active, displayOrder])
+  @@map("organisation_team_members")
 }
 
 /**

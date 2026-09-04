@@ -127,22 +127,6 @@ export async function startAttemptAction(
     };
   }
 
-  let teamId: string | undefined;
-  if (olympiad.participationMode === "team") {
-    const teamRegistration = await db.teamRegistration.findFirst({
-      where: {
-        olympiadId,
-        team: { members: { some: { userId: session.id, status: "active" } } },
-      },
-    });
-    if (!teamRegistration)
-      return {
-        ok: false,
-        error: "Join a registered team before starting this Olympiad.",
-      };
-    teamId = teamRegistration.teamId;
-  }
-
   const existing = await db.attempt.findUnique({
     where: { olympiadId_userId: { olympiadId, userId: session.id } },
   });
@@ -179,7 +163,7 @@ export async function startAttemptAction(
   const startedAt = new Date();
   const deadlineAt = computeDeadline(olympiad, startedAt);
   const attempt = await db.attempt.create({
-    data: { olympiadId, userId: session.id, teamId, deadlineAt },
+    data: { olympiadId, userId: session.id, deadlineAt },
   });
 
   return { ok: true, data: { attemptId: attempt.id } };

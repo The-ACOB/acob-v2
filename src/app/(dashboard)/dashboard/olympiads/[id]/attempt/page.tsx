@@ -29,21 +29,9 @@ export default async function AttemptPage({
   if (!olympiad) notFound();
 
   if (!attemptId) {
-    const registration =
-      olympiad.participationMode === "team"
-        ? await db.teamRegistration.findFirst({
-            where: {
-              olympiadId: id,
-              team: {
-                members: { some: { userId: session.id, status: "active" } },
-              },
-            },
-          })
-        : await db.olympiadRegistration.findUnique({
-            where: {
-              olympiadId_userId: { olympiadId: id, userId: session.id },
-            },
-          });
+    const registration = await db.olympiadRegistration.findUnique({
+      where: { olympiadId_userId: { olympiadId: id, userId: session.id } },
+    });
     const eligible = await isEligibleForOlympiad(olympiad, session.id);
     if (!registration || !eligible)
       return (

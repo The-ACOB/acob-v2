@@ -120,7 +120,14 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
       label: "People",
-      items: [{ href: "/dashboard/teams", label: "Teams", icon: Users }],
+      items: [
+        {
+          href: "/dashboard/organisation-team",
+          label: "Organisation Team",
+          icon: Users,
+        },
+        { href: "/dashboard/participants", label: "Participants", icon: Users },
+      ],
     },
     EXECUTIVE_SECTION,
     ...COMMAND_CENTER_SECTIONS,
@@ -306,7 +313,6 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     {
       label: "Account",
       items: [
-        { href: "/dashboard/teams", label: "My Teams", icon: Users },
         { href: "/dashboard/messages", label: "Messages", icon: MessageCircle },
       ],
     },

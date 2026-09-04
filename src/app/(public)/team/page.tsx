@@ -7,7 +7,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MetadataLabel } from "@/components/ui/MetadataLabel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHero } from "@/components/sections/PageHero";
-import { TEAM_MEMBERS } from "@/lib/team/members";
+import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/team" },
@@ -26,7 +26,11 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export default function TeamPage() {
+export default async function TeamPage() {
+  const members = await db.organisationTeamMember.findMany({
+    where: { active: true },
+    orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+  });
   return (
     <>
       <PageHero
@@ -42,26 +46,22 @@ export default function TeamPage() {
               A small team with a large curiosity about how people learn.
             </h2>
           </Reveal>
-          {TEAM_MEMBERS.length === 0 ? (
+          {members.length === 0 ? (
             <Reveal weight="minor" order={1} className="mt-12">
               <EmptyState
-                title="The team directory is being assembled"
-                description="Approved team profiles will appear here as the ACOB team directory takes shape."
+                title="The organisation team is coming soon"
+                description="ACOB's organisation team will appear here as members are published."
               />
             </Reveal>
           ) : (
             <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {TEAM_MEMBERS.map((member, index) => (
-                <Reveal
-                  key={`${member.name}-${member.role}`}
-                  weight="standard"
-                  order={index + 1}
-                >
+              {members.map((member, index) => (
+                <Reveal key={member.id} weight="standard" order={index + 1}>
                   <article className="group overflow-hidden rounded-lg border border-border bg-elevated transition-transform duration-300 motion-safe:hover:-translate-y-1">
                     <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-border bg-elevated-2">
-                      {member.image ? (
+                      {member.imageUrl ? (
                         <Image
-                          src={member.image}
+                          src={member.imageUrl}
                           alt={member.name}
                           fill
                           sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
@@ -81,27 +81,39 @@ export default function TeamPage() {
                         {member.name}
                       </h3>
                       <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">
-                        {member.role}
+                        {member.title}
                       </p>
                       {member.bio ? (
                         <p className="mt-4 text-sm leading-relaxed text-secondary">
                           {member.bio}
                         </p>
                       ) : null}
-                      {member.links?.length ? (
+                      {member.linkedinUrl || member.websiteUrl ? (
                         <div className="mt-5 flex flex-wrap gap-4">
-                          {member.links.map((link) => (
-                            <a
-                              key={link.href}
-                              href={link.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-secondary transition-colors hover:text-primary"
-                            >
-                              {link.label}
-                              <ArrowUpRight className="h-3 w-3" />
-                            </a>
-                          ))}
+                          {[
+                            member.linkedinUrl
+                              ? { href: member.linkedinUrl, label: "LinkedIn" }
+                              : null,
+                            member.websiteUrl
+                              ? { href: member.websiteUrl, label: "Website" }
+                              : null,
+                          ]
+                            .filter(
+                              (link): link is { href: string; label: string } =>
+                                Boolean(link),
+                            )
+                            .map((link) => (
+                              <a
+                                key={link.href}
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-secondary transition-colors hover:text-primary"
+                              >
+                                {link.label}
+                                <ArrowUpRight className="h-3 w-3" />
+                              </a>
+                            ))}
                         </div>
                       ) : null}
                     </div>
