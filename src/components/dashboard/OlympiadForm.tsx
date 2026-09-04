@@ -23,7 +23,7 @@ export function OlympiadForm({
   defaultValues,
   onSubmit,
   submitLabel = "Save",
-  redirectOnSuccess,
+  redirectPath,
 }: {
   defaultValues?: Omit<Partial<Values>, "startAt" | "endAt"> & {
     startAt?: Date | null;
@@ -33,7 +33,7 @@ export function OlympiadForm({
     values: Values,
   ) => Promise<ActionResult<{ id: string }> | ActionResult>;
   submitLabel?: string;
-  redirectOnSuccess?: (id?: string) => string;
+  redirectPath?: string;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -69,7 +69,7 @@ export function OlympiadForm({
     toast("success", "Saved");
     const id = "data" in result ? result.data?.id : undefined;
 
-    if (redirectOnSuccess) router.push(redirectOnSuccess(id));
+    if (redirectPath) router.push(redirectPath.replace(":id", id ?? ""));
     else router.refresh();
   };
 

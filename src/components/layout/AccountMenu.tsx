@@ -25,7 +25,8 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -55,11 +56,15 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
         role="menu"
         className={cn(
           "absolute right-0 top-11 w-56 origin-top-right rounded-lg border border-border-strong bg-elevated py-2 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] transition-all duration-150",
-          open ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
+          open
+            ? "pointer-events-auto scale-100 opacity-100"
+            : "pointer-events-none scale-95 opacity-0",
         )}
       >
         <div className="border-b border-border px-4 py-3">
-          <p className="truncate text-sm text-primary">{user.fullName ?? "Account"}</p>
+          <p className="truncate text-sm text-primary">
+            {user.fullName ?? "Account"}
+          </p>
           <p className="truncate text-xs text-muted">{user.email}</p>
         </div>
         <Link
@@ -68,6 +73,13 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
           className="block px-4 py-2.5 text-sm text-secondary transition-colors hover:bg-elevated-2 hover:text-primary"
         >
           Dashboard
+        </Link>
+        <Link
+          href="/dashboard/profile"
+          role="menuitem"
+          className="block px-4 py-2.5 text-sm text-secondary transition-colors hover:bg-elevated-2 hover:text-primary"
+        >
+          My profile
         </Link>
         <form action={logoutAction}>
           <button

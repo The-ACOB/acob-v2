@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
-import { requirePermission, AuthError } from "@/lib/authz/guards";
+import { requireAuth, requirePermission, AuthError } from "@/lib/authz/guards";
 import { createInvitedUser } from "@/lib/auth/invite";
 import { generateSecureToken } from "@/lib/auth/tokens";
 import { sendEmail, passwordResetEmailHtml } from "@/lib/email";
@@ -10,11 +10,16 @@ import { getSiteUrl } from "@/lib/env";
 import { recordAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
-import { registerParticipantSchema } from "./validation";
+import {
+  registerParticipantSchema,
+  updateParticipantProfileSchema,
+} from "./validation";
 import type { ActionResult } from "@/lib/auth/actions";
 
 /** HR/PR registers a new participant account directly. */
-export async function hrRegisterParticipantAction(input: unknown): Promise<ActionResult> {
+export async function hrRegisterParticipantAction(
+  input: unknown,
+): Promise<ActionResult> {
   let actor;
   try {
     actor = await requirePermission("participant:create");
@@ -25,15 +30,26 @@ export async function hrRegisterParticipantAction(input: unknown): Promise<Actio
 
   const parsed = registerParticipantSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const v = parsed.data;
 
-  const invited = await createInvitedUser({ email: v.email, fullName: v.fullName, roleKey: "PARTICIPANT" });
+  const invited = await createInvitedUser({
+    email: v.email,
+    fullName: v.fullName,
+    roleKey: "PARTICIPANT",
+  });
   if (!invited.ok) return invited;
 
   await db.participant.create({
-    data: { userId: invited.userId, institution: v.institution || null, gradeLevel: v.gradeLevel || null },
+    data: {
+      userId: invited.userId,
+      institution: v.institution || null,
+      gradeLevel: v.gradeLevel || null,
+    },
   });
 
   await recordAudit({
@@ -48,6 +64,53 @@ export async function hrRegisterParticipantAction(input: unknown): Promise<Actio
   return { ok: true };
 }
 
+export async function updateParticipantProfileAction(
+  userId: string,
+  input: unknown,
+): Promise<ActionResult> {
+  let actor;
+  try {
+    actor = await requireAuth();
+    if (actor.id !== userId) await requirePermission("participant:update");
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
+  const parsed = updateParticipantProfileSchema.safeParse(input);
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
+
+  const participant = await db.participant.findUnique({ where: { userId } });
+  if (!participant)
+    return { ok: false, error: "Participant profile not found." };
+
+  const v = parsed.data;
+  await db.$transaction([
+    db.profile.update({ where: { userId }, data: { fullName: v.fullName } }),
+    db.participant.update({
+      where: { userId },
+      data: {
+        institution: v.institution || null,
+        gradeLevel: v.gradeLevel || null,
+      },
+    }),
+  ]);
+
+  await recordAudit({
+    actorId: actor.id,
+    action: "participant:profile_updated",
+    targetType: "user",
+    targetId: userId,
+  });
+  revalidatePath(`/dashboard/participants/${userId}`);
+  revalidatePath("/dashboard/participants");
+  return { ok: true };
+}
+
 /**
  * HR/PR *requests* an ambassador promotion — it does not grant the
  * role. The request sits pending until an executive (CEO/COO/CTO)
@@ -55,7 +118,9 @@ export async function hrRegisterParticipantAction(input: unknown): Promise<Actio
  * actually get assigned (see lib/approvals/effects.ts). This is the
  * "cannot bypass executive approval" boundary, enforced structurally.
  */
-export async function requestAmbassadorPromotionAction(userId: string): Promise<ActionResult> {
+export async function requestAmbassadorPromotionAction(
+  userId: string,
+): Promise<ActionResult> {
   let actor;
   try {
     actor = await requirePermission("participant:update");
@@ -66,6 +131,36 @@ export async function requestAmbassadorPromotionAction(userId: string): Promise<
 
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) return { ok: false, error: "User not found." };
+
+  if (actor.roleKeys.includes("CEO")) {
+    const ambassadorRole = await db.role.findUnique({
+      where: { key: "AMBASSADOR" },
+    });
+    if (!ambassadorRole)
+      return { ok: false, error: "Ambassador role is not configured." };
+
+    await db.userRole.upsert({
+      where: { userId_roleId: { userId, roleId: ambassadorRole.id } },
+      create: { userId, roleId: ambassadorRole.id, assignedBy: actor.id },
+      update: { assignedBy: actor.id, assignedAt: new Date() },
+    });
+    await recordAudit({
+      actorId: actor.id,
+      action: "role:assigned",
+      targetType: "user",
+      targetId: userId,
+      metadata: { role: "AMBASSADOR", direct: true },
+    });
+    await notify({
+      userId,
+      type: "approval:completed",
+      title: "You've been promoted to Ambassador",
+      body: "Your ambassador access is now active.",
+    });
+    revalidatePath("/dashboard/participants");
+    revalidatePath(`/dashboard/participants/${userId}`);
+    return { ok: true };
+  }
 
   const request = await db.approvalRequest.create({
     data: {
@@ -94,8 +189,8 @@ export async function requestAmbassadorPromotionAction(userId: string): Promise<
         title: "Ambassador promotion requested",
         body: "A promotion request is awaiting your review.",
         metadata: { requestId: request.id },
-      })
-    )
+      }),
+    ),
   );
 
   revalidatePath("/dashboard/participants");
@@ -103,7 +198,9 @@ export async function requestAmbassadorPromotionAction(userId: string): Promise<
 }
 
 /** HR/PR triggers a password reset email on a participant's behalf — never reveals or sets the password itself. */
-export async function staffTriggerPasswordResetAction(userId: string): Promise<ActionResult> {
+export async function staffTriggerPasswordResetAction(
+  userId: string,
+): Promise<ActionResult> {
   let actor;
   try {
     actor = await requirePermission("user:update");
@@ -117,7 +214,11 @@ export async function staffTriggerPasswordResetAction(userId: string): Promise<A
 
   const { token, tokenHash } = generateSecureToken();
   await db.passwordResetToken.create({
-    data: { userId: user.id, tokenHash, expiresAt: new Date(Date.now() + 1000 * 60 * 60) },
+    data: {
+      userId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+    },
   });
 
   const siteUrl = getSiteUrl();
@@ -127,8 +228,15 @@ export async function staffTriggerPasswordResetAction(userId: string): Promise<A
     html: passwordResetEmailHtml(`${siteUrl}/reset-password?token=${token}`),
   });
   if (!delivery.delivered) {
-    console.error("[auth] Staff-triggered password reset email could not be delivered.", { userId: user.id });
-    return { ok: false, error: "The password reset email could not be sent. Please try again shortly." };
+    console.error(
+      "[auth] Staff-triggered password reset email could not be delivered.",
+      { userId: user.id },
+    );
+    return {
+      ok: false,
+      error:
+        "The password reset email could not be sent. Please try again shortly.",
+    };
   }
 
   await recordAudit({
@@ -148,7 +256,9 @@ export async function staffTriggerPasswordResetAction(userId: string): Promise<A
  * "an ambassador can only see participants they personally registered"
  * is checked against everywhere else in the app.
  */
-export async function ambassadorRegisterParticipantAction(input: unknown): Promise<ActionResult> {
+export async function ambassadorRegisterParticipantAction(
+  input: unknown,
+): Promise<ActionResult> {
   let actor;
   try {
     actor = await requirePermission("participant:create");
@@ -157,20 +267,34 @@ export async function ambassadorRegisterParticipantAction(input: unknown): Promi
     throw err;
   }
 
-  const ambassador = await db.ambassador.findUnique({ where: { userId: actor.id } });
-  if (!ambassador) return { ok: false, error: "Your ambassador profile isn't set up yet." };
+  const ambassador = await db.ambassador.findUnique({
+    where: { userId: actor.id },
+  });
+  if (!ambassador)
+    return { ok: false, error: "Your ambassador profile isn't set up yet." };
 
   const parsed = registerParticipantSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const v = parsed.data;
 
-  const invited = await createInvitedUser({ email: v.email, fullName: v.fullName, roleKey: "PARTICIPANT" });
+  const invited = await createInvitedUser({
+    email: v.email,
+    fullName: v.fullName,
+    roleKey: "PARTICIPANT",
+  });
   if (!invited.ok) return invited;
 
   const participant = await db.participant.create({
-    data: { userId: invited.userId, institution: v.institution || null, gradeLevel: v.gradeLevel || null },
+    data: {
+      userId: invited.userId,
+      institution: v.institution || null,
+      gradeLevel: v.gradeLevel || null,
+    },
   });
 
   await db.ambassadorReferral.create({

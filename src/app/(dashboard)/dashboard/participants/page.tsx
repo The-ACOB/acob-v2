@@ -34,31 +34,53 @@ export default async function ParticipantsPage({
 
   const { q } = await searchParams;
 
-  const rawParticipants: { id: string; userId: string; institution: string | null; gradeLevel: string | null }[] =
-    await db.participant.findMany({ take: 100 });
+  const query = q?.trim();
+  const participants = await db.participant.findMany({
+    where: query
+      ? {
+          user: {
+            OR: [
+              { email: { contains: query, mode: "insensitive" } },
+              {
+                profile: { fullName: { contains: query, mode: "insensitive" } },
+              },
+            ],
+          },
+        }
+      : undefined,
+    take: 100,
+    include: { user: { include: { profile: true } } },
+  });
 
-  const rows: Row[] = [];
-  for (const p of rawParticipants) {
-    const user = await db.user.findUnique({ where: { id: p.userId } });
-    if (!user) continue;
-    const profile: { fullName: string } | null = await db.profile.findUnique({ where: { userId: p.userId } });
-    const fullName = profile?.fullName ?? null;
-    if (q && !user.email.toLowerCase().includes(q.toLowerCase()) && !(fullName ?? "").toLowerCase().includes(q.toLowerCase())) {
-      continue;
-    }
-    rows.push({ id: p.id, userId: p.userId, institution: p.institution, gradeLevel: p.gradeLevel, email: user.email, fullName });
-  }
+  const rows: Row[] = participants.map((p) => ({
+    id: p.id,
+    userId: p.userId,
+    institution: p.institution,
+    gradeLevel: p.gradeLevel,
+    email: p.user.email,
+    fullName: p.user.profile?.fullName ?? null,
+  }));
 
   const columns: Column<Row>[] = [
-    { header: "Name", cell: (r) => <span className="text-primary">{r.fullName ?? "—"}</span> },
+    {
+      header: "Name",
+      cell: (r) => <span className="text-primary">{r.fullName ?? "—"}</span>,
+    },
     { header: "Email", cell: (r) => r.email },
     { header: "Institution", cell: (r) => r.institution ?? "—" },
-    { header: "Grade", cell: (r) => (r.gradeLevel ? <Badge tone="neutral">{r.gradeLevel}</Badge> : "—") },
+    {
+      header: "Grade",
+      cell: (r) =>
+        r.gradeLevel ? <Badge tone="neutral">{r.gradeLevel}</Badge> : "—",
+    },
     {
       header: "",
-        hideLabel: true,
+      hideLabel: true,
       cell: (r) => (
-        <Link href={`/dashboard/participants/${r.userId}`} className="text-xs text-accent underline underline-offset-4">
+        <Link
+          href={`/dashboard/participants/${r.userId}`}
+          className="text-xs text-accent underline underline-offset-4"
+        >
           View
         </Link>
       ),
@@ -70,7 +92,10 @@ export default async function ParticipantsPage({
       <DashboardPageHeader
         title="Participants"
         description="Search, register, and manage participant accounts."
-        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Participants" }]}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Participants" },
+        ]}
       />
 
       <div className="mb-10 max-w-xl">
@@ -84,12 +109,20 @@ export default async function ParticipantsPage({
           placeholder="Search by name or email…"
           className="w-full max-w-sm rounded-md border border-border-strong bg-elevated px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-accent focus:outline-none"
         />
-        <button type="submit" className="rounded-md border border-border-strong px-4 py-2 text-xs text-primary transition-colors hover:border-accent">
+        <button
+          type="submit"
+          className="rounded-md border border-border-strong px-4 py-2 text-xs text-primary transition-colors hover:border-accent"
+        >
           Search
         </button>
       </form>
 
-      <DataTable columns={columns} rows={rows} getRowId={(r) => r.id} emptyTitle="No participants found" />
+      <DataTable
+        columns={columns}
+        rows={rows}
+        getRowId={(r) => r.id}
+        emptyTitle="No participants found"
+      />
     </div>
   );
 }

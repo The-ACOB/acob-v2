@@ -13,16 +13,26 @@ import type { z } from "zod";
 
 type Values = z.infer<typeof createLetterSchema>;
 
-export function CreateLetterForm() {
+type ParticipantOption = { id: string; name: string; email: string };
+
+export function CreateLetterForm({
+  participants,
+}: {
+  participants: ParticipantOption[];
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({ resolver: zodResolver(createLetterSchema), defaultValues: { title: "Letter of Recommendation" } });
+  } = useForm<Values>({
+    resolver: zodResolver(createLetterSchema),
+    defaultValues: { title: "Letter of Recommendation" },
+  });
 
   const submit = async (values: Values) => {
     setServerError(null);
@@ -37,23 +47,77 @@ export function CreateLetterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-5 rounded-lg border border-border bg-elevated p-5">
-      <FormField label="Recipient email" htmlFor="recipientEmail" error={errors.recipientEmail?.message}>
-        <input id="recipientEmail" type="email" className={fieldClasses} {...register("recipientEmail")} />
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-5 rounded-lg border border-border bg-elevated p-5"
+    >
+      <FormField
+        label="Participant"
+        htmlFor="recipientUserId"
+        error={
+          errors.recipientUserId?.message ?? errors.recipientEmail?.message
+        }
+      >
+        <select
+          id="recipientUserId"
+          className={fieldClasses}
+          defaultValue=""
+          {...register("recipientUserId", {
+            onChange: (event) => {
+              const participant = participants.find(
+                (option) => option.id === event.target.value,
+              );
+              setValue("recipientEmail", participant?.email ?? "", {
+                shouldValidate: true,
+              });
+            },
+          })}
+        >
+          <option value="">Select a participant</option>
+          {participants.map((participant) => (
+            <option key={participant.id} value={participant.id}>
+              {participant.name} — {participant.email}
+            </option>
+          ))}
+        </select>
       </FormField>
       <FormField label="Title" htmlFor="title" error={errors.title?.message}>
         <input id="title" className={fieldClasses} {...register("title")} />
       </FormField>
-      <FormField label="Letter body (optional)" htmlFor="body" error={errors.body?.message}>
-        <textarea id="body" rows={5} className={`${fieldClasses} resize-none`} {...register("body")} />
+      <FormField
+        label="Letter body (optional)"
+        htmlFor="body"
+        error={errors.body?.message}
+      >
+        <textarea
+          id="body"
+          rows={5}
+          className={`${fieldClasses} resize-none`}
+          {...register("body")}
+        />
       </FormField>
-      <FormField label="File URL (optional)" htmlFor="fileUrl" error={errors.fileUrl?.message}>
-        <input id="fileUrl" className={fieldClasses} placeholder="https://…" {...register("fileUrl")} />
+      <FormField
+        label="File URL (optional)"
+        htmlFor="fileUrl"
+        error={errors.fileUrl?.message}
+      >
+        <input
+          id="fileUrl"
+          className={fieldClasses}
+          placeholder="https://…"
+          {...register("fileUrl")}
+        />
       </FormField>
 
       {serverError ? <p className="text-xs text-error">{serverError}</p> : null}
 
-      <Button type="submit" variant="primary" disabled={isSubmitting} className="w-fit text-xs">
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={isSubmitting}
+        className="w-fit text-xs"
+      >
         {isSubmitting ? "Saving…" : "Save as draft"}
       </Button>
     </form>

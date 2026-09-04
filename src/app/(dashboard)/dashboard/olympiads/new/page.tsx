@@ -26,7 +26,11 @@ export default async function NewOlympiadPage() {
         ]}
       />
       <div className="max-w-2xl">
-        <OlympiadForm onSubmit={createOlympiadAction} submitLabel="Create draft" redirectOnSuccess={(id) => `/dashboard/olympiads/${id}`} />
+        <OlympiadForm
+          onSubmit={createOlympiadAction}
+          submitLabel="Create draft"
+          redirectPath="/dashboard/olympiads/:id"
+        />
       </div>
     </div>
   );

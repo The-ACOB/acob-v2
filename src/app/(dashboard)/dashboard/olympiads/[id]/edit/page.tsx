@@ -60,7 +60,7 @@ export default async function EditOlympiadPage({
           }}
           onSubmit={submit}
           submitLabel="Save changes"
-          redirectOnSuccess={() => `/dashboard/olympiads/${id}`}
+          redirectPath={`/dashboard/olympiads/${id}`}
         />
       </div>
     </div>

@@ -19,6 +19,8 @@ type LetterRow = {
   recipient: { email: string; profile: { fullName: string } | null } | null;
 };
 
+type ParticipantOption = { id: string; name: string; email: string };
+
 const STATUS_TONE = {
   draft: "neutral",
   published: "success",
@@ -32,17 +34,32 @@ export default async function RecommendationLettersPage() {
   const canCreate = await hasPermission("recommendation_letter:create");
 
   if (canCreate) {
-    const letters: LetterRow[] = await db.recommendationLetter.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: {
-        recipient: {
-          include: {
-            profile: true,
+    const [letters, participants] = await Promise.all([
+      db.recommendationLetter.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: {
+          recipient: {
+            include: {
+              profile: true,
+            },
           },
         },
-      },
-    });
+      }),
+      db.participant.findMany({
+        take: 200,
+        orderBy: { createdAt: "desc" },
+        include: { user: { include: { profile: true } } },
+      }),
+    ]);
+
+    const participantOptions: ParticipantOption[] = participants.map(
+      (participant) => ({
+        id: participant.userId,
+        name: participant.user.profile?.fullName ?? "Unnamed participant",
+        email: participant.user.email,
+      }),
+    );
 
     const columns: Column<LetterRow>[] = [
       {
@@ -82,7 +99,7 @@ export default async function RecommendationLettersPage() {
         />
 
         <div className="mb-10 max-w-xl">
-          <CreateLetterForm />
+          <CreateLetterForm participants={participantOptions} />
         </div>
 
         <DataTable

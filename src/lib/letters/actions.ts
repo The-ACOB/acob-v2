@@ -14,7 +14,9 @@ import type { ActionResult } from "@/lib/auth/actions";
  * action: a letter is created, published, or revoked, never edited
  * in place, and participants have no write path to it at all.
  */
-export async function createLetterAction(input: unknown): Promise<ActionResult<{ id: string }>> {
+export async function createLetterAction(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
   let actor;
   try {
     actor = await requirePermission("recommendation_letter:create");
@@ -25,15 +27,29 @@ export async function createLetterAction(input: unknown): Promise<ActionResult<{
 
   const parsed = createLetterSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const v = parsed.data;
 
-  const recipient = await db.user.findUnique({ where: { email: v.recipientEmail } });
-  if (!recipient) return { ok: false, error: "No account found with that email." };
+  const recipient = v.recipientUserId
+    ? await db.user.findFirst({
+        where: { id: v.recipientUserId, participant: { isNot: null } },
+      })
+    : await db.user.findUnique({ where: { email: v.recipientEmail } });
+  if (!recipient)
+    return { ok: false, error: "No account found with that email." };
 
   const letter = await db.recommendationLetter.create({
-    data: { userId: recipient.id, title: v.title, body: v.body || null, fileUrl: v.fileUrl || null, issuedBy: actor.id },
+    data: {
+      userId: recipient.id,
+      title: v.title,
+      body: v.body || null,
+      fileUrl: v.fileUrl || null,
+      issuedBy: actor.id,
+    },
   });
 
   await recordAudit({
@@ -59,9 +75,13 @@ export async function publishLetterAction(id: string): Promise<ActionResult> {
 
   const letter = await db.recommendationLetter.findUnique({ where: { id } });
   if (!letter) return { ok: false, error: "Letter not found." };
-  if (letter.status === "published") return { ok: false, error: "Already published." };
+  if (letter.status === "published")
+    return { ok: false, error: "Already published." };
 
-  await db.recommendationLetter.update({ where: { id }, data: { status: "published", publishedAt: new Date() } });
+  await db.recommendationLetter.update({
+    where: { id },
+    data: { status: "published", publishedAt: new Date() },
+  });
 
   await recordAudit({
     actorId: actor.id,
