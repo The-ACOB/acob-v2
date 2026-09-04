@@ -8,6 +8,12 @@ export const registerParticipantSchema = z.object({
 });
 
 export const updateParticipantProfileSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address.")
+    .optional(),
   fullName: z.string().trim().min(2, "Enter the participant's full name."),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   gender: z.string().trim().max(50).optional().or(z.literal("")),

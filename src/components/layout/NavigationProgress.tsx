@@ -25,7 +25,12 @@ export function NavigationProgress() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-x-0 top-0 z-[100] h-0.5 origin-left bg-accent transition-transform duration-200 ${active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0"}`}
+      className={`pointer-events-none fixed inset-x-0 top-0 z-[9999] h-1 origin-left overflow-hidden bg-accent transition-opacity duration-150 ${active ? "opacity-100" : "opacity-0"}`}
+      style={
+        active
+          ? { animation: "acob-navigation-progress 900ms ease-in-out infinite" }
+          : undefined
+      }
     />
   );
 }

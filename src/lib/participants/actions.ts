@@ -5,7 +5,11 @@ import { db } from "@/lib/db/client";
 import { requireAuth, requirePermission, AuthError } from "@/lib/authz/guards";
 import { createInvitedUser } from "@/lib/auth/invite";
 import { generateSecureToken } from "@/lib/auth/tokens";
-import { sendEmail, passwordResetEmailHtml } from "@/lib/email";
+import {
+  sendEmail,
+  passwordResetEmailHtml,
+  verificationEmailHtml,
+} from "@/lib/email";
 import { getSiteUrl } from "@/lib/env";
 import { recordAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
@@ -72,11 +76,6 @@ export async function updateParticipantProfileAction(
   try {
     actor = await requireAuth();
     if (actor.id !== userId) await requirePermission("participant:update");
-    if (actor.id === userId && !actor.roleKeys.includes("PARTICIPANT"))
-      return {
-        ok: false,
-        error: "Only participant accounts can edit participant profile fields.",
-      };
   } catch (err) {
     if (err instanceof AuthError) return { ok: false, error: err.message };
     throw err;
@@ -90,33 +89,77 @@ export async function updateParticipantProfileAction(
     };
 
   const v = parsed.data;
+  if (v.email && v.email !== actor.email) {
+    if (actor.id !== userId)
+      return { ok: false, error: "You cannot change another user's email." };
+    const existingEmail = await db.user.findUnique({
+      where: { email: v.email },
+    });
+    if (existingEmail && existingEmail.id !== userId)
+      return { ok: false, error: "That email address is already in use." };
+    const { token, tokenHash } = generateSecureToken();
+    await db.$transaction([
+      db.user.update({
+        where: { id: userId },
+        data: { pendingEmail: v.email },
+      }),
+      db.emailVerificationToken.updateMany({
+        where: { userId, usedAt: null },
+        data: { usedAt: new Date() },
+      }),
+      db.emailVerificationToken.create({
+        data: {
+          userId,
+          tokenHash,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+        },
+      }),
+    ]);
+    const delivery = await sendEmail({
+      to: v.email,
+      subject: "Confirm your new ACOB email",
+      html: verificationEmailHtml(
+        `${getSiteUrl()}/verify-email?token=${token}`,
+      ),
+    });
+    if (!delivery.delivered)
+      return {
+        ok: false,
+        error:
+          "We couldn't send the email confirmation. Your current email remains active.",
+      };
+  }
   await db.$transaction([
     db.profile.update({
       where: { userId },
       data: { fullName: v.fullName, phone: v.phone || null },
     }),
-    db.participant.upsert({
-      where: { userId },
-      create: {
-        userId,
-        gender: v.gender || null,
-        institution: v.institution || null,
-        gradeLevel: v.gradeLevel || null,
-        academicLevel: v.academicLevel || null,
-        district: v.district || null,
-        address: v.address || null,
-        city: v.city || null,
-      },
-      update: {
-        gender: v.gender || null,
-        institution: v.institution || null,
-        gradeLevel: v.gradeLevel || null,
-        academicLevel: v.academicLevel || null,
-        district: v.district || null,
-        address: v.address || null,
-        city: v.city || null,
-      },
-    }),
+    ...(actor.roleKeys.includes("PARTICIPANT") || actor.id !== userId
+      ? [
+          db.participant.upsert({
+            where: { userId },
+            create: {
+              userId,
+              gender: v.gender || null,
+              institution: v.institution || null,
+              gradeLevel: v.gradeLevel || null,
+              academicLevel: v.academicLevel || null,
+              district: v.district || null,
+              address: v.address || null,
+              city: v.city || null,
+            },
+            update: {
+              gender: v.gender || null,
+              institution: v.institution || null,
+              gradeLevel: v.gradeLevel || null,
+              academicLevel: v.academicLevel || null,
+              district: v.district || null,
+              address: v.address || null,
+              city: v.city || null,
+            },
+          }),
+        ]
+      : []),
   ]);
 
   await recordAudit({

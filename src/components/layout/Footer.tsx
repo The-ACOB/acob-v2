@@ -5,7 +5,6 @@ import { NAV_LINKS } from "./nav-links";
 
 const SOCIALS = [
   { label: "Facebook", href: "#" },
-  { label: "Instagram", href: "#" },
   { label: "LinkedIn", href: "#" },
   { label: "YouTube", href: "#" },
 ];
@@ -20,9 +19,9 @@ export function Footer() {
           <div className="flex flex-col gap-5">
             <Logo href="/" />
             <p className="max-w-sm text-sm leading-relaxed text-secondary">
-              Applied Cognitio Olympiad Bangladesh exists to close the gap between
-              knowing an answer and understanding it — cultivating students who
-              ask better questions.
+              Applied Cognitio Olympiad Bangladesh exists to close the gap
+              between knowing an answer and understanding it — cultivating
+              students who ask better questions.
             </p>
           </div>
 
@@ -31,7 +30,11 @@ export function Footer() {
               Navigate
             </span>
             {NAV_LINKS.map((link) => (
-              <TextLink key={link.href} href={link.href} className="w-fit text-sm">
+              <TextLink
+                key={link.href}
+                href={link.href}
+                className="w-fit text-sm"
+              >
                 {link.label}
               </TextLink>
             ))}
@@ -56,7 +59,9 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-4 border-t border-border pt-8 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} Applied Cognitio Olympiad Bangladesh. All rights reserved.</p>
+          <p>
+            © {year} Applied Cognitio Olympiad Bangladesh. All rights reserved.
+          </p>
           <p className="font-mono uppercase tracking-[0.14em]">
             Founded 2025 · Dhaka, Bangladesh
           </p>

@@ -26,33 +26,32 @@ export default async function ProfilePage() {
     <div>
       <DashboardPageHeader
         title="My profile"
-        description="Keep your participant information up to date."
+        description="Keep your account and profile information up to date."
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "My profile" },
         ]}
       />
-      {participant ? (
-        <ParticipantProfileForm
-          userId={session.id}
-          defaultValues={{
-            fullName: profile.fullName,
-            phone: profile.phone ?? "",
-            gender: participant.gender ?? "",
-            institution: participant.institution ?? "",
-            gradeLevel: participant.gradeLevel ?? "",
-            academicLevel: participant.academicLevel ?? "",
-            district: participant.district ?? "",
-            address: participant.address ?? "",
-            city: participant.city ?? "",
-          }}
-        />
-      ) : (
-        <div className="mt-6 rounded-lg border border-border bg-elevated p-6 text-sm text-secondary">
-          <p>Email: {session.email}</p>
-          <p className="mt-2">Roles: {session.roleKeys.join(", ") || "None"}</p>
-        </div>
-      )}
+      <p className="mt-6 text-sm text-secondary">
+        Email: {session.email} (email changes require verification and are not
+        enabled in this account flow)
+      </p>
+      <ParticipantProfileForm
+        userId={session.id}
+        showParticipantFields={Boolean(participant)}
+        defaultValues={{
+          email: session.email,
+          fullName: profile.fullName,
+          phone: profile.phone ?? "",
+          gender: participant?.gender ?? "",
+          institution: participant?.institution ?? "",
+          gradeLevel: participant?.gradeLevel ?? "",
+          academicLevel: participant?.academicLevel ?? "",
+          district: participant?.district ?? "",
+          address: participant?.address ?? "",
+          city: participant?.city ?? "",
+        }}
+      />
     </div>
   );
 }

@@ -16,11 +16,17 @@ export const metadata: Metadata = { title: "Manage Olympiad" };
 
 type AttemptRow = {
   id: string;
+  userId: string;
   status: string;
   score: number | null;
   totalMarks: number | null;
   rank: number | null;
   user: { email: string; profile: { fullName: string } | null } | null;
+};
+
+type RegistrationRow = AttemptRow & {
+  registeredAt: Date;
+  attemptId: string | null;
 };
 
 export default async function OlympiadDetailPage({
@@ -59,10 +65,38 @@ export default async function OlympiadDetailPage({
       },
     },
   });
+  const registrations = await db.olympiadRegistration.findMany({
+    where: { olympiadId: id },
+    orderBy: { registeredAt: "asc" },
+    include: { user: { include: { profile: true } } },
+  });
+  const resultRows: RegistrationRow[] = registrations.map((registration) => {
+    const attempt = attempts.find(
+      (candidate) => candidate.userId === registration.userId,
+    );
+    return {
+      id: attempt?.id ?? registration.id,
+      userId: registration.userId,
+      attemptId: attempt?.id ?? null,
+      registeredAt: registration.registeredAt,
+      status: attempt?.status ?? "registered",
+      score: attempt?.score ?? null,
+      totalMarks: attempt?.totalMarks ?? null,
+      rank: attempt?.rank ?? null,
+      user: registration.user,
+    };
+  });
+  const attemptedCount = resultRows.filter(
+    (row) => row.attemptId !== null,
+  ).length;
+  const submittedCount = resultRows.filter(
+    (row) =>
+      row.status === "submitted" || row.status === "expired_auto_submitted",
+  ).length;
 
   const resultsPublished = Boolean(olympiad.resultsPublishedAt);
 
-  const columns: Column<AttemptRow>[] = [
+  const columns: Column<RegistrationRow>[] = [
     {
       header: "Participant",
       cell: (r) => (
@@ -72,10 +106,22 @@ export default async function OlympiadDetailPage({
       ),
     },
     {
-      header: "Status",
+      header: "Attempt status",
       cell: (r) => (
-        <Badge tone={r.status === "in_progress" ? "warning" : "neutral"}>
-          {r.status.replace(/_/g, " ")}
+        <Badge
+          tone={
+            r.status === "in_progress"
+              ? "warning"
+              : r.status === "registered"
+                ? "neutral"
+                : "success"
+          }
+        >
+          {r.status === "registered"
+            ? "Not started"
+            : r.status === "expired_auto_submitted"
+              ? "Auto-submitted"
+              : r.status.replace(/_/g, " ")}
         </Badge>
       ),
     },
@@ -147,12 +193,12 @@ export default async function OlympiadDetailPage({
             Participants & Results
           </h2>
           <p className="mb-4 text-sm text-secondary">
-            {olympiad._count.registrations} registered participant
-            {olympiad._count.registrations === 1 ? "" : "s"}
+            {registrations.length} registered, {attemptedCount} attempted,{" "}
+            {submittedCount} submitted
           </p>
           <DataTable
             columns={columns}
-            rows={attempts}
+            rows={resultRows}
             getRowId={(r) => r.id}
             emptyTitle="No attempts yet"
             emptyDescription="Once participants start this Olympiad, their attempts will appear here."

@@ -166,6 +166,7 @@ export default async function ParticipantProfilePage({
       </dl>
       <ParticipantProfileForm
         userId={userId}
+        allowEmailEdit={false}
         defaultValues={{
           fullName: profile?.fullName ?? "",
           phone: profile?.phone ?? "",

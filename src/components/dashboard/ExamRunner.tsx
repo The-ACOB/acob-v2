@@ -111,6 +111,20 @@ export function ExamRunner({
     if (submittedRef.current) return;
     submittedRef.current = true;
     setSubmitting(true);
+    for (const item of questions) {
+      const result = await saveAnswerAction(
+        attemptId,
+        item.id,
+        answers[item.id] ?? null,
+        0,
+      );
+      if (!result.ok) {
+        toast("error", "Could not save your latest answer", result.error);
+        submittedRef.current = false;
+        setSubmitting(false);
+        return;
+      }
+    }
     const result = await submitAttemptAction(attemptId);
     setSubmitting(false);
     if (!result.ok) {
@@ -121,7 +135,7 @@ export function ExamRunner({
     toast("success", "Submitted");
     router.push("/dashboard/olympiads");
     router.refresh();
-  }, [attemptId, router, toast]);
+  }, [answers, attemptId, questions, router, toast]);
 
   // Client-side countdown — purely visual. The server independently
   // re-validates the real deadline on every save/submit call, so a

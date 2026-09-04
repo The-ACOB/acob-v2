@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@keyframes acob-navigation-progress {
+  0% {
+    transform: scaleX(0.08);
+  }
+  50% {
+    transform: scaleX(0.62);
+  }
+  100% {
+    transform: scaleX(0.94);
+  }
+}
+
 /* ============================================================
    ACOB DESIGN TOKENS
    Centralized CSS variables. Change values here to re-theme

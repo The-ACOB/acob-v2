@@ -277,10 +277,16 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
       data: { usedAt: now },
     });
     if (result.count !== 1) return false;
-    await tx.user.update({
+    const verifiedUser = await tx.user.update({
       where: { id: record.userId },
       data: { emailVerifiedAt: now },
     });
+    if (verifiedUser.pendingEmail) {
+      await tx.user.update({
+        where: { id: record.userId },
+        data: { email: verifiedUser.pendingEmail, pendingEmail: null },
+      });
+    }
     const participantRole = await tx.role.findUnique({
       where: { key: "PARTICIPANT" },
     });

@@ -23,6 +23,7 @@ enum UserStatus {
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
+  pendingEmail    String?   @unique @map("pending_email")
   passwordHash    String    @map("password_hash")
   status          UserStatus @default(active)
   emailVerifiedAt DateTime? @map("email_verified_at")

@@ -14,9 +14,13 @@ type Values = z.infer<typeof updateParticipantProfileSchema>;
 
 export function ParticipantProfileForm({
   userId,
+  showParticipantFields = true,
+  allowEmailEdit = true,
   defaultValues,
 }: {
   userId: string;
+  showParticipantFields?: boolean;
+  allowEmailEdit?: boolean;
   defaultValues: Values;
 }) {
   const { toast } = useToast();
@@ -54,64 +58,94 @@ export function ParticipantProfileForm({
           {...register("fullName")}
         />
       </FormField>
+      {allowEmailEdit ? (
+        <FormField
+          label="Email address"
+          htmlFor="email"
+          error={errors.email?.message}
+        >
+          <input
+            id="email"
+            type="email"
+            className={fieldClasses}
+            {...register("email")}
+          />
+        </FormField>
+      ) : null}
       <FormField label="Phone" htmlFor="phone" error={errors.phone?.message}>
         <input id="phone" className={fieldClasses} {...register("phone")} />
       </FormField>
-      <FormField label="Gender" htmlFor="gender" error={errors.gender?.message}>
-        <input id="gender" className={fieldClasses} {...register("gender")} />
-      </FormField>
-      <FormField
-        label="School or institution"
-        htmlFor="institution"
-        error={errors.institution?.message}
-      >
-        <input
-          id="institution"
-          className={fieldClasses}
-          {...register("institution")}
-        />
-      </FormField>
-      <FormField
-        label="Academic level"
-        htmlFor="academicLevel"
-        error={errors.academicLevel?.message}
-      >
-        <input
-          id="academicLevel"
-          className={fieldClasses}
-          {...register("academicLevel")}
-        />
-      </FormField>
-      <FormField
-        label="District"
-        htmlFor="district"
-        error={errors.district?.message}
-      >
-        <input
-          id="district"
-          className={fieldClasses}
-          {...register("district")}
-        />
-      </FormField>
-      <FormField
-        label="City / Upazila"
-        htmlFor="city"
-        error={errors.city?.message}
-      >
-        <input id="city" className={fieldClasses} {...register("city")} />
-      </FormField>
-      <FormField
-        label="Address"
-        htmlFor="address"
-        error={errors.address?.message}
-      >
-        <textarea
-          id="address"
-          rows={3}
-          className={`${fieldClasses} resize-none`}
-          {...register("address")}
-        />
-      </FormField>
+      {showParticipantFields ? (
+        <FormField
+          label="Gender"
+          htmlFor="gender"
+          error={errors.gender?.message}
+        >
+          <input id="gender" className={fieldClasses} {...register("gender")} />
+        </FormField>
+      ) : null}
+      {showParticipantFields ? (
+        <FormField
+          label="School or institution"
+          htmlFor="institution"
+          error={errors.institution?.message}
+        >
+          <input
+            id="institution"
+            className={fieldClasses}
+            {...register("institution")}
+          />
+        </FormField>
+      ) : null}
+      {showParticipantFields ? (
+        <FormField
+          label="Academic level"
+          htmlFor="academicLevel"
+          error={errors.academicLevel?.message}
+        >
+          <input
+            id="academicLevel"
+            className={fieldClasses}
+            {...register("academicLevel")}
+          />
+        </FormField>
+      ) : null}
+      {showParticipantFields ? (
+        <FormField
+          label="District"
+          htmlFor="district"
+          error={errors.district?.message}
+        >
+          <input
+            id="district"
+            className={fieldClasses}
+            {...register("district")}
+          />
+        </FormField>
+      ) : null}
+      {showParticipantFields ? (
+        <FormField
+          label="City / Upazila"
+          htmlFor="city"
+          error={errors.city?.message}
+        >
+          <input id="city" className={fieldClasses} {...register("city")} />
+        </FormField>
+      ) : null}
+      {showParticipantFields ? (
+        <FormField
+          label="Address"
+          htmlFor="address"
+          error={errors.address?.message}
+        >
+          <textarea
+            id="address"
+            rows={3}
+            className={`${fieldClasses} resize-none`}
+            {...register("address")}
+          />
+        </FormField>
+      ) : null}
       <FormField
         label="Class or grade"
         htmlFor="gradeLevel"
