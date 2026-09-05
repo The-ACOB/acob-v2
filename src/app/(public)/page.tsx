@@ -16,7 +16,7 @@ import { OrganizationJsonLd } from "@/components/sections/OrganizationJsonLd";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
-  title: "ACOB | Applied Cognitio Olympiad Bangladesh",
+  title: "Applied Cognitio Olympiad Bangladesh",
   description:
     "Curiosity over memorisation. ACOB creates academic Olympiads and learning experiences that reward reasoning, application, and understanding — not recall.",
 };
