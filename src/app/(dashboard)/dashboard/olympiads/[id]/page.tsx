@@ -170,6 +170,7 @@ export default async function OlympiadDetailPage({
             status={olympiad.status}
             resultsPublished={resultsPublished}
             hasAttempts={attempts.length > 0}
+            registrationEnabled={olympiad.registrationEnabled}
           />
           <p className="mt-3 text-sm text-secondary">
             Current phase:{" "}

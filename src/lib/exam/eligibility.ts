@@ -1,8 +1,13 @@
 import { db } from "@/lib/db/client";
-import type { Olympiad } from "@prisma/client";
+type EligibleOlympiad = {
+  eligibilityMode: string;
+  eligibilityGradeLevel: string | null;
+  eligibilityInstitution: string | null;
+  eligibilityAcademicLevel: string | null;
+};
 
 export async function isEligibleForOlympiad(
-  olympiad: Olympiad,
+  olympiad: EligibleOlympiad,
   userId: string,
 ): Promise<boolean> {
   if (olympiad.eligibilityMode === "open") return true;

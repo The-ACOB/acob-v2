@@ -10,7 +10,12 @@ export type OlympiadPhase =
 
 type ScheduledOlympiad = Pick<
   Olympiad,
-  "status" | "registrationStartAt" | "registrationEndAt" | "startAt" | "endAt"
+  | "status"
+  | "registrationEnabled"
+  | "registrationStartAt"
+  | "registrationEndAt"
+  | "startAt"
+  | "endAt"
 >;
 
 export function getOlympiadPhase(
@@ -19,6 +24,7 @@ export function getOlympiadPhase(
 ): OlympiadPhase {
   if (olympiad.status !== "published")
     return olympiad.status === "draft" ? "draft" : "closed";
+  if (!olympiad.registrationEnabled) return "registration_closed";
   if (olympiad.registrationStartAt && now < olympiad.registrationStartAt)
     return "upcoming";
   if (olympiad.registrationEndAt && now < olympiad.registrationEndAt)

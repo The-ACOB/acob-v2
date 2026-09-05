@@ -7,6 +7,8 @@ import { AnimatedSeparator } from "@/components/ui/Separator";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { PageHero } from "@/components/sections/PageHero";
+import { db } from "@/lib/db/client";
+import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/olympiads" },
@@ -23,7 +25,24 @@ const RECOGNITION_TIERS = [
   { rank: "All other participants", name: "Participation" },
 ];
 
-export default function OlympiadsPage() {
+export default async function OlympiadsPage() {
+  const olympiads = await db.olympiad.findMany({
+    where: { status: "published" },
+    orderBy: [{ startAt: "asc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      subject: true,
+      durationMinutes: true,
+      registrationStartAt: true,
+      registrationEndAt: true,
+      startAt: true,
+      endAt: true,
+      status: true,
+      registrationEnabled: true,
+    },
+  });
   return (
     <>
       <PageHero
@@ -43,17 +62,52 @@ export default function OlympiadsPage() {
             </Reveal>
           </div>
 
-          <Reveal weight="minor" order={1} className="mt-10">
-            <EmptyState
-              title="This cycle's tracks haven't been published yet"
-              description="Subjects, grade bands, dates, and registration will appear here directly from ACOB's records as soon as they're confirmed."
-              action={
-                <Button href="/contact" variant="secondary" className="mt-2">
-                  Get notified
-                </Button>
-              }
-            />
-          </Reveal>
+          {olympiads.length === 0 ? (
+            <Reveal weight="minor" order={1} className="mt-10">
+              <EmptyState
+                title="This cycle's tracks haven't been published yet"
+                description="Subjects, grade bands, dates, and registration will appear here directly from ACOB's records as soon as they're confirmed."
+                action={
+                  <Button href="/contact" variant="secondary" className="mt-2">
+                    Get notified
+                  </Button>
+                }
+              />
+            </Reveal>
+          ) : (
+            <div className="mt-10 grid gap-5 lg:grid-cols-2">
+              {olympiads.map((olympiad, index) => (
+                <Reveal key={olympiad.id} weight="minor" order={index}>
+                  <article className="flex h-full flex-col justify-between rounded-lg border border-border bg-elevated p-6">
+                    <div>
+                      <p className="font-mono text-xs uppercase tracking-[0.14em] text-accent">
+                        {getOlympiadPhase(olympiad).replace(/_/g, " ")}
+                      </p>
+                      <h3 className="mt-3 font-display text-2xl text-primary">
+                        {olympiad.title}
+                      </h3>
+                      {olympiad.description ? (
+                        <p className="mt-3 text-sm leading-relaxed text-secondary">
+                          {olympiad.description}
+                        </p>
+                      ) : null}
+                      <p className="mt-4 text-xs text-muted">
+                        {olympiad.subject ?? "ACOB Olympiad"} ·{" "}
+                        {olympiad.durationMinutes} minutes
+                      </p>
+                    </div>
+                    <Button
+                      href={`/olympiads/${olympiad.id}`}
+                      variant="secondary"
+                      className="mt-6 w-fit text-xs"
+                    >
+                      View Olympiad
+                    </Button>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          )}
         </Container>
       </Section>
 

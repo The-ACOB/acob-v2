@@ -5,22 +5,31 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { useToast } from "@/components/dashboard/Toast";
-import { publishOlympiadAction, unpublishOlympiadAction, publishResultsAction } from "@/lib/olympiads/actions";
+import {
+  publishOlympiadAction,
+  unpublishOlympiadAction,
+  publishResultsAction,
+  setOlympiadRegistrationAction,
+} from "@/lib/olympiads/actions";
 
 export function OlympiadPublishControls({
   olympiadId,
   status,
   resultsPublished,
   hasAttempts,
+  registrationEnabled,
 }: {
   olympiadId: string;
   status: "draft" | "published" | "unpublished";
   resultsPublished: boolean;
   hasAttempts: boolean;
+  registrationEnabled: boolean;
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [confirming, setConfirming] = useState<"publish" | "unpublish" | "results" | null>(null);
+  const [confirming, setConfirming] = useState<
+    "publish" | "unpublish" | "results" | null
+  >(null);
   const [pending, setPending] = useState(false);
 
   async function handlePublish() {
@@ -45,26 +54,63 @@ export function OlympiadPublishControls({
     setPending(true);
     const result = await publishResultsAction(olympiadId);
     setPending(false);
-    if (!result.ok) return toast("error", "Could not publish results", result.error);
+    if (!result.ok)
+      return toast("error", "Could not publish results", result.error);
     toast("success", "Results published");
+    router.refresh();
+  }
+
+  async function handleRegistration(enabled: boolean) {
+    setPending(true);
+    const result = await setOlympiadRegistrationAction(olympiadId, enabled);
+    setPending(false);
+    if (!result.ok)
+      return toast("error", "Could not update registration", result.error);
+    toast("success", enabled ? "Registration opened" : "Registration closed");
     router.refresh();
   }
 
   return (
     <div className="flex flex-wrap gap-3">
       {status !== "published" ? (
-        <Button variant="primary" className="text-xs" disabled={pending} onClick={() => setConfirming("publish")}>
+        <Button
+          variant="primary"
+          className="text-xs"
+          disabled={pending}
+          onClick={() => setConfirming("publish")}
+        >
           Publish
         </Button>
       ) : (
-        <Button variant="secondary" className="text-xs" disabled={pending} onClick={() => setConfirming("unpublish")}>
+        <Button
+          variant="secondary"
+          className="text-xs"
+          disabled={pending}
+          onClick={() => setConfirming("unpublish")}
+        >
           Unpublish
         </Button>
       )}
 
       {hasAttempts && !resultsPublished ? (
-        <Button variant="secondary" className="text-xs" disabled={pending} onClick={() => setConfirming("results")}>
+        <Button
+          variant="secondary"
+          className="text-xs"
+          disabled={pending}
+          onClick={() => setConfirming("results")}
+        >
           Publish results
+        </Button>
+      ) : null}
+
+      {status === "published" ? (
+        <Button
+          variant="secondary"
+          className="text-xs"
+          disabled={pending}
+          onClick={() => handleRegistration(!registrationEnabled)}
+        >
+          {registrationEnabled ? "Close registration" : "Open registration"}
         </Button>
       ) : null}
 

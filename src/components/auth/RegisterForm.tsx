@@ -8,10 +8,12 @@ import { registerAction } from "@/lib/auth/actions";
 import { FormField, fieldClasses } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import type { z } from "zod";
+import { useRouter } from "next/navigation";
 
 type Values = z.infer<typeof registerSchema>;
 
-export function RegisterForm() {
+export function RegisterForm({ returnTo }: { returnTo?: string }) {
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const {
@@ -27,6 +29,8 @@ export function RegisterForm() {
       setServerError(result.error);
       return;
     }
+    if (returnTo?.startsWith("/"))
+      router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`);
     setSubmitted(true);
   };
 
@@ -43,14 +47,37 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
-      <FormField label="Full name" htmlFor="fullName" error={errors.fullName?.message}>
-        <input id="fullName" className={fieldClasses} autoComplete="name" {...register("fullName")} />
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="flex flex-col gap-5"
+    >
+      <FormField
+        label="Full name"
+        htmlFor="fullName"
+        error={errors.fullName?.message}
+      >
+        <input
+          id="fullName"
+          className={fieldClasses}
+          autoComplete="name"
+          {...register("fullName")}
+        />
       </FormField>
       <FormField label="Email" htmlFor="email" error={errors.email?.message}>
-        <input id="email" type="email" className={fieldClasses} autoComplete="email" {...register("email")} />
+        <input
+          id="email"
+          type="email"
+          className={fieldClasses}
+          autoComplete="email"
+          {...register("email")}
+        />
       </FormField>
-      <FormField label="Password" htmlFor="password" error={errors.password?.message}>
+      <FormField
+        label="Password"
+        htmlFor="password"
+        error={errors.password?.message}
+      >
         <input
           id="password"
           type="password"
@@ -60,7 +87,12 @@ export function RegisterForm() {
         />
       </FormField>
       {serverError ? <p className="text-xs text-error">{serverError}</p> : null}
-      <Button type="submit" variant="primary" disabled={isSubmitting} className="mt-2">
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={isSubmitting}
+        className="mt-2"
+      >
         {isSubmitting ? "Creating account…" : "Create account"}
       </Button>
     </form>

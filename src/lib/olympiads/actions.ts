@@ -249,6 +249,39 @@ export async function unpublishOlympiadAction(
   return { ok: true };
 }
 
+export async function setOlympiadRegistrationAction(
+  id: string,
+  enabled: boolean,
+): Promise<ActionResult> {
+  let actor;
+  try {
+    actor = await requirePermission("olympiad:schedule");
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
+  const olympiad = await db.olympiad.findUnique({ where: { id } });
+  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  await db.olympiad.update({
+    where: { id },
+    data: { registrationEnabled: enabled },
+  });
+  await recordAudit({
+    actorId: actor.id,
+    action: enabled
+      ? "olympiad:registration_opened"
+      : "olympiad:registration_closed",
+    targetType: "olympiad",
+    targetId: id,
+  });
+  revalidatePath(`/dashboard/olympiads/${id}`);
+  revalidatePath(`/olympiads/${id}`);
+  revalidatePath("/olympiads");
+  return { ok: true };
+}
+
 export async function createQuestionAction(
   olympiadId: string,
   input: unknown,

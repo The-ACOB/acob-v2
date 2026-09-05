@@ -5,7 +5,12 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 
 export const metadata: Metadata = { title: "Create account" };
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const { returnTo } = await searchParams;
   return (
     <AuthCard
       eyebrow="Get started"
@@ -14,13 +19,16 @@ export default function RegisterPage() {
       footer={
         <p>
           Already have an account?{" "}
-          <Link href="/login" className="text-primary underline underline-offset-4">
+          <Link
+            href="/login"
+            className="text-primary underline underline-offset-4"
+          >
             Sign in
           </Link>
         </p>
       }
     >
-      <RegisterForm />
+      <RegisterForm returnTo={returnTo} />
     </AuthCard>
   );
 }
