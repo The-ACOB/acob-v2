@@ -34,7 +34,7 @@ export default async function TeamPage() {
   return (
     <>
       <PageHero
-        eyebrow="The people behind ACOB"
+        eyebrow=""
         title="Our Team"
         description="Applied Cognitio Olympiad Bangladesh is built by people who care about what happens after a student finds the answer: the question, the reasoning, and the understanding that follows."
       />

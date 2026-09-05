@@ -27,7 +27,7 @@ export default function OlympiadsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Olympiads"
+        eyebrow=""
         title="Every problem is written to be reasoned through, not recalled."
         description="ACOB Olympiads run across subjects and grade bands, each built to test how a student thinks under a genuinely unfamiliar problem."
       />
@@ -76,7 +76,9 @@ export default function OlympiadsPage() {
                     <span className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
                       {tier.rank}
                     </span>
-                    <span className="font-display text-xl text-primary">{tier.name}</span>
+                    <span className="font-display text-xl text-primary">
+                      {tier.name}
+                    </span>
                   </div>
                 </Reveal>
               ))}

@@ -23,12 +23,12 @@ export default async function PodcastsPage() {
   return (
     <>
       <PageHero
-        eyebrow="ACOB Media"
+        eyebrow=""
         title="Inside Excellence."
         description="A podcast from ACOB on curiosity, reasoning, and the people who take applied learning seriously — educators, researchers, and past Olympiad participants."
       />
 
-      <Section>
+      {/* <Section>
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
             <Reveal weight="standard">
@@ -46,7 +46,7 @@ export default async function PodcastsPage() {
             </Reveal>
           </div>
         </Container>
-      </Section>
+      </Section> */}
 
       <AnimatedSeparator />
 

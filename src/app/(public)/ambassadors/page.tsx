@@ -8,9 +8,18 @@ import { Button } from "@/components/ui/Button";
 import { PageHero } from "@/components/sections/PageHero";
 
 const RESPONSIBILITIES = [
-  { label: "Represent", body: "Carry ACOB's philosophy into your own school or community." },
-  { label: "Organise", body: "Help coordinate registration and awareness for upcoming Olympiads." },
-  { label: "Report", body: "Share what's working — and what isn't — from your institution." },
+  {
+    label: "Represent",
+    body: "Carry ACOB's philosophy into your own school or community.",
+  },
+  {
+    label: "Organise",
+    body: "Help coordinate registration and awareness for upcoming Olympiads.",
+  },
+  {
+    label: "Report",
+    body: "Share what's working — and what isn't — from your institution.",
+  },
 ];
 
 export const metadata: Metadata = {
@@ -24,12 +33,12 @@ export default function AmbassadorsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Ambassador program"
+        eyebrow=""
         title="Represent ACOB where you already are."
         description="Ambassadors are students and educators who bring ACOB's Olympiads and philosophy to their own schools, colleges, and communities."
       />
 
-      <Section>
+      {/* <Section>
         <Container>
           <div className="grid grid-cols-1 gap-x-10 gap-y-14 sm:grid-cols-3">
             {RESPONSIBILITIES.map((r, i) => (
@@ -41,7 +50,7 @@ export default function AmbassadorsPage() {
             ))}
           </div>
         </Container>
-      </Section>
+      </Section> */}
 
       <AnimatedSeparator />
 

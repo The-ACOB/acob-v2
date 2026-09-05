@@ -36,7 +36,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHero
-        eyebrow="About ACOB"
+        eyebrow=""
         title="Founded on the gap between knowing and understanding."
         description="Applied Cognitio Olympiad Bangladesh began in 2025 with a question: what happens to a student's curiosity once they've learned to pass the test?"
       />
@@ -52,18 +52,18 @@ export default function AboutPage() {
                 <p className="text-lg leading-relaxed text-secondary">
                   A student can answer a question correctly without ever
                   wondering why the answer is correct. They can pass an
-                  examination without becoming curious about the subject
-                  itself. We watched that happen often enough to think it was
-                  worth building something in response.
+                  examination without becoming curious about the subject itself.
+                  We watched that happen often enough to think it was worth
+                  building something in response.
                 </p>
               </Reveal>
               <Reveal weight="standard" order={2}>
                 <p className="text-lg leading-relaxed text-secondary">
                   ACOB creates academic challenges, learning resources, and
                   opportunities that encourage students to question, reason,
-                  apply, experiment, and understand — rather than simply
-                  recall. It&apos;s a slower, harder standard to design for.
-                  We think it&apos;s the right one.
+                  apply, experiment, and understand — rather than simply recall.
+                  It&apos;s a slower, harder standard to design for. We think
+                  it&apos;s the right one.
                 </p>
               </Reveal>
             </div>
@@ -86,8 +86,12 @@ export default function AboutPage() {
             {VALUES.map((v, i) => (
               <Reveal key={v.label} weight="standard" order={i + 1}>
                 <div className="border-t border-border-strong pt-5">
-                  <h3 className="font-display text-xl text-primary">{v.label}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-secondary">{v.body}</p>
+                  <h3 className="font-display text-xl text-primary">
+                    {v.label}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-secondary">
+                    {v.body}
+                  </p>
                 </div>
               </Reveal>
             ))}

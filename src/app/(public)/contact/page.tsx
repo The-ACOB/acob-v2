@@ -16,7 +16,7 @@ export default function ContactPage() {
   return (
     <>
       <PageHero
-        eyebrow="Contact"
+        eyebrow=""
         title="Get in touch."
         description="Questions about an Olympiad, the ambassador program, media, or careers — this reaches ACOB directly."
       />

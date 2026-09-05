@@ -40,7 +40,7 @@ export default async function ResourcesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Resources"
+        eyebrow=""
         title="Study material built for understanding, not repetition."
         description="Everything here is designed to build intuition for a subject — not to be memorised the night before a competition."
       />
