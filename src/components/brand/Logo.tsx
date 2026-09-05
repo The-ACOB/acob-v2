@@ -6,22 +6,24 @@ export function Logo({
   className,
   href = "/",
   priority = false,
+  src = "/assets/logo.png",
 }: {
   className?: string;
   href?: string | null;
   priority?: boolean;
+  src?: string;
 }) {
   const mark = (
     <div
       className={cn("relative flex items-center overflow-visible", className)}
     >
       <Image
-        src="/assets/logo.png"
+        src={src}
         alt="Applied Cognitio Olympiad Bangladesh"
         width={320}
         height={80}
         priority={priority}
-        className="h-16 w-auto max-w-none -my-3 -ml-2 object-contain"
+        className="h-12 w-auto max-w-none -my-3 -ml-2 object-contain"
       />
     </div>
   );
