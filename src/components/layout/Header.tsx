@@ -69,12 +69,12 @@ export function Header({ user = null }: { user?: HeaderUser }) {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-5 lg:flex">
-          <TextLink
+          {/* <TextLink
             href="/verify"
             className="text-[13px] font-medium tracking-tight text-muted"
           >
-            Verify
-          </TextLink>
+            Verify Certificate
+          </TextLink> */}
           {user ? (
             <AccountMenu user={user} />
           ) : (

@@ -29,7 +29,9 @@ export default function ContactPage() {
               <div className="mt-6 flex flex-col gap-5 text-sm text-secondary">
                 <div>
                   <p className="text-muted">Email</p>
-                  <p className="mt-1 text-primary">hello@theacob.com</p>
+                  <p className="mt-1 text-primary">
+                    reachappliedcognitio@gmail.com
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted">Based in</p>

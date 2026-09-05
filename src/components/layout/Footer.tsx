@@ -4,9 +4,9 @@ import { TextLink } from "@/components/ui/TextLink";
 import { NAV_LINKS } from "./nav-links";
 
 const SOCIALS = [
-  { label: "Facebook", href: "#" },
-  { label: "LinkedIn", href: "#" },
-  { label: "YouTube", href: "#" },
+  { label: "Facebook", href: "https://www.facebook.com/appliedcognitiobd" },
+  { label: "LinkedIn", href: "http://linkedin.com/company/appliedcognitiobd" },
+  { label: "YouTube", href: "https://www.youtube.com/@appliedcognitiobd" },
 ];
 
 export function Footer() {
@@ -60,7 +60,9 @@ export function Footer() {
 
         <div className="mt-16 flex flex-col gap-4 border-t border-border pt-8 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {year} Applied Cognitio Olympiad Bangladesh. All rights reserved.
+            © 2025-{year} Applied Cognitio Olympiad Bangladesh. All rights
+            reserved.
+            <br></br>Technology Partner <b>Glitched Tech</b>
           </p>
           <p className="font-mono uppercase tracking-[0.14em]">
             Founded 2025 · Dhaka, Bangladesh

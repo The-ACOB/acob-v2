@@ -37,14 +37,6 @@ export default function HomePage() {
         <Container className="relative pt-20 pb-16 sm:pt-28 sm:pb-20 lg:pt-36">
           <Reveal weight="minor">
             <div className="mb-8 flex items-center gap-3">
-              <Image
-                src="/assets/logo.png"
-                alt=""
-                width={28}
-                height={28}
-                className="h-6 w-auto opacity-80"
-                aria-hidden
-              />
               <MetadataLabel>
                 Applied Cognitio Olympiad Bangladesh
               </MetadataLabel>
@@ -93,7 +85,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-x-10 gap-y-3 border-t border-border pt-6">
               <MetadataLabel muted>Founded 2025</MetadataLabel>
               <MetadataLabel muted>Based in Bangladesh</MetadataLabel>
-              <MetadataLabel muted>Curiosity over memorisation</MetadataLabel>
+              {/* <MetadataLabel muted>Curiosity over memorisation</MetadataLabel> */}
             </div>
           </Reveal>
         </Container>
