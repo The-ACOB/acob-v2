@@ -38,14 +38,8 @@ export default async function TeamPage() {
         title="Our Team"
         description="Applied Cognitio Olympiad Bangladesh is built by people who care about what happens after a student finds the answer: the question, the reasoning, and the understanding that follows."
       />
-      <Section bordered>
+      <Section bordered className="pt-12 sm:pt-14 lg:pt-16">
         <Container>
-          <Reveal weight="standard">
-            <MetadataLabel>People &amp; perspective</MetadataLabel>
-            <h2 className="mt-4 max-w-2xl font-display text-3xl leading-[1.1] tracking-tight text-primary sm:text-4xl">
-              A small team with a large curiosity about how people learn.
-            </h2>
-          </Reveal>
           {members.length === 0 ? (
             <Reveal weight="minor" order={1} className="mt-12">
               <EmptyState
@@ -54,7 +48,7 @@ export default async function TeamPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-0 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {members.map((member, index) => (
                 <Reveal key={member.id} weight="standard" order={index + 1}>
                   <article className="group overflow-hidden rounded-lg border border-border bg-elevated transition-transform duration-300 motion-safe:hover:-translate-y-1">

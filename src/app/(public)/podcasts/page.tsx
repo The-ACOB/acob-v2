@@ -50,7 +50,7 @@ export default async function PodcastsPage() {
 
       <AnimatedSeparator />
 
-      <Section bordered>
+      <Section bordered className="pt-12 sm:pt-14 lg:pt-16">
         <Container>
           <Reveal weight="standard">
             <MetadataLabel>Episodes</MetadataLabel>
@@ -66,7 +66,7 @@ export default async function PodcastsPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-10 flex flex-col divide-y divide-border border-t border-border">
+            <div className="mt-8 flex flex-col divide-y divide-border border-t border-border">
               {episodes.map((episode) => (
                 <article key={episode.id} className="py-6">
                   <h3 className="font-display text-2xl text-primary">
