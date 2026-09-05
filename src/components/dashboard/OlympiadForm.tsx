@@ -25,7 +25,12 @@ export function OlympiadForm({
   submitLabel = "Save",
   redirectPath,
 }: {
-  defaultValues?: Omit<Partial<Values>, "startAt" | "endAt"> & {
+  defaultValues?: Omit<
+    Partial<Values>,
+    "registrationStartAt" | "registrationEndAt" | "startAt" | "endAt"
+  > & {
+    registrationStartAt?: Date | null;
+    registrationEndAt?: Date | null;
     startAt?: Date | null;
     endAt?: Date | null;
   };
@@ -50,6 +55,12 @@ export function OlympiadForm({
       description: defaultValues?.description ?? "",
       subject: defaultValues?.subject ?? "",
       durationMinutes: defaultValues?.durationMinutes ?? 60,
+      registrationStartAt: toLocalInputValue(
+        defaultValues?.registrationStartAt ?? null,
+      ),
+      registrationEndAt: toLocalInputValue(
+        defaultValues?.registrationEndAt ?? null,
+      ),
       startAt: toLocalInputValue(defaultValues?.startAt ?? null),
       endAt: toLocalInputValue(defaultValues?.endAt ?? null),
       negativeMarkingEnabled: defaultValues?.negativeMarkingEnabled ?? false,
@@ -165,9 +176,37 @@ export function OlympiadForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 border-t border-border pt-5 sm:grid-cols-2">
         <FormField
-          label="Opens"
+          label="Registration opens"
+          htmlFor="registrationStartAt"
+          error={errors.registrationStartAt?.message}
+        >
+          <input
+            id="registrationStartAt"
+            type="datetime-local"
+            className={fieldClasses}
+            {...register("registrationStartAt")}
+          />
+        </FormField>
+
+        <FormField
+          label="Registration closes"
+          htmlFor="registrationEndAt"
+          error={errors.registrationEndAt?.message}
+        >
+          <input
+            id="registrationEndAt"
+            type="datetime-local"
+            className={fieldClasses}
+            {...register("registrationEndAt")}
+          />
+        </FormField>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 border-t border-border pt-5 sm:grid-cols-2">
+        <FormField
+          label="Exam starts"
           htmlFor="startAt"
           error={errors.startAt?.message}
         >
@@ -179,7 +218,11 @@ export function OlympiadForm({
           />
         </FormField>
 
-        <FormField label="Closes" htmlFor="endAt" error={errors.endAt?.message}>
+        <FormField
+          label="Exam ends"
+          htmlFor="endAt"
+          error={errors.endAt?.message}
+        >
           <input
             id="endAt"
             type="datetime-local"

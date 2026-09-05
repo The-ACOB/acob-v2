@@ -53,6 +53,9 @@ export default async function EditOlympiadPage({
             description: olympiad.description ?? "",
             subject: olympiad.subject ?? "",
             durationMinutes: olympiad.durationMinutes,
+            registrationStartAt:
+              olympiad.registrationStartAt ?? olympiad.createdAt,
+            registrationEndAt: olympiad.registrationEndAt ?? olympiad.startAt,
             startAt: olympiad.startAt,
             endAt: olympiad.endAt,
             negativeMarkingEnabled: olympiad.negativeMarkingEnabled,

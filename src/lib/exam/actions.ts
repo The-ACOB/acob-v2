@@ -7,6 +7,7 @@ import { scoreAttempt } from "./scoring";
 import type { ActionResult } from "@/lib/auth/actions";
 import type { Olympiad } from "@prisma/client";
 import { isEligibleForOlympiad } from "./eligibility";
+import { isExamLive, isRegistrationOpen } from "@/lib/olympiads/lifecycle";
 
 const EXAM_ROLES = ["PARTICIPANT", "AMBASSADOR"];
 
@@ -24,11 +25,8 @@ async function resolveEffectiveOlympiad(id: string): Promise<Olympiad | null> {
   return olympiad;
 }
 
-function isWithinExamWindow(olympiad: Olympiad): boolean {
-  const now = Date.now();
-  if (olympiad.startAt && now < olympiad.startAt.getTime()) return false;
-  if (olympiad.endAt && now >= olympiad.endAt.getTime()) return false;
-  return true;
+function isBeforeExam(olympiad: Olympiad): boolean {
+  return Boolean(olympiad.startAt && Date.now() < olympiad.startAt.getTime());
 }
 
 export async function registerForOlympiadAction(
@@ -46,7 +44,7 @@ export async function registerForOlympiadAction(
   const olympiad = await resolveEffectiveOlympiad(olympiadId);
   if (!olympiad || olympiad.status !== "published")
     return { ok: false, error: "Registration is not open." };
-  if (olympiad.endAt && Date.now() >= olympiad.endAt.getTime())
+  if (!isRegistrationOpen(olympiad))
     return { ok: false, error: "Registration is closed." };
   if (!(await isEligibleForOlympiad(olympiad, session.id)))
     return { ok: false, error: "You are not eligible to register." };
@@ -120,10 +118,32 @@ export async function startAttemptAction(
     return { ok: false, error: "This Olympiad is not currently available." };
   }
 
+  if (isBeforeExam(olympiad)) {
+    return { ok: false, error: "This Olympiad has not started yet." };
+  }
+
   if (!(await isEligibleForOlympiad(olympiad, session.id))) {
     return {
       ok: false,
       error: "You are not eligible to attempt this Olympiad.",
+    };
+  }
+
+  const registration = await db.olympiadRegistration.findUnique({
+    where: { olympiadId_userId: { olympiadId, userId: session.id } },
+  });
+  if (!registration) {
+    return {
+      ok: false,
+      error: "Register for this Olympiad before starting the exam.",
+    };
+  }
+
+  const questionCount = await db.question.count({ where: { olympiadId } });
+  if (questionCount === 0) {
+    return {
+      ok: false,
+      error: "This exam is not ready yet. Questions have not been added.",
     };
   }
 
@@ -132,11 +152,6 @@ export async function startAttemptAction(
   });
 
   if (existing) {
-    await db.olympiadRegistration.upsert({
-      where: { olympiadId_userId: { olympiadId, userId: session.id } },
-      create: { olympiadId, userId: session.id },
-      update: {},
-    });
     const refreshed = await autoSubmitIfExpired(existing, olympiad);
     if (refreshed.status !== "in_progress") {
       return { ok: false, error: "You have already attempted this Olympiad." };
@@ -144,16 +159,7 @@ export async function startAttemptAction(
     return { ok: true, data: { attemptId: refreshed.id } };
   }
 
-  const registration = await db.olympiadRegistration.findUnique({
-    where: { olympiadId_userId: { olympiadId, userId: session.id } },
-  });
-  if (!registration)
-    return {
-      ok: false,
-      error: "Register for this Olympiad before starting the exam.",
-    };
-
-  if (!isWithinExamWindow(olympiad)) {
+  if (!isExamLive(olympiad)) {
     return {
       ok: false,
       error: "This Olympiad is not open for new attempts right now.",
@@ -197,10 +203,30 @@ export async function saveAnswerAction(
   });
   if (!olympiad) return { ok: false, error: "Olympiad not found." };
 
+  if (olympiad.status !== "published" || isBeforeExam(olympiad)) {
+    return { ok: false, error: "The exam questions are not available yet." };
+  }
+  if (!(await isEligibleForOlympiad(olympiad, session.id))) {
+    return { ok: false, error: "You are not eligible to access this exam." };
+  }
+  const registration = await db.olympiadRegistration.findUnique({
+    where: {
+      olympiadId_userId: { olympiadId: olympiad.id, userId: session.id },
+    },
+  });
+  if (!registration)
+    return { ok: false, error: "Exam registration not found." };
+
   const current = await autoSubmitIfExpired(attempt, olympiad);
   if (current.status !== "in_progress") {
     return { ok: false, error: "Time has expired for this attempt." };
   }
+
+  const questionCount = await db.question.count({
+    where: { olympiadId: attempt.olympiadId },
+  });
+  if (questionCount === 0)
+    return { ok: false, error: "This exam has no questions yet." };
 
   const question: {
     id: string;
@@ -282,10 +308,23 @@ export async function submitAttemptAction(
   });
   if (!olympiad) return { ok: false, error: "Olympiad not found." };
 
+  if (olympiad.status !== "published" || isBeforeExam(olympiad)) {
+    return { ok: false, error: "The exam questions are not available yet." };
+  }
+  if (!(await isEligibleForOlympiad(olympiad, session.id))) {
+    return { ok: false, error: "You are not eligible to submit this exam." };
+  }
+
   const current = await autoSubmitIfExpired(attempt, olympiad);
   if (current.status !== "in_progress") {
     return { ok: false, error: "This attempt has already been submitted." };
   }
+
+  const questionCount = await db.question.count({
+    where: { olympiadId: attempt.olympiadId },
+  });
+  if (questionCount === 0)
+    return { ok: false, error: "This exam has no questions yet." };
 
   const questions: {
     id: string;
@@ -390,10 +429,20 @@ export async function getExamData(attemptId: string): Promise<
   });
   if (!olympiad) return { ok: false, error: "Olympiad not found." };
 
+  if (olympiad.status !== "published" || isBeforeExam(olympiad)) {
+    return { ok: false, error: "The exam questions are not available yet." };
+  }
+
   const current = await autoSubmitIfExpired(attempt, olympiad);
   if (current.status !== "in_progress") {
     return { ok: false, error: "This attempt is no longer in progress." };
   }
+
+  const questionCount = await db.question.count({
+    where: { olympiadId: attempt.olympiadId },
+  });
+  if (questionCount === 0)
+    return { ok: false, error: "This exam has no questions yet." };
 
   const rawQuestions: {
     id: string;

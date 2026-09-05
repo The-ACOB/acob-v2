@@ -8,6 +8,7 @@ import { ExamRunner } from "@/components/dashboard/ExamRunner";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { db } from "@/lib/db/client";
+import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
 
 export const metadata: Metadata = { title: "Attempt" };
 
@@ -33,6 +34,23 @@ export default async function AttemptPage({
       where: { olympiadId_userId: { olympiadId: id, userId: session.id } },
     });
     const eligible = await isEligibleForOlympiad(olympiad, session.id);
+    const phase = getOlympiadPhase(olympiad);
+    if (phase !== "live") {
+      return (
+        <EmptyState
+          title={
+            phase === "closed"
+              ? "This Olympiad is closed"
+              : "The exam is not live yet"
+          }
+          description={
+            phase === "registration_open"
+              ? "You are registered. The exam will be available at its scheduled start time."
+              : "Questions are only available during the exam window."
+          }
+        />
+      );
+    }
     if (!registration || !eligible)
       return (
         <EmptyState

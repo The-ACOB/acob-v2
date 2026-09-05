@@ -439,6 +439,8 @@ model Olympiad {
   subject                String?
   status                 OlympiadStatus @default(draft)
   durationMinutes        Int            @map("duration_minutes")
+  registrationStartAt   DateTime?      @map("registration_start_at")
+  registrationEndAt     DateTime?      @map("registration_end_at")
   startAt                DateTime?      @map("start_at")
   endAt                  DateTime?      @map("end_at")
   publishAt              DateTime?      @map("publish_at")

@@ -11,6 +11,7 @@ import {
 import { OlympiadPublishControls } from "@/components/dashboard/OlympiadPublishControls";
 import { DataTable, type Column } from "@/components/dashboard/DataTable";
 import { Badge } from "@/components/ui/Badge";
+import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
 
 export const metadata: Metadata = { title: "Manage Olympiad" };
 
@@ -95,6 +96,7 @@ export default async function OlympiadDetailPage({
   ).length;
 
   const resultsPublished = Boolean(olympiad.resultsPublishedAt);
+  const phase = getOlympiadPhase(olympiad);
 
   const columns: Column<RegistrationRow>[] = [
     {
@@ -169,9 +171,32 @@ export default async function OlympiadDetailPage({
             resultsPublished={resultsPublished}
             hasAttempts={attempts.length > 0}
           />
+          <p className="mt-3 text-sm text-secondary">
+            Current phase:{" "}
+            <span className="font-medium text-primary">
+              {phase.replace(/_/g, " ")}
+            </span>
+          </p>
+          <div className="mt-3 text-sm text-secondary">
+            <p>
+              Registration:{" "}
+              {olympiad.registrationStartAt?.toLocaleString() ?? "Now"} to{" "}
+              {olympiad.registrationEndAt?.toLocaleString() ?? "Exam start"}
+            </p>
+            <p>
+              Exam: {olympiad.startAt?.toLocaleString() ?? "Now"} to{" "}
+              {olympiad.endAt?.toLocaleString() ?? "No closing time"}
+            </p>
+          </div>
           {olympiad.publishAt && olympiad.status === "draft" ? (
             <p className="mt-3 text-xs text-muted">
               Scheduled to publish {olympiad.publishAt.toLocaleString()}.
+            </p>
+          ) : null}
+          {questions.length === 0 ? (
+            <p className="mt-3 text-sm text-warning">
+              This Olympiad has no questions yet. Students will not be able to
+              start the exam until questions are added.
             </p>
           ) : null}
         </section>
@@ -181,11 +206,7 @@ export default async function OlympiadDetailPage({
             Questions{" "}
             <span className="text-sm text-muted">({questions.length})</span>
           </h2>
-          <QuestionsManager
-            olympiadId={id}
-            questions={questions}
-            editable={olympiad.status !== "published"}
-          />
+          <QuestionsManager olympiadId={id} questions={questions} editable />
         </section>
 
         <section>

@@ -3,6 +3,10 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { isEligibleForOlympiad } from "@/lib/exam/eligibility";
 import { OlympiadRegistrationForm } from "@/components/dashboard/OlympiadRegistrationForm";
+import {
+  getOlympiadPhase,
+  isRegistrationOpen,
+} from "@/lib/olympiads/lifecycle";
 
 export default async function OlympiadRegistrationPage({
   params,
@@ -27,7 +31,8 @@ export default async function OlympiadRegistrationPage({
       questionCount={olympiad._count.questions}
       registered={Boolean(existing)}
       eligible={eligible}
-      registrationOpen
+      registrationOpen={isRegistrationOpen(olympiad)}
+      phase={getOlympiadPhase(olympiad)}
     />
   );
 }

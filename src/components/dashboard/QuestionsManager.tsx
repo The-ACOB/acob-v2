@@ -7,7 +7,11 @@ import { QuestionEditor } from "@/components/dashboard/QuestionEditor";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/dashboard/Toast";
-import { createQuestionAction, updateQuestionAction, deleteQuestionAction } from "@/lib/olympiads/actions";
+import {
+  createQuestionAction,
+  updateQuestionAction,
+  deleteQuestionAction,
+} from "@/lib/olympiads/actions";
 import type { ActionResult } from "@/lib/auth/actions";
 
 export type QuestionRow = {
@@ -65,9 +69,14 @@ export function QuestionsManager({
             text: editing.text,
             marks: editing.marks,
             difficulty: editing.difficulty,
-            options: editing.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect })),
+            options: editing.options.map((o) => ({
+              text: o.text,
+              isCorrect: o.isCorrect,
+            })),
           }}
-          onSubmit={(values): Promise<ActionResult> => updateQuestionAction(olympiadId, editing.id, values)}
+          onSubmit={(values): Promise<ActionResult> =>
+            updateQuestionAction(olympiadId, editing.id, values)
+          }
           onDone={() => {
             setMode("none");
             router.refresh();
@@ -84,18 +93,33 @@ export function QuestionsManager({
       ) : (
         <div className="flex flex-col gap-3">
           {questions.map((q, i) => (
-            <div key={q.id} className="rounded-lg border border-border bg-elevated p-4">
+            <div
+              key={q.id}
+              className="rounded-lg border border-border bg-elevated p-4"
+            >
               <div className="flex items-start justify-between gap-4">
                 <p className="text-sm text-primary">
-                  <span className="mr-2 font-mono text-xs text-muted">Q{i + 1}.</span>
+                  <span className="mr-2 font-mono text-xs text-muted">
+                    Q{i + 1}.
+                  </span>
                   {q.text}
                 </p>
                 {editable ? (
                   <div className="flex shrink-0 gap-2">
-                    <button type="button" onClick={() => setMode(q.id)} aria-label="Edit" className="text-muted hover:text-primary">
+                    <button
+                      type="button"
+                      onClick={() => setMode(q.id)}
+                      aria-label="Edit"
+                      className="text-muted hover:text-primary"
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button type="button" onClick={() => setDeleteTarget(q.id)} aria-label="Delete" className="text-muted hover:text-error">
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(q.id)}
+                      aria-label="Delete"
+                      className="text-muted hover:text-error"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -128,9 +152,7 @@ export function QuestionsManager({
         >
           <Plus className="h-3.5 w-3.5" /> Add question
         </button>
-      ) : (
-        <p className="text-xs text-muted">Unpublish this Olympiad to edit its questions.</p>
-      )}
+      ) : null}
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

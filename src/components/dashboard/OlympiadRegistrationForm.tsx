@@ -11,12 +11,15 @@ export function OlympiadRegistrationForm({
   registered,
   eligible,
   registrationOpen,
+  phase,
 }: {
   olympiad: {
     id: string;
     title: string;
     description: string | null;
     durationMinutes: number;
+    registrationStartAt: Date | null;
+    registrationEndAt: Date | null;
     startAt: Date | null;
     endAt: Date | null;
     eligibilityMode: string;
@@ -28,6 +31,7 @@ export function OlympiadRegistrationForm({
   registered: boolean;
   eligible: boolean;
   registrationOpen: boolean;
+  phase: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -45,6 +49,9 @@ export function OlympiadRegistrationForm({
   return (
     <div className="mx-auto max-w-2xl rounded-lg border border-border bg-elevated p-6">
       <h1 className="font-display text-3xl text-primary">{olympiad.title}</h1>
+      <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-accent">
+        {phase.replace(/_/g, " ")}
+      </p>
       {olympiad.description ? (
         <p className="mt-3 text-secondary">{olympiad.description}</p>
       ) : null}
@@ -58,12 +65,18 @@ export function OlympiadRegistrationForm({
           <dd>{questionCount}</dd>
         </div>
         <div>
-          <dt className="text-muted">Opens</dt>
-          <dd>{olympiad.startAt?.toLocaleString() ?? "Now"}</dd>
+          <dt className="text-muted">Registration</dt>
+          <dd>
+            {olympiad.registrationStartAt?.toLocaleString() ?? "Now"} to{" "}
+            {olympiad.registrationEndAt?.toLocaleString() ?? "Exam start"}
+          </dd>
         </div>
         <div>
-          <dt className="text-muted">Closes</dt>
-          <dd>{olympiad.endAt?.toLocaleString() ?? "No closing time"}</dd>
+          <dt className="text-muted">Exam</dt>
+          <dd>
+            {olympiad.startAt?.toLocaleString() ?? "Now"} to{" "}
+            {olympiad.endAt?.toLocaleString() ?? "No closing time"}
+          </dd>
         </div>
       </dl>
       <p className="mt-6 text-sm text-secondary">
@@ -79,13 +92,20 @@ export function OlympiadRegistrationForm({
               .join(" / ") || "Configured criteria"}
       </p>
       {error ? <p className="mt-4 text-sm text-error">{error}</p> : null}
+      {!registrationOpen && !confirmed ? (
+        <p className="mt-4 text-sm text-warning">
+          Registration is not currently open.
+        </p>
+      ) : null}
       {confirmed ? (
         <Button
           href={`/dashboard/olympiads/${olympiad.id}/attempt`}
-          variant="primary"
+          variant={registrationOpen ? "primary" : "secondary"}
           className="mt-6 text-xs"
         >
-          Registered — view exam
+          {registrationOpen
+            ? "Registered — view exam"
+            : "Registered — await exam"}
         </Button>
       ) : (
         <Button

@@ -62,6 +62,8 @@ export async function createOlympiadAction(
       description: v.description || null,
       subject: v.subject || null,
       durationMinutes: v.durationMinutes,
+      registrationStartAt: new Date(v.registrationStartAt),
+      registrationEndAt: new Date(v.registrationEndAt),
       startAt: v.startAt ? new Date(v.startAt) : null,
       endAt: v.endAt ? new Date(v.endAt) : null,
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
@@ -132,6 +134,8 @@ export async function updateOlympiadAction(
       description: v.description || null,
       subject: v.subject || null,
       durationMinutes: v.durationMinutes,
+      registrationStartAt: new Date(v.registrationStartAt),
+      registrationEndAt: new Date(v.registrationEndAt),
       startAt: v.startAt ? new Date(v.startAt) : null,
       endAt: v.endAt ? new Date(v.endAt) : null,
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
@@ -174,17 +178,6 @@ export async function publishOlympiadAction(
 
   if (!olympiad) {
     return { ok: false, error: "Olympiad not found." };
-  }
-
-  const questionCount = await db.question.count({
-    where: { olympiadId: id },
-  });
-
-  if (questionCount === 0) {
-    return {
-      ok: false,
-      error: "Add at least one question before publishing.",
-    };
   }
 
   const scheduled = publishAt ? new Date(publishAt) : null;
@@ -277,13 +270,6 @@ export async function createQuestionAction(
     return { ok: false, error: "Olympiad not found." };
   }
 
-  if (olympiad.status === "published") {
-    return {
-      ok: false,
-      error: "Unpublish the Olympiad before editing questions.",
-    };
-  }
-
   const parsed = questionSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -352,13 +338,6 @@ export async function updateQuestionAction(
     return { ok: false, error: "Olympiad not found." };
   }
 
-  if (olympiad.status === "published") {
-    return {
-      ok: false,
-      error: "Unpublish the Olympiad before editing questions.",
-    };
-  }
-
   const parsed = questionSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -421,13 +400,6 @@ export async function deleteQuestionAction(
 
   if (!olympiad) {
     return { ok: false, error: "Olympiad not found." };
-  }
-
-  if (olympiad.status === "published") {
-    return {
-      ok: false,
-      error: "Unpublish the Olympiad before editing questions.",
-    };
   }
 
   await db.question.delete({
