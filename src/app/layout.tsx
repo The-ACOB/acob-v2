@@ -105,8 +105,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className="min-h-dvh bg-background font-sans text-primary antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className="min-h-dvh bg-background font-sans text-primary antialiased"
+        suppressHydrationWarning
+      >
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('acob-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`,

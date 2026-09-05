@@ -12,14 +12,18 @@ export function Logo({
   priority?: boolean;
 }) {
   const mark = (
-    <Image
-      src="/assets/logo.png"
-      alt="Applied Cognitio Olympiad Bangladesh"
-      width={160}
-      height={40}
-      priority={priority}
-      className={cn("h-8 w-auto object-contain", className)}
-    />
+    <div
+      className={cn("relative flex items-center overflow-visible", className)}
+    >
+      <Image
+        src="/assets/logo.png"
+        alt="Applied Cognitio Olympiad Bangladesh"
+        width={320}
+        height={80}
+        priority={priority}
+        className="h-16 w-auto max-w-none -my-3 -ml-2 object-contain"
+      />
+    </div>
   );
 
   if (href === null) return mark;
@@ -28,7 +32,7 @@ export function Logo({
     <Link
       href={href}
       aria-label="ACOB home"
-      className="inline-flex items-center"
+      className="inline-flex items-center overflow-visible"
     >
       {mark}
     </Link>

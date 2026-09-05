@@ -18,9 +18,6 @@ export function Header({ user = null }: { user?: HeaderUser }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Close the mobile menu when navigating to a new route. Adjusted at
-  // render time (React's sanctioned pattern for resetting state in
-  // response to a prop/route change) rather than in an effect.
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
@@ -51,7 +48,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center justify-between gap-6 px-6 sm:px-8 lg:px-10">
-        <Logo priority className="h-7 shrink-0 sm:h-8" />
+        <Logo priority className="h-11 shrink-0 sm:h-12" />
 
         <nav aria-label="Primary" className="hidden items-center gap-7 lg:flex">
           {NAV_LINKS.map((link) => (
@@ -69,12 +66,6 @@ export function Header({ user = null }: { user?: HeaderUser }) {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-5 lg:flex">
-          {/* <TextLink
-            href="/verify"
-            className="text-[13px] font-medium tracking-tight text-muted"
-          >
-            Verify Certificate
-          </TextLink> */}
           {user ? (
             <AccountMenu user={user} />
           ) : (
