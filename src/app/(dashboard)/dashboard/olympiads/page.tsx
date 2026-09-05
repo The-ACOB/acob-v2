@@ -46,7 +46,10 @@ export default async function OlympiadsPage() {
         header: "Status",
         cell: (r) => <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>,
       },
-      { header: "Duration", cell: (r) => `${r.durationMinutes} min` },
+      {
+        header: "Duration",
+        cell: (r) => `${r.durationMinutes} min`,
+      },
       {
         header: "Created",
         cell: (r) => (
@@ -88,6 +91,7 @@ export default async function OlympiadsPage() {
             </Button>
           }
         />
+
         <DataTable
           columns={columns}
           rows={olympiads}
@@ -116,13 +120,28 @@ export default async function OlympiadsPage() {
   const [myAttempts, myRegistrations] = await Promise.all([
     db.attempt.findMany({
       where: { userId: session.id },
+      select: {
+        olympiadId: true,
+        status: true,
+      },
     }),
-    db.olympiadRegistration.findMany({ where: { userId: session.id } }),
+    db.olympiadRegistration.findMany({
+      where: { userId: session.id },
+      select: {
+        olympiadId: true,
+      },
+    }),
   ]);
+
   const attemptByOlympiad = new Map(
-    myAttempts.map((a) => [a.olympiadId, a.status]),
+    myAttempts.map((attempt) => [attempt.olympiadId, attempt.status]),
   );
-  const registeredOlympiads = new Set(myRegistrations.map((r) => r.olympiadId));
+
+  const registeredOlympiads = new Set(
+    myRegistrations.map((registration) => registration.olympiadId),
+  );
+
+  const now = new Date();
 
   return (
     <div>
@@ -144,6 +163,60 @@ export default async function OlympiadsPage() {
         <div className="flex flex-col gap-4">
           {published.map((o) => {
             const attemptStatus = attemptByOlympiad.get(o.id);
+            const isRegistered = registeredOlympiads.has(o.id);
+
+            const examStarted = o.startAt ? now >= o.startAt : true;
+            const examEnded = o.endAt ? now >= o.endAt : false;
+
+            let action: React.ReactNode;
+
+            if (attemptStatus === "in_progress") {
+              action = (
+                <Button
+                  href={`/dashboard/olympiads/${o.id}/attempt`}
+                  variant="primary"
+                  className="shrink-0 text-xs"
+                >
+                  Resume
+                </Button>
+              );
+            } else if (
+              attemptStatus === "submitted" ||
+              attemptStatus === "expired_auto_submitted"
+            ) {
+              action = <Badge tone="neutral">Attempted</Badge>;
+            } else if (isRegistered && examStarted && !examEnded) {
+              action = (
+                <Button
+                  href={`/dashboard/olympiads/${o.id}/attempt`}
+                  variant="primary"
+                  className="shrink-0 text-xs"
+                >
+                  Start Exam
+                </Button>
+              );
+            } else if (isRegistered) {
+              action = (
+                <Button
+                  href={`/dashboard/olympiads/${o.id}/attempt`}
+                  variant="secondary"
+                  className="shrink-0 text-xs"
+                >
+                  Registered — View Exam
+                </Button>
+              );
+            } else {
+              action = (
+                <Button
+                  href={`/dashboard/olympiads/${o.id}/register`}
+                  variant="secondary"
+                  className="shrink-0 text-xs"
+                >
+                  Register
+                </Button>
+              );
+            }
+
             return (
               <div
                 key={o.id}
@@ -151,37 +224,20 @@ export default async function OlympiadsPage() {
               >
                 <div>
                   <p className="font-display text-lg text-primary">{o.title}</p>
+
                   {o.description ? (
                     <p className="mt-1 max-w-lg text-sm text-secondary">
                       {o.description}
                     </p>
                   ) : null}
+
                   <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
                     {o.durationMinutes} minutes
                     {o.endAt ? ` · Closes ${o.endAt.toLocaleString()}` : ""}
                   </p>
                 </div>
-                {attemptStatus === "in_progress" ? (
-                  <Button
-                    href={`/dashboard/olympiads/${o.id}/attempt`}
-                    variant="primary"
-                    className="shrink-0 text-xs"
-                  >
-                    Resume
-                  </Button>
-                ) : attemptStatus ? (
-                  <Badge tone="neutral">Attempted</Badge>
-                ) : registeredOlympiads.has(o.id) ? (
-                  <Badge tone="success">Registered</Badge>
-                ) : (
-                  <Button
-                    href={`/dashboard/olympiads/${o.id}/register`}
-                    variant="secondary"
-                    className="shrink-0 text-xs"
-                  >
-                    Register
-                  </Button>
-                )}
+
+                {action}
               </div>
             );
           })}
