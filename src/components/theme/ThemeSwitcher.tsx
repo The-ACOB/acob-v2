@@ -32,26 +32,55 @@ const OPTIONS: {
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const active = OPTIONS.find((option) => option.value === theme) ?? OPTIONS[0];
-  const ActiveIcon = active.icon;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function close(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node))
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
+      }
     }
+
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
     }
+
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", onKey);
+
     return () => {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", onKey);
     };
   }, []);
+
+  /*
+   * Theme state can differ between the server and the browser.
+   * Don't render theme-dependent UI until the client has mounted.
+   * This prevents React hydration mismatches.
+   */
+  if (!mounted) {
+    return (
+      <div
+        aria-hidden="true"
+        className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border-strong"
+      >
+        <Monitor className="h-4 w-4 text-secondary" strokeWidth={1.7} />
+      </div>
+    );
+  }
+
+  const active = OPTIONS.find((option) => option.value === theme) ?? OPTIONS[0];
+
+  const ActiveIcon = active.icon;
 
   return (
     <div ref={ref} className="relative">
@@ -65,6 +94,7 @@ export function ThemeSwitcher() {
       >
         <ActiveIcon className="h-4 w-4" strokeWidth={1.7} />
       </button>
+
       {open ? (
         <div
           role="menu"
@@ -74,6 +104,7 @@ export function ThemeSwitcher() {
           {OPTIONS.map((option) => {
             const Icon = option.icon;
             const selected = option.value === theme;
+
             return (
               <button
                 key={option.value}
@@ -90,6 +121,7 @@ export function ThemeSwitcher() {
                   className="h-4 w-4 shrink-0 text-secondary"
                   strokeWidth={1.7}
                 />
+
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs text-primary">
                     {option.label}
@@ -98,6 +130,7 @@ export function ThemeSwitcher() {
                     {option.description}
                   </span>
                 </span>
+
                 {selected ? (
                   <Check className="h-3.5 w-3.5 text-accent" strokeWidth={2} />
                 ) : null}
