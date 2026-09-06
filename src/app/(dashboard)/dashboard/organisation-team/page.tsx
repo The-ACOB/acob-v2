@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Organisation Team" };
 
 export default async function OrganisationTeamPage() {
   try {
-    await requireRole("CEO");
+    await requireRole("CEO", "COO", "CTO");
   } catch (err) {
     if (err instanceof AuthError) redirect("/dashboard");
     throw err;

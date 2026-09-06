@@ -207,7 +207,7 @@ export async function requestAmbassadorPromotionAction(
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) return { ok: false, error: "User not found." };
 
-  if (actor.roleKeys.includes("CEO")) {
+  if (actor.roleKeys.some((r) => ["CEO", "COO", "CTO"].includes(r))) {
     const ambassadorRole = await db.role.findUnique({
       where: { key: "AMBASSADOR" },
     });

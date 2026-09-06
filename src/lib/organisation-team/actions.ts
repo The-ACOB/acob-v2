@@ -10,9 +10,9 @@ import type { z } from "zod";
 
 type MemberValues = z.infer<typeof organisationTeamMemberSchema>;
 
-async function requireCeo() {
+async function requireExecutive() {
   try {
-    return await requireRole("CEO");
+    return await requireRole("CEO", "COO", "CTO");
   } catch (err) {
     if (err instanceof AuthError) return null;
     throw err;
@@ -32,11 +32,12 @@ function parseInput(
 export async function createOrganisationTeamMemberAction(
   input: unknown,
 ): Promise<ActionResult<{ id: string }>> {
-  const actor = await requireCeo();
+  const actor = await requireExecutive();
   if (!actor)
     return {
       ok: false,
-      error: "You must be the CEO to manage the organisation team.",
+      error:
+        "You must be an executive (CEO, COO, CTO) to manage the organisation team.",
     };
   const parsed = parseInput(input);
   if ("error" in parsed) return { ok: false, error: parsed.error };
@@ -70,11 +71,12 @@ export async function updateOrganisationTeamMemberAction(
   id: string,
   input: unknown,
 ): Promise<ActionResult> {
-  const actor = await requireCeo();
+  const actor = await requireExecutive();
   if (!actor)
     return {
       ok: false,
-      error: "You must be the CEO to manage the organisation team.",
+      error:
+        "You must be an executive (CEO, COO, CTO) to manage the organisation team.",
     };
   const parsed = parseInput(input);
   if ("error" in parsed) return { ok: false, error: parsed.error };

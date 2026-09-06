@@ -115,38 +115,29 @@ const COMMAND_CENTER_SECTIONS: NavSection[] = [
   },
 ];
 
+const EXECUTIVE_PEOPLE_SECTION: NavSection = {
+  label: "People",
+  items: [
+    {
+      href: "/dashboard/organisation-team",
+      label: "Organisation Team",
+      icon: Users,
+    },
+    { href: "/dashboard/participants", label: "Participants", icon: Users },
+  ],
+};
+
+const EXECUTIVE_NAV: NavSection[] = [
+  { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+  EXECUTIVE_PEOPLE_SECTION,
+  EXECUTIVE_SECTION,
+  ...COMMAND_CENTER_SECTIONS.slice(1),
+];
+
 const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
-  CEO: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
-    {
-      label: "People",
-      items: [
-        {
-          href: "/dashboard/organisation-team",
-          label: "Organisation Team",
-          icon: Users,
-        },
-        { href: "/dashboard/participants", label: "Participants", icon: Users },
-      ],
-    },
-    EXECUTIVE_SECTION,
-    ...COMMAND_CENTER_SECTIONS,
-  ],
-  COO: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
-    EXECUTIVE_SECTION,
-    ...COMMAND_CENTER_SECTIONS,
-  ],
-  CTO: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
-    EXECUTIVE_SECTION,
-    {
-      label: "Organization",
-      items: [
-        { href: "/dashboard/participants", label: "Participants", icon: Users },
-      ],
-    },
-  ],
+  CEO: EXECUTIVE_NAV,
+  COO: EXECUTIVE_NAV,
+  CTO: EXECUTIVE_NAV,
   HR_PR: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {

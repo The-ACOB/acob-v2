@@ -252,7 +252,7 @@ export default async function DashboardOverviewPage() {
         description={primaryRoleLabel(session.roleKeys)}
       />
 
-      {session.roleKeys.includes("CEO") ? (
+      {session.roleKeys.some((r) => ["CEO", "COO", "CTO"].includes(r)) ? (
         <ExecutiveOverview actorId={session.id} />
       ) : (
         <RolePanels roleKeys={session.roleKeys} />

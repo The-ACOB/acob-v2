@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
 import { requirePermission, AuthError } from "@/lib/authz/guards";
+import { ROLE_ASSIGNERS } from "@/lib/authz/roles";
 import { db } from "@/lib/db/client";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { ParticipantProfileActions } from "@/components/dashboard/ParticipantProfileActions";
@@ -184,8 +185,13 @@ export default async function ParticipantProfilePage({
           city: participant?.city ?? "",
         }}
       />
-      {actor.roleKeys.includes("CEO") && actor.id !== userId ? (
-        <RoleManagementForm userId={userId} currentRole={primaryRole} />
+      {ROLE_ASSIGNERS.some((r) => actor.roleKeys.includes(r)) &&
+      actor.id !== userId ? (
+        <RoleManagementForm
+          userId={userId}
+          currentRole={primaryRole}
+          isCeo={actor.roleKeys.includes("CEO")}
+        />
       ) : null}
     </div>
   );

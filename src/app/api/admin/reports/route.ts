@@ -11,7 +11,7 @@ function toCsv(rows: string[][]) {
 }
 export async function GET(request: Request) {
   try {
-    await requireRole("CEO");
+    await requireRole("CEO", "COO", "CTO");
   } catch (err) {
     if (err instanceof AuthError)
       return NextResponse.json({ error: err.message }, { status: err.status });

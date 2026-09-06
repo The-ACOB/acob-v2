@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { requireRole, AuthError } from "./guards";
-import { ROLE_DEFINITIONS } from "./roles";
+import { ROLE_DEFINITIONS, ROLE_ASSIGNERS, type RoleKey } from "./roles";
+import {
+  assertCanAssignRole,
+  assertCanRemoveRole,
+  assertNotSelfAssigning,
+} from "./hierarchy";
 import { recordAudit } from "@/lib/audit";
 import type { ActionResult } from "@/lib/auth/actions";
 
@@ -13,21 +18,36 @@ export async function setUserRoleAction(
 ): Promise<ActionResult> {
   let actor;
   try {
-    actor = await requireRole("CEO");
+    actor = await requireRole(...ROLE_ASSIGNERS);
   } catch (err) {
     if (err instanceof AuthError) return { ok: false, error: err.message };
     throw err;
   }
-  if (actor.id === targetUserId)
-    return { ok: false, error: "The CEO account cannot change its own role." };
+
   if (!ROLE_DEFINITIONS.some((role) => role.key === roleKey))
     return { ok: false, error: "Invalid role." };
 
   const target = await db.user.findUnique({
     where: { id: targetUserId },
-    include: { participant: true, ambassador: true },
+    include: {
+      userRoles: { include: { role: true } },
+      participant: true,
+      ambassador: true,
+    },
   });
   if (!target) return { ok: false, error: "User not found." };
+
+  const targetRoleKeys = target.userRoles.map((ur) => ur.role.key);
+
+  try {
+    assertNotSelfAssigning(actor, targetUserId);
+    assertCanRemoveRole(actor, targetUserId, targetRoleKeys);
+    assertCanAssignRole(actor, roleKey as RoleKey);
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
   const role = await db.role.findUnique({ where: { key: roleKey } });
   if (!role) return { ok: false, error: "Role is not configured." };
   const participantRole = await db.role.findUnique({

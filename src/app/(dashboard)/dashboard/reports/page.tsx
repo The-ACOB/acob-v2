@@ -4,7 +4,7 @@ import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 
 export default async function ReportsPage() {
   try {
-    await requireRole("CEO");
+    await requireRole("CEO", "COO", "CTO");
   } catch (err) {
     if (err instanceof AuthError) redirect("/dashboard");
     throw err;
