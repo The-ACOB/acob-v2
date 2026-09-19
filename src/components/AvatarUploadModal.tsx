@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "@/lib/canvasUtils";
 
@@ -20,6 +20,8 @@ export default function AvatarUploadModal({
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onCropComplete = useCallback(
     (croppedArea: any, croppedAreaPixels: any) => {
@@ -73,20 +75,20 @@ export default function AvatarUploadModal({
         <h2 className="text-lg font-medium mb-4">Update Profile Picture</h2>
 
         {!imageSrc ? (
-          <div className="border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-[#555] transition">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-[#555] transition"
+          >
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handleFileChange}
               className="hidden"
-              id="avatar-file-input"
             />
-            <label
-              htmlFor="avatar-file-input"
-              className="cursor-pointer text-sm text-gray-400"
-            >
-              Click to select an image from your device
-            </label>
+            <p className="text-sm text-gray-400 pointer-events-none">
+              Click anywhere here to select an image from your device
+            </p>
           </div>
         ) : (
           <div>
