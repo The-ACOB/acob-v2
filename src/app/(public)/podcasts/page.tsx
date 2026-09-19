@@ -27,7 +27,7 @@ export default async function PodcastsPage() {
       <PageHero
         eyebrow=""
         title="Inside Excellence."
-        description="A podcast from ACOB on curiosity, reasoning, and the people who take applied learning seriously — educators, researchers, and past Olympiad participants."
+        description="A podcast from ACOB on curiosity, reasoning, and the people who take applied learning seriously."
       />
 
       <AnimatedSeparator />

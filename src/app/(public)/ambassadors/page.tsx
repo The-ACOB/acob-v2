@@ -35,7 +35,7 @@ export default function AmbassadorsPage() {
       <PageHero
         eyebrow=""
         title="Represent ACOB where you already are."
-        description="Ambassadors are students and educators who bring ACOB's Olympiads and philosophy to their own schools, colleges, and communities."
+        description="Ambassadors are students who bring ACOB's Olympiads and philosophy to their own schools, colleges, and communities."
       />
 
       {/* <Section>
