@@ -169,8 +169,10 @@ export default async function ParticipantProfilePage({
           </dd>
         </div>
       </dl>
+
       <ParticipantProfileForm
         userId={userId}
+        initialAvatarUrl={profile?.avatarUrl ?? null}
         allowEmailEdit={false}
         defaultValues={{
           fullName: profile?.fullName ?? "",
