@@ -113,17 +113,18 @@ export function verificationEmailHtml(link: string) {
     </head>
     <body style="background-color: #050505; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 40px 0; color: #ededed;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto;">
-        <!-- Brand Header with Logo -->
+        <!-- Brand Header with Larger Centered Logo -->
         <tr>
-          <td align="center" style="padding: 24px 0;">
+          <td align="center" style="padding: 28px 0 20px 0;">
             <table border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center">
-                  <img src="${logoUrl}" alt="ACOB Logo" width="38" height="38" style="display: block; border-radius: 6px; object-fit: contain;" />
+                  <img src="${logoUrl}" alt="Applied Cognitio Olympiad Bangladesh" width="140" style="display: block; border-radius: 4px; object-fit: contain; margin: 0 auto;" />
                 </td>
-                <td style="padding-left: 12px; text-align: left;">
-                  <span style="color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: -0.3px; display: block;">ACOB</span>
-                  <span style="color: #666666; font-size: 13px; display: block; letter-spacing: -0.2px;">Learn for Life</span>
+              </tr>
+              <tr>
+                <td align="center" style="padding-top: 6px;">
+                  <span style="color: #777777; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Learn for Life</span>
                 </td>
               </tr>
             </table>
@@ -182,17 +183,18 @@ export function passwordResetEmailHtml(link: string) {
     </head>
     <body style="background-color: #050505; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 40px 0; color: #ededed;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto;">
-        <!-- Brand Header with Logo -->
+        <!-- Brand Header with Larger Centered Logo -->
         <tr>
-          <td align="center" style="padding: 24px 0;">
+          <td align="center" style="padding: 28px 0 20px 0;">
             <table border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center">
-                  <img src="${logoUrl}" alt="ACOB Logo" width="38" height="38" style="display: block; border-radius: 6px; object-fit: contain;" />
+                  <img src="${logoUrl}" alt="Applied Cognitio Olympiad Bangladesh" width="140" style="display: block; border-radius: 4px; object-fit: contain; margin: 0 auto;" />
                 </td>
-                <td style="padding-left: 12px; text-align: left;">
-                  <span style="color: #ffffff; font-size: 15px; font-weight: 600; letter-spacing: -0.3px; display: block;">ACOB</span>
-                  <span style="color: #666666; font-size: 13px; display: block; letter-spacing: -0.2px;">Learn for Life</span>
+              </tr>
+              <tr>
+                <td align="center" style="padding-top: 6px;">
+                  <span style="color: #777777; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Learn for Life</span>
                 </td>
               </tr>
             </table>
