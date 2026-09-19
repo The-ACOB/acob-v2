@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 
 function initials(name: string) {
   return name
+    .trim()
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -53,19 +54,20 @@ export default async function TeamPage() {
                 <Reveal key={member.id} weight="standard" order={index + 1}>
                   <article className="group relative flex flex-col items-center rounded-xl border border-border bg-elevated/50 p-6 text-center transition-all duration-300 hover:border-accent/40 hover:bg-elevated">
                     {/* Compact Circle Avatar Frame */}
-                    <div className="relative h-24 w-24 overflow-hidden rounded-full border border-border bg-elevated-2 shadow-inner">
+                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-elevated-2 shadow-inner flex items-center justify-center">
                       {member.imageUrl ? (
                         <Image
                           src={member.imageUrl}
                           alt={member.name}
                           fill
                           sizes="96px"
+                          unoptimized
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center font-display text-xl text-muted">
+                        <span className="font-display text-base font-semibold text-muted select-none">
                           {initials(member.name)}
-                        </div>
+                        </span>
                       )}
                     </div>
 
