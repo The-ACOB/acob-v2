@@ -124,7 +124,7 @@ export function verificationEmailHtml(link: string) {
               </tr>
               <tr>
                 <td align="center" style="padding-top: 6px;">
-                  <span style="color: #777777; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Learn for Life</span>
+                  <span style="color: #777777; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Applied Cognitio Olympiad Bangladesh</span>
                 </td>
               </tr>
             </table>
@@ -194,7 +194,7 @@ export function passwordResetEmailHtml(link: string) {
               </tr>
               <tr>
                 <td align="center" style="padding-top: 6px;">
-                  <span style="color: #777777; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Learn for Life</span>
+                  <span style="color: #777777; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Applied Cognitio Olympiad Bangladesh</span>
                 </td>
               </tr>
             </table>
