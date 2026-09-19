@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { AnimatedSeparator } from "@/components/ui/Separator";
 import { PageHero } from "@/components/sections/PageHero";
 import { db } from "@/lib/db/client";
+import { PodcastGrid } from "@/components/podcasts/PodcastGrid";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/podcasts" },
@@ -20,6 +21,7 @@ export default async function PodcastsPage() {
     where: { kind: "podcast", status: "published" },
     orderBy: { publishedAt: "desc" },
   });
+
   return (
     <>
       <PageHero
@@ -27,26 +29,6 @@ export default async function PodcastsPage() {
         title="Inside Excellence."
         description="A podcast from ACOB on curiosity, reasoning, and the people who take applied learning seriously — educators, researchers, and past Olympiad participants."
       />
-
-      {/* <Section>
-        <Container>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-            <Reveal weight="standard">
-              <MetadataLabel>The premise</MetadataLabel>
-            </Reveal>
-            <Reveal weight="standard" order={1}>
-              <p className="max-w-xl text-lg leading-relaxed text-secondary">
-                Every episode starts from the same question ACOB asks in its
-                Olympiads: not <em className="text-primary not-italic">what</em>{" "}
-                do you know, but{" "}
-                <em className="text-primary not-italic">how</em> did you come to
-                know it. Guests talk through the reasoning behind their work,
-                not just the results of it.
-              </p>
-            </Reveal>
-          </div>
-        </Container>
-      </Section> */}
 
       <AnimatedSeparator />
 
@@ -58,6 +40,7 @@ export default async function PodcastsPage() {
               Listen in
             </h2>
           </Reveal>
+
           {episodes.length === 0 ? (
             <Reveal weight="minor" order={1} className="mt-10">
               <EmptyState
@@ -66,28 +49,7 @@ export default async function PodcastsPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-8 flex flex-col divide-y divide-border border-t border-border">
-              {episodes.map((episode) => (
-                <article key={episode.id} className="py-6">
-                  <h3 className="font-display text-2xl text-primary">
-                    {episode.title}
-                  </h3>
-                  {episode.description ? (
-                    <p className="mt-2 text-sm text-secondary">
-                      {episode.description}
-                    </p>
-                  ) : null}
-                  {episode.externalUrl ? (
-                    <a
-                      href={episode.externalUrl}
-                      className="mt-3 inline-block text-sm text-accent underline"
-                    >
-                      Listen
-                    </a>
-                  ) : null}
-                </article>
-              ))}
-            </div>
+            <PodcastGrid episodes={episodes} />
           )}
         </Container>
       </Section>

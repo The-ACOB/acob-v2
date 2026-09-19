@@ -110,11 +110,6 @@ export default function RootLayout({
         className="min-h-dvh bg-background font-sans text-primary antialiased"
         suppressHydrationWarning
       >
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('acob-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`,
-          }}
-        />
         <NavigationProgress />
         <AmbientBackground />
         <ThemeProvider>{children}</ThemeProvider>
