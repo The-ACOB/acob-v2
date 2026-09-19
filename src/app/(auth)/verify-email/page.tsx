@@ -1,43 +1,86 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { verifyEmailAction } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/Button";
 
-export const metadata: Metadata = { title: "Verify your email" };
+export default function VerifyEmailPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = searchParams.get("token");
 
-export default async function VerifyEmailPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ token?: string }>;
-}) {
-  const { token } = await searchParams;
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
+  const [errorMessage, setErrorMessage] = useState<string>(
+    "Invalid or expired token.",
+  );
+  const [isPending, startTransition] = useTransition();
 
-  if (!token) {
+  useEffect(() => {
+    if (!token) {
+      setStatus("error");
+      setErrorMessage("This link is missing its verification token.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const result = await verifyEmailAction(token);
+
+        if (result.ok) {
+          setStatus("success");
+          setTimeout(() => {
+            router.push("/dashboard");
+            router.refresh();
+          }, 600);
+        } else {
+          setStatus("error");
+          setErrorMessage(result.error);
+        }
+      } catch (err) {
+        setStatus("error");
+        setErrorMessage("An unexpected error occurred during verification.");
+      }
+    });
+  }, [token, router]);
+
+  if (status === "loading" || isPending) {
     return (
       <AuthCard
         eyebrow="Account verification"
-        title="Missing verification token"
+        title="Verifying your email..."
+        description="Please wait while we confirm your account and sign you in."
       >
-        <p className="text-sm text-secondary">
-          This link is missing its token. Sign in and request a new verification
-          email from your account.
-        </p>
+        <div className="flex items-center justify-center py-6">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        </div>
       </AuthCard>
     );
   }
 
-  // Executes verification, creates session, and redirects to dashboard.
-  // If verification fails, it returns the error result object.
-  const result = await verifyEmailAction(token);
+  if (status === "success") {
+    return (
+      <AuthCard
+        eyebrow="Account verification"
+        title="Email verified!"
+        description="Signing you in and routing you to your dashboard..."
+      >
+        <div className="flex items-center justify-center py-6">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        </div>
+      </AuthCard>
+    );
+  }
 
   return (
     <AuthCard
       eyebrow="Account verification"
       title="Verification failed"
-      description={
-        result && !result.ok ? result.error : "An unknown error occurred."
-      }
+      description={errorMessage}
     >
       <Button href="/login" variant="secondary">
         Continue to sign in

@@ -253,7 +253,9 @@ export async function logoutAction(): Promise<void> {
   redirect("/login");
 }
 
-export async function verifyEmailAction(token: string): Promise<ActionResult> {
+export async function verifyEmailAction(
+  token: string,
+): Promise<ActionResult<{ userId: string }>> {
   if (!token) return { ok: false, error: "Missing verification token." };
 
   const tokenHash = hashToken(token);
@@ -318,9 +320,10 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
     targetId: userId,
   });
 
-  // Automatically authenticate user and redirect directly to dashboard
+  // Create session securely on the server
   await createSession(userId);
-  redirect("/dashboard");
+
+  return { ok: true, data: { userId } };
 }
 
 /** Always returns ok:true — never reveals whether the email exists. */
