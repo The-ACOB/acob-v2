@@ -38,6 +38,7 @@ export default async function ProfilePage() {
       </p>
       <ParticipantProfileForm
         userId={session.id}
+        initialAvatarUrl={profile.avatarUrl}
         showParticipantFields={Boolean(participant)}
         defaultValues={{
           email: session.email,
