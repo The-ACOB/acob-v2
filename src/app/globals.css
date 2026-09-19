@@ -152,6 +152,41 @@ body {
   }
 }
 
+/* ============================================================
+   AMBIENT HERO BREATHING ANIMATIONS (Timeless, Non-Cringe)
+   ============================================================ */
+@keyframes pulse-glow {
+  0% {
+    transform: scale(1) translate(0px, 0px);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.12) translate(35px, -25px);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1) translate(-25px, 20px);
+    opacity: 0.25;
+  }
+}
+
+@keyframes float-slow {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-18px);
+  }
+}
+
+.animate-slow-pulse {
+  animation: pulse-glow 14s ease-in-out infinite alternate;
+}
+
+.animate-float-slow {
+  animation: float-slow 18s ease-in-out infinite alternate;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   [data-theme="light"] .acob-light-lift {
     animation: acob-orbital-drift 12s ease-in-out infinite;

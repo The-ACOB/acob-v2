@@ -13,6 +13,7 @@ import { WordReveal } from "@/components/ui/WordReveal";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TextLink } from "@/components/ui/TextLink";
 import { OrganizationJsonLd } from "@/components/sections/OrganizationJsonLd";
+import { HeroAmbientCanvas } from "@/components/sections/HeroAmbientCanvas"; // <-- IMPORTED
 import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = {
@@ -32,16 +33,21 @@ export default async function HomePage() {
   return (
     <>
       <OrganizationJsonLd />
+
       {/* ============ HERO ============ */}
       <section className="relative overflow-hidden">
+        {/* --- INTERACTIVE MOVING AMBIENT BACKGROUND --- */}
+        <HeroAmbientCanvas />
+        {/* --------------------------------------------- */}
+
         <div
           aria-hidden
-          className="acob-light-lift pointer-events-none absolute right-[-10%] top-[-8%] h-[600px] w-[600px] opacity-70 sm:h-[760px] sm:w-[760px] lg:right-[-6%] lg:top-[-12%]"
+          className="acob-light-lift pointer-events-none absolute right-[-10%] top-[-8%] z-0 h-[600px] w-[600px] opacity-70 sm:h-[760px] sm:w-[760px] lg:right-[-6%] lg:top-[-12%]"
         >
           <ParallaxOrbital className="h-full w-full" />
         </div>
 
-        <Container className="relative pt-20 pb-16 sm:pt-28 sm:pb-20 lg:pt-36">
+        <Container className="relative z-10 pt-20 pb-16 sm:pt-28 sm:pb-20 lg:pt-36">
           <Reveal weight="minor">
             <div className="mb-8 flex items-center gap-3">
               <MetadataLabel>
