@@ -21,46 +21,46 @@ enum UserStatus {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
-  pendingEmail    String?   @unique @map("pending_email")
-  passwordHash    String    @map("password_hash")
-  status          UserStatus @default(active)
-  emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id                      String    @id @default(uuid())
+  email                   String    @unique
+  pendingEmail            String?   @unique @map("pending_email")
+  passwordHash            String    @map("password_hash")
+  status                  UserStatus @default(active)
+  emailVerifiedAt         DateTime? @map("email_verified_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
 
-  profile                  Profile?
-  sessions                 Session[]
-  passwordResetTokens      PasswordResetToken[]
-  emailVerificationTokens  EmailVerificationToken[]
-  notifications            Notification[]
-  notificationPreference   NotificationPreference?
-  userRoles                UserRole[]               @relation("UserRoleUser")
-  rolesAssigned            UserRole[]               @relation("UserRoleAssignedBy")
-  approvalRequestsMade     ApprovalRequest[]        @relation("ApprovalRequester")
-  approvalRequestsReviewed ApprovalRequest[]        @relation("ApprovalReviewer")
-  auditLogs                AuditLog[]
-  participant              Participant?
-  ambassador               Ambassador?
-  ambassadorApprovals      Ambassador[]             @relation("AmbassadorApprover")
-  contactSubmissions       ContactSubmission[]
-  contactReplies           ContactReply[]
-  conversations            Conversation[]           @relation("ConversationParticipant")
-  messagesSent             Message[]                @relation("MessageSender")
-  olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
-  attempts                 Attempt[]                @relation("AttemptUser")
-  olympiadRegistrations    OlympiadRegistration[]
-  certificatesReceived     Certificate[]            @relation("CertificateRecipient")
-  certificatesIssued       Certificate[]            @relation("CertificateIssuer")
-  certificatesRevoked      Certificate[]            @relation("CertificateRevoker")
-  lettersReceived          RecommendationLetter[]   @relation("LetterRecipient")
-  lettersIssued            RecommendationLetter[]   @relation("LetterIssuer")
-  lettersRevoked           RecommendationLetter[]   @relation("LetterRevoker")
-  contentAuthored          Content[]                @relation("ContentAuthor")
-  careerListingsCreated    CareerListing[]          @relation("CareerListingCreator")
-  popupsCreated            Popup[]                  @relation("PopupCreator")
-  organisationTeamMembers  OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
+  profile                 Profile?
+  sessions                Session[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  notifications           Notification[]
+  notificationPreference  NotificationPreference?
+  userRoles               UserRole[]               @relation("UserRoleUser")
+  rolesAssigned           UserRole[]               @relation("UserRoleAssignedBy")
+  approvalRequestsMade    ApprovalRequest[]        @relation("ApprovalRequester")
+  approvalRequestsReviewed ApprovalRequest[]       @relation("ApprovalReviewer")
+  auditLogs               AuditLog[]
+  participant             Participant?
+  ambassador              Ambassador?
+  ambassadorApprovals     Ambassador[]             @relation("AmbassadorApprover")
+  contactSubmissions      ContactSubmission[]
+  contactReplies          ContactReply[]
+  conversations           Conversation[]           @relation("ConversationParticipant")
+  messagesSent            Message[]                @relation("MessageSender")
+  olympiadsCreated        Olympiad[]               @relation("OlympiadCreator")
+  attempts                Attempt[]                @relation("AttemptUser")
+  olympiadRegistrations   OlympiadRegistration[]
+  certificatesReceived    Certificate[]            @relation("CertificateRecipient")
+  certificatesIssued      Certificate[]            @relation("CertificateIssuer")
+  certificatesRevoked     Certificate[]            @relation("CertificateRevoker")
+  lettersReceived         RecommendationLetter[]   @relation("LetterRecipient")
+  lettersIssued           RecommendationLetter[]   @relation("LetterIssuer")
+  lettersRevoked          RecommendationLetter[]   @relation("LetterRevoker")
+  contentAuthored         Content[]                @relation("ContentAuthor")
+  careerListingsCreated   CareerListing[]          @relation("CareerListingCreator")
+  popupsCreated           Popup[]                  @relation("PopupCreator")
+  organisationTeamMembers OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
 
   @@map("users")
 }
@@ -266,18 +266,18 @@ enum AmbassadorStatus {
 }
 
 model Participant {
-  id          String   @id @default(uuid())
-  userId      String   @unique @map("user_id")
-  gender      String?
-  district    String?
-  address     String?
-  city        String?
-  academicLevel String? @map("academic_level")
-  institution String?
-  gradeLevel  String?  @map("grade_level")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  gender        String?
+  district      String?
+  address       String?
+  city          String?
+  academicLevel String?  @map("academic_level")
+  institution   String?
+  gradeLevel    String?  @map("grade_level")
+  createdAt     DateTime @default(now()) @map("created_at")
 
-  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   referral AmbassadorReferral?
 
   @@map("participants")
@@ -322,12 +322,6 @@ enum ContactStatus {
   @@map("contact_status")
 }
 
-/**
- * A public contact-form submission. `userId` is set when the submitter
- * was signed in at the time — otherwise the conversation exists purely
- * by name/email, and any staff reply goes out by email only (there's
- * no dashboard for an anonymous visitor to read it in-app).
- */
 model ContactSubmission {
   id        String        @id @default(uuid())
   name      String
@@ -346,11 +340,6 @@ model ContactSubmission {
   @@map("contact_submissions")
 }
 
-/**
- * A staff reply to a contact submission. `staffUserId` is recorded for
- * accountability but is never surfaced to the recipient — replies are
- * always shown/sent as "ACOB Support Team".
- */
 model ContactReply {
   id           String   @id @default(uuid())
   submissionId String   @map("submission_id")
@@ -371,12 +360,6 @@ enum ConversationStatus {
   @@map("conversation_status")
 }
 
-/**
- * A support thread belonging to exactly one registered participant or
- * ambassador. There is no concept of messaging an individual staff
- * member directly — a conversation is always with "ACOB Support",
- * and any support-permission holder may pick it up.
- */
 model Conversation {
   id                String             @id @default(uuid())
   participantUserId String             @map("participant_user_id")
@@ -436,12 +419,13 @@ model Olympiad {
   title                  String
   slug                   String         @unique
   description            String?
+  posterUrl              String?        @map("poster_url")  // <-- ADDED POSTER FIELD HERE
   subject                String?
   status                 OlympiadStatus @default(draft)
   durationMinutes        Int            @map("duration_minutes")
-  registrationEnabled   Boolean        @default(true) @map("registration_enabled")
-  registrationStartAt   DateTime?      @map("registration_start_at")
-  registrationEndAt     DateTime?      @map("registration_end_at")
+  registrationEnabled    Boolean        @default(true) @map("registration_enabled")
+  registrationStartAt    DateTime?      @map("registration_start_at")
+  registrationEndAt      DateTime?      @map("registration_end_at")
   startAt                DateTime?      @map("start_at")
   endAt                  DateTime?      @map("end_at")
   publishAt              DateTime?      @map("publish_at")
@@ -456,11 +440,11 @@ model Olympiad {
   createdAt              DateTime       @default(now()) @map("created_at")
   updatedAt              DateTime       @updatedAt @map("updated_at")
 
-  creator   User       @relation("OlympiadCreator", fields: [createdBy], references: [id], onDelete: Cascade)
-  questions Question[]
-  attempts  Attempt[]
+  creator       User                   @relation("OlympiadCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  questions     Question[]
+  attempts      Attempt[]
   registrations OlympiadRegistration[]
-  certificates Certificate[]
+  certificates  Certificate[]
 
   @@map("olympiads")
 }
@@ -498,34 +482,27 @@ model QuestionOption {
   @@map("question_options")
 }
 
-/**
- * One attempt per participant per Olympiad (enforced by the unique
- * constraint below). `deadlineAt` is computed once, server-side, when
- * the attempt starts — every subsequent read or write re-checks
- * against this stored deadline rather than trusting anything the
- * client sends, which is what makes the exam timer authoritative.
- */
 model Attempt {
-  id                String        @id @default(uuid())
-  olympiadId        String        @map("olympiad_id")
-  userId            String        @map("user_id")
-  status            AttemptStatus @default(in_progress)
-  startedAt         DateTime      @default(now()) @map("started_at")
-  deadlineAt        DateTime      @map("deadline_at")
-  submittedAt       DateTime?     @map("submitted_at")
-  score             Float?
-  totalMarks        Float?        @map("total_marks")
-  correctCount      Int?          @map("correct_count")
-  incorrectCount    Int?          @map("incorrect_count")
-  unansweredCount   Int?          @map("unanswered_count")
-  timeSpentSeconds  Int?          @map("time_spent_seconds")
-  rank              Int?
-  scoreLocked       Boolean       @default(false) @map("score_locked")
-  integrityViolationCount Int      @default(0) @map("integrity_violation_count")
-  autoSubmissionReason String?     @map("auto_submission_reason")
-  autoSubmittedAt  DateTime?       @map("auto_submitted_at")
-  createdAt         DateTime      @default(now()) @map("created_at")
-  updatedAt         DateTime      @updatedAt @map("updated_at")
+  id                      String        @id @default(uuid())
+  olympiadId              String        @map("olympiad_id")
+  userId                  String        @map("user_id")
+  status                  AttemptStatus @default(in_progress)
+  startedAt               DateTime      @default(now()) @map("started_at")
+  deadlineAt              DateTime      @map("deadline_at")
+  submittedAt             DateTime?     @map("submitted_at")
+  score                   Float?
+  totalMarks              Float?        @map("total_marks")
+  correctCount            Int?          @map("correct_count")
+  incorrectCount          Int?          @map("incorrect_count")
+  unansweredCount         Int?          @map("unanswered_count")
+  timeSpentSeconds        Int?          @map("time_spent_seconds")
+  rank                    Int?
+  scoreLocked             Boolean       @default(false) @map("score_locked")
+  integrityViolationCount Int           @default(0) @map("integrity_violation_count")
+  autoSubmissionReason    String?       @map("auto_submission_reason")
+  autoSubmittedAt         DateTime?     @map("auto_submitted_at")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
 
   olympiad Olympiad        @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
   user     User            @relation("AttemptUser", fields: [userId], references: [id], onDelete: Cascade)
@@ -536,13 +513,13 @@ model Attempt {
 }
 
 model OlympiadRegistration {
-  id          String   @id @default(uuid())
-  olympiadId  String   @map("olympiad_id")
-  userId      String   @map("user_id")
+  id           String   @id @default(uuid())
+  olympiadId   String   @map("olympiad_id")
+  userId       String   @map("user_id")
   registeredAt DateTime @default(now()) @map("registered_at")
 
   olympiad Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([olympiadId, userId])
   @@index([userId])
@@ -550,18 +527,18 @@ model OlympiadRegistration {
 }
 
 model OrganisationTeamMember {
-  id          String   @id @default(uuid())
-  name        String
-  title       String
-  bio         String?
-  imageUrl    String?  @map("image_url")
-  displayOrder Int     @default(0) @map("display_order")
-  active      Boolean  @default(true)
-  linkedinUrl String?  @map("linkedin_url")
-  websiteUrl  String?  @map("website_url")
-  createdBy   String   @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  name         String
+  title        String
+  bio          String?
+  imageUrl     String?  @map("image_url")
+  displayOrder Int      @default(0) @map("display_order")
+  active       Boolean  @default(true)
+  linkedinUrl  String?  @map("linkedin_url")
+  websiteUrl   String?  @map("website_url")
+  createdBy    String   @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   creator User @relation("OrganisationTeamMemberCreator", fields: [createdBy], references: [id], onDelete: Cascade)
 
@@ -569,24 +546,19 @@ model OrganisationTeamMember {
   @@map("organisation_team_members")
 }
 
-/**
- * `timeSpentSeconds` and `changeCount` are updated via debounced
- * client pings (see lib/exam), not on every keystroke — a handful of
- * writes per question, not one per millisecond.
- */
 model AttemptAnswer {
-  id                 String    @id @default(uuid())
-  attemptId          String    @map("attempt_id")
-  questionId         String    @map("question_id")
-  selectedOptionId   String?   @map("selected_option_id")
-  isCorrect          Boolean?  @map("is_correct")
-  marksAwarded       Float?    @map("marks_awarded")
+  id                String    @id @default(uuid())
+  attemptId         String    @map("attempt_id")
+  questionId        String    @map("question_id")
+  selectedOptionId  String?   @map("selected_option_id")
+  isCorrect         Boolean?  @map("is_correct")
+  marksAwarded      Float?    @map("marks_awarded")
   timeSpentSeconds   Int       @default(0) @map("time_spent_seconds")
-  changeCount        Int       @default(0) @map("change_count")
-  firstAnsweredAt    DateTime? @map("first_answered_at")
-  lastInteractionAt  DateTime? @map("last_interaction_at")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  changeCount       Int       @default(0) @map("change_count")
+  firstAnsweredAt   DateTime? @map("first_answered_at")
+  lastInteractionAt DateTime? @map("last_interaction_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   attempt        Attempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
@@ -617,13 +589,6 @@ enum CertificateStatus {
   @@map("certificate_status")
 }
 
-/**
- * Two identifiers by design: `certificateId` is the short, readable
- * ID printed on the certificate itself (what a person types into the
- * verify form); `verificationToken` is a long, cryptographically
- * random string embedded only in the QR code. Knowing one does not
- * make the other guessable, and neither is a sequential counter.
- */
 model Certificate {
   id                String                 @id @default(uuid())
   certificateId     String                 @unique @map("certificate_id")
@@ -700,11 +665,6 @@ enum ContentStatus {
   @@map("content_status")
 }
 
-/**
- * "Delete" never hard-removes a row — it sets status to `archived`.
- * That's the safeguard against destroying published material by
- * accident; nothing in this app performs a real DELETE on content.
- */
 model Content {
   id          String        @id @default(uuid())
   kind        ContentKind

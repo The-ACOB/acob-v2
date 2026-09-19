@@ -51,6 +51,7 @@ export default async function EditOlympiadPage({
           defaultValues={{
             title: olympiad.title,
             description: olympiad.description ?? "",
+            posterUrl: olympiad.posterUrl ?? "",
             subject: olympiad.subject ?? "",
             durationMinutes: olympiad.durationMinutes,
             registrationStartAt:

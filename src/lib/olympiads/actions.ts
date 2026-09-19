@@ -60,6 +60,7 @@ export async function createOlympiadAction(
       title: v.title,
       slug,
       description: v.description || null,
+      posterUrl: v.posterUrl || null,
       subject: v.subject || null,
       durationMinutes: v.durationMinutes,
       registrationStartAt: new Date(v.registrationStartAt),
@@ -132,6 +133,7 @@ export async function updateOlympiadAction(
     data: {
       title: v.title,
       description: v.description || null,
+      posterUrl: v.posterUrl || null,
       subject: v.subject || null,
       durationMinutes: v.durationMinutes,
       registrationStartAt: new Date(v.registrationStartAt),
@@ -451,13 +453,6 @@ export async function deleteQuestionAction(
   return { ok: true };
 }
 
-/**
- * Publishes results: computes ranks across all submitted attempts and
- * locks their scores. Once locked, an attempt's score is immutable —
- * this action itself is idempotent (safe to re-run, e.g. to add
- * late-graded attempts) but never un-does an existing lock silently;
- * it recomputes and re-locks explicitly.
- */
 export async function publishResultsAction(
   olympiadId: string,
 ): Promise<ActionResult> {

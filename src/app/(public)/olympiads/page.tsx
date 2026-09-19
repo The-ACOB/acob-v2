@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
@@ -33,6 +34,7 @@ export default async function OlympiadsPage() {
       id: true,
       title: true,
       description: true,
+      posterUrl: true,
       subject: true,
       durationMinutes: true,
       registrationStartAt: true,
@@ -43,6 +45,7 @@ export default async function OlympiadsPage() {
       registrationEnabled: true,
     },
   });
+
   return (
     <>
       <PageHero
@@ -75,34 +78,59 @@ export default async function OlympiadsPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-10 grid gap-5 lg:grid-cols-2">
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
               {olympiads.map((olympiad, index) => (
                 <Reveal key={olympiad.id} weight="minor" order={index}>
-                  <article className="flex h-full flex-col justify-between rounded-lg border border-border bg-elevated p-6">
+                  <article className="flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-elevated transition-all duration-300 hover:border-accent/40">
                     <div>
-                      <p className="font-mono text-xs uppercase tracking-[0.14em] text-accent">
-                        {getOlympiadPhase(olympiad).replace(/_/g, " ")}
-                      </p>
-                      <h3 className="mt-3 font-display text-2xl text-primary">
-                        {olympiad.title}
-                      </h3>
-                      {olympiad.description ? (
-                        <p className="mt-3 text-sm leading-relaxed text-secondary">
-                          {olympiad.description}
+                      {/* Poster Banner Section */}
+                      {olympiad.posterUrl ? (
+                        <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-border bg-black/40">
+                          <Image
+                            src={olympiad.posterUrl}
+                            alt={olympiad.title}
+                            fill
+                            sizes="(max-width: 1024px) 100vw, 50vw"
+                            unoptimized
+                            className="object-cover transition-transform duration-500 hover:scale-105"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-28 w-full border-b border-border bg-gradient-to-br from-neutral-900 to-neutral-950 flex items-center justify-center">
+                          <span className="font-mono text-xs uppercase tracking-widest text-muted/60">
+                            {olympiad.subject ?? "ACOB Olympiad"}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="p-6">
+                        <p className="font-mono text-xs uppercase tracking-[0.14em] text-accent">
+                          {getOlympiadPhase(olympiad).replace(/_/g, " ")}
                         </p>
-                      ) : null}
-                      <p className="mt-4 text-xs text-muted">
-                        {olympiad.subject ?? "ACOB Olympiad"} ·{" "}
-                        {olympiad.durationMinutes} minutes
-                      </p>
+                        <h3 className="mt-3 font-display text-2xl text-primary">
+                          {olympiad.title}
+                        </h3>
+                        {olympiad.description ? (
+                          <p className="mt-3 text-sm leading-relaxed text-secondary line-clamp-3">
+                            {olympiad.description}
+                          </p>
+                        ) : null}
+                        <p className="mt-4 text-xs text-muted font-mono">
+                          {olympiad.subject ?? "ACOB Olympiad"} ·{" "}
+                          {olympiad.durationMinutes} minutes
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      href={`/olympiads/${olympiad.id}`}
-                      variant="secondary"
-                      className="mt-6 w-fit text-xs"
-                    >
-                      View Olympiad
-                    </Button>
+
+                    <div className="p-6 pt-0">
+                      <Button
+                        href={`/olympiads/${olympiad.id}`}
+                        variant="secondary"
+                        className="w-fit text-xs"
+                      >
+                        View Olympiad
+                      </Button>
+                    </div>
                   </article>
                 </Reveal>
               ))}

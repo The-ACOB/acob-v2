@@ -4,6 +4,7 @@ export const olympiadSchema = z
   .object({
     title: z.string().trim().min(3, "Title is required."),
     description: z.string().trim().max(2000).optional().or(z.literal("")),
+    posterUrl: z.string().trim().url().optional().or(z.literal("")),
     subject: z.string().trim().max(120).optional().or(z.literal("")),
     durationMinutes: z.number().int().min(5, "Minimum 5 minutes.").max(600),
     registrationStartAt: z.string().min(1, "Registration opening is required."),
