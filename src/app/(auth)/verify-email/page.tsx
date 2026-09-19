@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { verifyEmailAction } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/Button";
 
-export default function VerifyEmailPage() {
+// Force dynamic rendering so Next.js doesn't attempt static prerendering at build time
+export const dynamic = "force-dynamic";
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -91,5 +94,25 @@ export default function VerifyEmailPage() {
         </Link>
       </p>
     </AuthCard>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthCard
+          eyebrow="Account verification"
+          title="Loading..."
+          description="Preparing verification..."
+        >
+          <div className="flex items-center justify-center py-6">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          </div>
+        </AuthCard>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
