@@ -171,8 +171,8 @@ export function OrganisationTeamManager({
               </label>
               <input type="hidden" name="imageUrl" value={imageUrl} />
               <p className="text-[11px] text-muted">
-                Stored locally in{" "}
-                <code className="text-accent">/public/uploads/team/</code>
+                Stored securely via{" "}
+                <code className="text-accent">Vercel Blob CDN</code>
               </p>
             </div>
           </div>

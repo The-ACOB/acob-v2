@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 
 export async function POST(request: Request) {
   try {
@@ -11,18 +10,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const blob = await put(
+      `team/${Date.now()}-${file.name.replace(/\s+/g, "-")}`,
+      file,
+      {
+        access: "public",
+      },
+    );
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "team");
-    await mkdir(uploadDir, { recursive: true });
-
-    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-    const filePath = path.join(uploadDir, fileName);
-
-    await writeFile(filePath, buffer);
-
-    return NextResponse.json({ url: `/uploads/team/${fileName}` });
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
