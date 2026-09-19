@@ -5,7 +5,11 @@ import Link from "next/link";
 import { logoutAction } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
 
-type HeaderUser = { email: string; fullName: string | null };
+type HeaderUser = {
+  email: string;
+  fullName: string | null;
+  avatarUrl?: string | null;
+};
 
 function initials(user: HeaderUser): string {
   const source = user.fullName?.trim() || user.email;
@@ -15,7 +19,7 @@ function initials(user: HeaderUser): string {
 }
 
 /**
- * Compact account trigger — an initials badge that opens a small menu,
+ * Compact account trigger — an avatar badge or initials badge that opens a small menu,
  * replacing the old inline "Sign out (full email)" text that made the
  * header feel cluttered.
  */
@@ -47,9 +51,17 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-border-strong font-mono text-[11px] uppercase tracking-widest text-primary transition-colors hover:border-accent"
+        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border-strong font-mono text-[11px] uppercase tracking-widest text-primary transition-colors hover:border-accent"
       >
-        {initials(user)}
+        {user.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt={user.fullName ?? user.email}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          initials(user)
+        )}
       </button>
 
       <div
