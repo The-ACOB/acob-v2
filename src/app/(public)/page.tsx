@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
@@ -13,6 +13,7 @@ import { WordReveal } from "@/components/ui/WordReveal";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TextLink } from "@/components/ui/TextLink";
 import { OrganizationJsonLd } from "@/components/sections/OrganizationJsonLd";
+import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -21,7 +22,13 @@ export const metadata: Metadata = {
     "Curiosity over memorisation. ACOB creates academic Olympiads and learning experiences that reward reasoning, application, and understanding — not recall.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const publishedOlympiads = await db.olympiad.findMany({
+    where: { status: "published" },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  });
+
   return (
     <>
       <OrganizationJsonLd />
@@ -85,7 +92,6 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-x-10 gap-y-3 border-t border-border pt-6">
               <MetadataLabel muted>Founded 2025</MetadataLabel>
               <MetadataLabel muted>Based in Bangladesh</MetadataLabel>
-              {/* <MetadataLabel muted>Curiosity over memorisation</MetadataLabel> */}
             </div>
           </Reveal>
         </Container>
@@ -155,22 +161,59 @@ export default function HomePage() {
               </h2>
               <p className="mt-5 text-base leading-relaxed text-secondary">
                 Every ACOB Olympiad is written to test how a student thinks, not
-                just what they&apos;ve memorised. Full details on this
-                year&apos;s tracks, subjects, and registration open here soon.
+                just what they&apos;ve memorised. Explore active tracks below or
+                view the complete schedule.
               </p>
             </Reveal>
             <Reveal weight="minor" order={1}>
               <Button href="/olympiads" variant="secondary">
-                View Olympiads
+                View All Olympiads
               </Button>
             </Reveal>
           </div>
 
           <Reveal weight="minor" order={2} className="mt-14">
-            <EmptyState
-              title="Olympiad listings open soon"
-              description="This section will surface live tracks, subjects, dates, and registration status as soon as the current cycle is published."
-            />
+            {publishedOlympiads.length === 0 ? (
+              <EmptyState
+                title="Olympiad listings open soon"
+                description="This section will surface live tracks, subjects, dates, and registration status as soon as the current cycle is published."
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {publishedOlympiads.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col justify-between rounded-xl border border-border bg-elevated/40 p-6 transition-all hover:border-accent/40"
+                  >
+                    <div>
+                      <span className="inline-block rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">
+                        Registration Open
+                      </span>
+                      <h3 className="mt-3 font-display text-xl text-primary">
+                        {item.title}
+                      </h3>
+                      {item.description && (
+                        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-secondary">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
+                      <span className="text-xs text-muted">
+                        Duration: {item.durationMinutes} mins
+                      </span>
+                      <Link
+                        href="/olympiads"
+                        className="text-xs font-semibold text-accent hover:underline"
+                      >
+                        View Olympiad →
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Reveal>
         </Container>
       </Section>
