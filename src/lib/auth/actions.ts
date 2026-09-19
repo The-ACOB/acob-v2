@@ -130,8 +130,6 @@ export async function registerAction(input: unknown): Promise<ActionResult> {
         update: {},
       });
     }
-    // Preserve anti-enumeration. An unverified account receives a fresh link;
-    // a verified one gets the same generic confirmation without a mail send.
     if (!existing.emailVerifiedAt && existing.status === "active") {
       const { token } = await issueVerificationToken(existing.id);
       const delivery = await sendVerificationEmail(existing.email, token);
@@ -167,8 +165,6 @@ export async function registerAction(input: unknown): Promise<ActionResult> {
     });
     userId = user.id;
   } catch (error) {
-    // A concurrent registration can win after the initial lookup. Keep the
-    // response generic and never expose database details to the browser.
     console.error("[auth] Registration database operation failed.", {
       message: error instanceof Error ? error.message : "unknown",
     });
@@ -270,7 +266,9 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
       error: "This verification link is invalid or has expired.",
     };
 
+  const userId = record.userId;
   const now = new Date();
+
   const consumed = await db.$transaction(async (tx) => {
     const result = await tx.emailVerificationToken.updateMany({
       where: { id: record.id, usedAt: null, expiresAt: { gt: now } },
@@ -278,12 +276,12 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
     });
     if (result.count !== 1) return false;
     const verifiedUser = await tx.user.update({
-      where: { id: record.userId },
+      where: { id: userId },
       data: { emailVerifiedAt: now },
     });
     if (verifiedUser.pendingEmail) {
       await tx.user.update({
-        where: { id: record.userId },
+        where: { id: userId },
         data: { email: verifiedUser.pendingEmail, pendingEmail: null },
       });
     }
@@ -293,19 +291,20 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
     if (participantRole) {
       const participantRoleAssignment = await tx.userRole.findUnique({
         where: {
-          userId_roleId: { userId: record.userId, roleId: participantRole.id },
+          userId_roleId: { userId, roleId: participantRole.id },
         },
       });
       if (participantRoleAssignment) {
         await tx.participant.upsert({
-          where: { userId: record.userId },
-          create: { userId: record.userId },
+          where: { userId },
+          create: { userId },
           update: {},
         });
       }
     }
     return true;
   });
+
   if (!consumed)
     return {
       ok: false,
@@ -313,13 +312,15 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
     };
 
   await recordAudit({
-    actorId: record.userId,
+    actorId: userId,
     action: "auth:email_verified",
     targetType: "user",
-    targetId: record.userId,
+    targetId: userId,
   });
 
-  return { ok: true };
+  // Automatically authenticate user and redirect directly to dashboard
+  await createSession(userId);
+  redirect("/dashboard");
 }
 
 /** Always returns ok:true — never reveals whether the email exists. */
@@ -340,7 +341,6 @@ export async function forgotPasswordAction(
     windowMs: 60 * 60 * 1000,
   });
   if (!rl.allowed) {
-    // Still generic, to avoid leaking timing/rate-limit signals about the email's existence.
     return { ok: true };
   }
 

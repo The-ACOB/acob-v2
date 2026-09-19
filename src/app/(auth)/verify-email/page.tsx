@@ -15,25 +15,28 @@ export default async function VerifyEmailPage({
 
   if (!token) {
     return (
-      <AuthCard eyebrow="Account verification" title="Missing verification token">
+      <AuthCard
+        eyebrow="Account verification"
+        title="Missing verification token"
+      >
         <p className="text-sm text-secondary">
-          This link is missing its token. Sign in and request a new
-          verification email from your account.
+          This link is missing its token. Sign in and request a new verification
+          email from your account.
         </p>
       </AuthCard>
     );
   }
 
+  // Executes verification, creates session, and redirects to dashboard.
+  // If verification fails, it returns the error result object.
   const result = await verifyEmailAction(token);
 
   return (
     <AuthCard
       eyebrow="Account verification"
-      title={result.ok ? "Email verified" : "Verification failed"}
+      title="Verification failed"
       description={
-        result.ok
-          ? "Your email address has been confirmed."
-          : (result as { ok: false; error: string }).error
+        result && !result.ok ? result.error : "An unknown error occurred."
       }
     >
       <Button href="/login" variant="secondary">
