@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const session = await getCurrentSession();
   if (!session) redirect("/login?next=/dashboard");
 
@@ -24,19 +28,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
     take: 8,
   });
 
-  const notifications: NotificationItem[] = rawNotifications.map((n: {
-    id: string;
-    title: string;
-    body: string | null;
-    createdAt: Date;
-    readAt: Date | null;
-  }) => ({
-    id: n.id,
-    title: n.title,
-    body: n.body,
-    createdAt: n.createdAt.toISOString(),
-    readAt: n.readAt ? n.readAt.toISOString() : null,
-  }));
+  const notifications: NotificationItem[] = rawNotifications.map(
+    (n: {
+      id: string;
+      title: string;
+      body: string | null;
+      createdAt: Date;
+      readAt: Date | null;
+    }) => ({
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      createdAt: n.createdAt.toISOString(),
+      readAt: n.readAt ? n.readAt.toISOString() : null,
+    }),
+  );
 
   return (
     <ToastProvider>
@@ -46,7 +52,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <DashboardHeader
             roleKeys={session.roleKeys}
             roleLabel={roleLabel}
-            user={{ email: session.email, fullName: session.fullName }}
+            user={{
+              email: session.email,
+              fullName: session.fullName,
+              avatarUrl: session.avatarUrl,
+            }}
             notifications={notifications}
           />
           <main className="flex-1 px-6 py-8 sm:px-8 lg:px-10">{children}</main>

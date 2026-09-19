@@ -11,7 +11,11 @@ import { NAV_LINKS } from "./nav-links";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 
-type HeaderUser = { email: string; fullName: string | null } | null;
+type HeaderUser = {
+  email: string;
+  fullName: string | null;
+  avatarUrl?: string | null;
+} | null;
 
 export function Header({ user = null }: { user?: HeaderUser }) {
   const pathname = usePathname();
@@ -164,7 +168,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
                 ) : (
                   <TextLink
                     href="/login"
-                    className="w-fit rounded-full border border-border-strong px-4 py-2 text-sm font-medium tracking-tight after:hidden"
+                    className="text-sm font-medium tracking-tight after:hidden"
                   >
                     Sign in
                   </TextLink>
