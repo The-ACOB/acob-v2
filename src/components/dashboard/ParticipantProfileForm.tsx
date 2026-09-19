@@ -33,15 +33,67 @@ export function ParticipantProfileForm({
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Initialize gender state based on defaultValues
+  const initialGender = defaultValues.gender || "";
+  const isStandardGender = ["Male", "Female"].includes(initialGender);
+  const [genderOption, setGenderOption] = useState<string>(
+    isStandardGender ? initialGender : initialGender ? "Other" : "Male",
+  );
+  const [genderOtherText, setGenderOtherText] = useState<string>(
+    !isStandardGender && initialGender ? initialGender : "",
+  );
+
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(updateParticipantProfileSchema),
     defaultValues,
   });
+
+  const gradeLevelValue = watch("gradeLevel") || "";
+
+  // Handle class/grade dropdown change and auto-calculate academic level
+  const handleGradeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setValue("gradeLevel", val, { shouldValidate: true });
+
+    const gradeNum = parseInt(val.trim(), 10);
+    if (!isNaN(gradeNum)) {
+      if (gradeNum >= 6 && gradeNum <= 8) {
+        setValue("academicLevel", "Junior Secondary", { shouldValidate: true });
+      } else if (gradeNum >= 9) {
+        setValue("academicLevel", "Secondary Higher Secondary", {
+          shouldValidate: true,
+        });
+      } else {
+        setValue("academicLevel", "", { shouldValidate: true });
+      }
+    } else {
+      setValue("academicLevel", "", { shouldValidate: true });
+    }
+  };
+
+  const handleGenderChange = (option: string) => {
+    setGenderOption(option);
+    if (option === "Other") {
+      setValue("gender", genderOtherText, { shouldValidate: true });
+    } else {
+      setValue("gender", option, { shouldValidate: true });
+    }
+  };
+
+  const handleGenderOtherChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setGenderOtherText(text);
+    if (genderOption === "Other") {
+      setValue("gender", text, { shouldValidate: true });
+    }
+  };
 
   const submit = async (values: Values) => {
     setServerError(null);
@@ -65,10 +117,10 @@ export function ParticipantProfileForm({
   };
 
   return (
-    <div className="mt-6 flex max-w-2xl flex-col gap-6">
+    <div className="mt-6 flex max-w-3xl flex-col gap-6">
       {/* Profile Picture Section */}
-      <div className="flex items-center gap-6 rounded-lg border border-border bg-elevated p-6">
-        <div className="relative h-20 w-20 overflow-hidden rounded-full bg-background border border-border">
+      <div className="flex items-center gap-6 rounded-lg border border-border bg-elevated p-6 shadow-sm">
+        <div className="relative h-20 w-20 overflow-hidden rounded-full bg-background border border-border flex-shrink-0">
           {avatarUrl ? (
             <Image
               src={avatarUrl}
@@ -112,134 +164,224 @@ export function ParticipantProfileForm({
       <form
         onSubmit={handleSubmit(submit)}
         noValidate
-        className="flex flex-col gap-5 rounded-lg border border-border bg-elevated p-6"
+        className="flex flex-col gap-6 rounded-lg border border-border bg-elevated p-6 shadow-sm"
       >
-        <FormField
-          label="Name"
-          htmlFor="fullName"
-          error={errors.fullName?.message}
-        >
-          <input
-            id="fullName"
-            className={fieldClasses}
-            {...register("fullName")}
-          />
-        </FormField>
-        {allowEmailEdit ? (
-          <FormField
-            label="Email address"
-            htmlFor="email"
-            error={errors.email?.message}
-          >
-            <input
-              id="email"
-              type="email"
-              className={fieldClasses}
-              {...register("email")}
-            />
-          </FormField>
-        ) : null}
-        <FormField label="Phone" htmlFor="phone" error={errors.phone?.message}>
-          <input id="phone" className={fieldClasses} {...register("phone")} />
-        </FormField>
-        <FormField label="Bio" htmlFor="bio" error={errors.bio?.message}>
-          <textarea
-            id="bio"
-            rows={3}
-            className={`${fieldClasses} resize-none`}
-            {...register("bio")}
-          />
-        </FormField>
+        {/* Section 1: Basic Information */}
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
+            Basic Information
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Name"
+              htmlFor="fullName"
+              error={errors.fullName?.message}
+            >
+              <input
+                id="fullName"
+                className={fieldClasses}
+                {...register("fullName")}
+              />
+            </FormField>
+
+            {allowEmailEdit ? (
+              <FormField
+                label="Email address"
+                htmlFor="email"
+                error={errors.email?.message}
+              >
+                <input
+                  id="email"
+                  type="email"
+                  className={fieldClasses}
+                  {...register("email")}
+                />
+              </FormField>
+            ) : null}
+
+            <FormField
+              label="Phone"
+              htmlFor="phone"
+              error={errors.phone?.message}
+            >
+              <input
+                id="phone"
+                className={fieldClasses}
+                {...register("phone")}
+              />
+            </FormField>
+
+            {showParticipantFields ? (
+              <div className="space-y-1.5 flex flex-col justify-center">
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Gender
+                </label>
+                <div className="flex items-center gap-5 pt-1.5">
+                  {["Male", "Female", "Other"].map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center gap-2 cursor-pointer text-sm text-gray-200 select-none"
+                    >
+                      <input
+                        type="radio"
+                        name="genderGroup"
+                        value={option}
+                        checked={genderOption === option}
+                        onChange={() => handleGenderChange(option)}
+                        className="accent-white cursor-pointer"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+                {genderOption === "Other" && (
+                  <input
+                    type="text"
+                    placeholder="Please specify your gender"
+                    value={genderOtherText}
+                    onChange={handleGenderOtherChange}
+                    className="mt-2 w-full bg-[#141414] border border-[#222222] rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-white transition"
+                  />
+                )}
+                {errors.gender?.message && (
+                  <p className="text-xs text-error mt-1">
+                    {errors.gender.message}
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-4">
+            <FormField label="Bio" htmlFor="bio" error={errors.bio?.message}>
+              <textarea
+                id="bio"
+                rows={2}
+                className={`${fieldClasses} resize-none`}
+                {...register("bio")}
+              />
+            </FormField>
+          </div>
+        </div>
+
         {showParticipantFields ? (
-          <FormField
-            label="Gender"
-            htmlFor="gender"
-            error={errors.gender?.message}
-          >
-            <input
-              id="gender"
-              className={fieldClasses}
-              {...register("gender")}
-            />
-          </FormField>
+          <>
+            <hr className="border-border my-1" />
+
+            {/* Section 2: Academic & Institutional Details */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
+                Academic Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="School or institution"
+                  htmlFor="institution"
+                  error={errors.institution?.message}
+                >
+                  <input
+                    id="institution"
+                    className={fieldClasses}
+                    {...register("institution")}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Class or grade"
+                  htmlFor="gradeLevel"
+                  error={errors.gradeLevel?.message}
+                >
+                  <select
+                    id="gradeLevel"
+                    className={`${fieldClasses} cursor-pointer`}
+                    value={gradeLevelValue}
+                    onChange={handleGradeChange}
+                  >
+                    <option value="" disabled>
+                      Select class or grade
+                    </option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                  </select>
+                </FormField>
+
+                <FormField
+                  label="Academic level (auto-selected)"
+                  htmlFor="academicLevel"
+                  error={errors.academicLevel?.message}
+                >
+                  <input
+                    id="academicLevel"
+                    readOnly
+                    className={`${fieldClasses} bg-[#111] text-gray-400 cursor-not-allowed`}
+                    {...register("academicLevel")}
+                    placeholder="Auto-calculated from grade"
+                  />
+                </FormField>
+              </div>
+            </div>
+
+            <hr className="border-border my-1" />
+
+            {/* Section 3: Location Details */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
+                Location Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  label="District"
+                  htmlFor="district"
+                  error={errors.district?.message}
+                >
+                  <input
+                    id="district"
+                    className={fieldClasses}
+                    {...register("district")}
+                  />
+                </FormField>
+
+                <FormField
+                  label="City / Upazila"
+                  htmlFor="city"
+                  error={errors.city?.message}
+                >
+                  <input
+                    id="city"
+                    className={fieldClasses}
+                    {...register("city")}
+                  />
+                </FormField>
+              </div>
+
+              <div className="mt-4">
+                <FormField
+                  label="Address"
+                  htmlFor="address"
+                  error={errors.address?.message}
+                >
+                  <textarea
+                    id="address"
+                    rows={2}
+                    className={`${fieldClasses} resize-none`}
+                    {...register("address")}
+                  />
+                </FormField>
+              </div>
+            </div>
+          </>
         ) : null}
-        {showParticipantFields ? (
-          <FormField
-            label="School or institution"
-            htmlFor="institution"
-            error={errors.institution?.message}
-          >
-            <input
-              id="institution"
-              className={fieldClasses}
-              {...register("institution")}
-            />
-          </FormField>
-        ) : null}
-        {showParticipantFields ? (
-          <FormField
-            label="Academic level"
-            htmlFor="academicLevel"
-            error={errors.academicLevel?.message}
-          >
-            <input
-              id="academicLevel"
-              className={fieldClasses}
-              {...register("academicLevel")}
-            />
-          </FormField>
-        ) : null}
-        {showParticipantFields ? (
-          <FormField
-            label="District"
-            htmlFor="district"
-            error={errors.district?.message}
-          >
-            <input
-              id="district"
-              className={fieldClasses}
-              {...register("district")}
-            />
-          </FormField>
-        ) : null}
-        {showParticipantFields ? (
-          <FormField
-            label="City / Upazila"
-            htmlFor="city"
-            error={errors.city?.message}
-          >
-            <input id="city" className={fieldClasses} {...register("city")} />
-          </FormField>
-        ) : null}
-        {showParticipantFields ? (
-          <FormField
-            label="Address"
-            htmlFor="address"
-            error={errors.address?.message}
-          >
-            <textarea
-              id="address"
-              rows={3}
-              className={`${fieldClasses} resize-none`}
-              {...register("address")}
-            />
-          </FormField>
-        ) : null}
-        <FormField
-          label="Class or grade"
-          htmlFor="gradeLevel"
-          error={errors.gradeLevel?.message}
-        >
-          <input
-            id="gradeLevel"
-            className={fieldClasses}
-            {...register("gradeLevel")}
-          />
-        </FormField>
+
         {serverError ? (
           <p className="text-xs text-error">{serverError}</p>
         ) : null}
-        <div className="flex gap-3">
+
+        <div className="flex items-center gap-3 pt-2">
           <Button
             type="submit"
             variant="primary"
@@ -261,12 +403,12 @@ export function ParticipantProfileForm({
           >
             Cancel
           </Button>
+          {saved ? (
+            <p className="text-xs text-success ml-2" role="status">
+              Saved successfully
+            </p>
+          ) : null}
         </div>
-        {saved ? (
-          <p className="text-xs text-success" role="status">
-            Saved successfully
-          </p>
-        ) : null}
       </form>
 
       <AvatarUploadModal
