@@ -4,7 +4,6 @@ import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
-import { MetadataLabel } from "@/components/ui/MetadataLabel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHero } from "@/components/sections/PageHero";
 import { db } from "@/lib/db/client";
@@ -31,6 +30,7 @@ export default async function TeamPage() {
     where: { active: true },
     orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
   });
+
   return (
     <>
       <PageHero
@@ -48,69 +48,68 @@ export default async function TeamPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-0 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-0 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {members.map((member, index) => (
                 <Reveal key={member.id} weight="standard" order={index + 1}>
-                  <article className="group overflow-hidden rounded-lg border border-border bg-elevated transition-transform duration-300 motion-safe:hover:-translate-y-1">
-                    <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-border bg-elevated-2">
+                  <article className="group relative flex flex-col items-center rounded-xl border border-border bg-elevated/50 p-6 text-center transition-all duration-300 hover:border-accent/40 hover:bg-elevated">
+                    {/* Compact Circle Avatar Frame */}
+                    <div className="relative h-24 w-24 overflow-hidden rounded-full border border-border bg-elevated-2 shadow-inner">
                       {member.imageUrl ? (
                         <Image
                           src={member.imageUrl}
                           alt={member.name}
                           fill
-                          sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                          className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
+                          sizes="96px"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <span
-                          aria-hidden="true"
-                          className="font-display text-5xl text-muted"
-                        >
+                        <div className="flex h-full w-full items-center justify-center font-display text-xl text-muted">
                           {initials(member.name)}
-                        </span>
+                        </div>
                       )}
                     </div>
-                    <div className="p-5">
-                      <h3 className="font-display text-2xl text-primary">
-                        {member.name}
-                      </h3>
-                      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">
-                        {member.title}
+
+                    {/* Member Information */}
+                    <h3 className="mt-4 font-display text-lg font-semibold text-primary">
+                      {member.name}
+                    </h3>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-accent">
+                      {member.title}
+                    </p>
+
+                    {member.bio && (
+                      <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-secondary">
+                        {member.bio}
                       </p>
-                      {member.bio ? (
-                        <p className="mt-4 text-sm leading-relaxed text-secondary">
-                          {member.bio}
-                        </p>
-                      ) : null}
-                      {member.linkedinUrl || member.websiteUrl ? (
-                        <div className="mt-5 flex flex-wrap gap-4">
-                          {[
-                            member.linkedinUrl
-                              ? { href: member.linkedinUrl, label: "LinkedIn" }
-                              : null,
-                            member.websiteUrl
-                              ? { href: member.websiteUrl, label: "Website" }
-                              : null,
-                          ]
-                            .filter(
-                              (link): link is { href: string; label: string } =>
-                                Boolean(link),
-                            )
-                            .map((link) => (
-                              <a
-                                key={link.href}
-                                href={link.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-secondary transition-colors hover:text-primary"
-                              >
-                                {link.label}
-                                <ArrowUpRight className="h-3 w-3" />
-                              </a>
-                            ))}
-                        </div>
-                      ) : null}
-                    </div>
+                    )}
+
+                    {/* Social Links */}
+                    {(member.linkedinUrl || member.websiteUrl) && (
+                      <div className="mt-5 flex w-full items-center justify-center gap-4 border-t border-border/40 pt-4 text-xs">
+                        {member.linkedinUrl && (
+                          <a
+                            href={member.linkedinUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-secondary transition-colors hover:text-primary"
+                          >
+                            LinkedIn
+                            <ArrowUpRight className="h-3 w-3" />
+                          </a>
+                        )}
+                        {member.websiteUrl && (
+                          <a
+                            href={member.websiteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-secondary transition-colors hover:text-primary"
+                          >
+                            Website
+                            <ArrowUpRight className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </article>
                 </Reveal>
               ))}
