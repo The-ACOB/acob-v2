@@ -11,7 +11,11 @@ import type { ActionResult } from "@/lib/auth/actions";
 
 type Values = z.infer<typeof registerParticipantSchema>;
 
-export function RegisterParticipantForm({ onSubmit }: { onSubmit: (values: Values) => Promise<ActionResult> }) {
+export function RegisterParticipantForm({
+  onSubmit,
+}: {
+  onSubmit: (values: Values) => Promise<ActionResult>;
+}) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const {
@@ -35,9 +39,17 @@ export function RegisterParticipantForm({ onSubmit }: { onSubmit: (values: Value
   if (done) {
     return (
       <div className="rounded-lg border border-success/30 bg-success/5 px-6 py-8">
-        <p className="font-display text-lg text-primary">Participant registered</p>
-        <p className="mt-2 text-sm text-secondary">An email has been sent to them to set their password.</p>
-        <button type="button" onClick={() => setDone(false)} className="mt-4 text-xs text-accent underline underline-offset-4">
+        <p className="font-display text-lg text-primary">
+          Participant registered
+        </p>
+        <p className="mt-2 text-sm text-secondary">
+          An email has been sent to them to set their password.
+        </p>
+        <button
+          type="button"
+          onClick={() => setDone(false)}
+          className="mt-4 text-xs text-accent underline underline-offset-4"
+        >
           Register another
         </button>
       </div>
@@ -45,27 +57,76 @@ export function RegisterParticipantForm({ onSubmit }: { onSubmit: (values: Value
   }
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-5 rounded-lg border border-border bg-elevated p-5">
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-5 rounded-lg border border-border bg-elevated p-5"
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label="Full name" htmlFor="fullName" error={errors.fullName?.message}>
-          <input id="fullName" className={fieldClasses} {...register("fullName")} />
+        <FormField
+          label="Full name"
+          htmlFor="fullName"
+          error={errors.fullName?.message}
+        >
+          <input
+            id="fullName"
+            className={fieldClasses}
+            {...register("fullName")}
+          />
         </FormField>
         <FormField label="Email" htmlFor="email" error={errors.email?.message}>
-          <input id="email" type="email" className={fieldClasses} {...register("email")} />
+          <input
+            id="email"
+            type="email"
+            className={fieldClasses}
+            {...register("email")}
+          />
         </FormField>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label="Institution (optional)" htmlFor="institution" error={errors.institution?.message}>
-          <input id="institution" className={fieldClasses} {...register("institution")} />
+        <FormField
+          label="Institution (optional)"
+          htmlFor="institution"
+          error={errors.institution?.message}
+        >
+          <input
+            id="institution"
+            className={fieldClasses}
+            {...register("institution")}
+          />
         </FormField>
-        <FormField label="Grade level (optional)" htmlFor="gradeLevel" error={errors.gradeLevel?.message}>
-          <input id="gradeLevel" className={fieldClasses} {...register("gradeLevel")} />
+        <FormField
+          label="Grade level (optional)"
+          htmlFor="gradeLevel"
+          error={errors.gradeLevel?.message}
+        >
+          <select
+            id="gradeLevel"
+            className={fieldClasses}
+            {...register("gradeLevel")}
+          >
+            <option value="">Select grade level…</option>
+            <option value="Grade 6">Grade 6</option>
+            <option value="Grade 7">Grade 7</option>
+            <option value="Grade 8">Grade 8</option>
+            <option value="Grade 9">Grade 9</option>
+            <option value="Grade 10">Grade 10</option>
+            <option value="Grade 11">Grade 11</option>
+            <option value="Grade 12">Grade 12</option>
+            <option value="University / College">University / College</option>
+            <option value="Other">Other</option>
+          </select>
         </FormField>
       </div>
 
       {serverError ? <p className="text-xs text-error">{serverError}</p> : null}
 
-      <Button type="submit" variant="primary" disabled={isSubmitting} className="w-fit text-xs">
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={isSubmitting}
+        className="w-fit text-xs"
+      >
         {isSubmitting ? "Registering…" : "Register participant"}
       </Button>
     </form>
