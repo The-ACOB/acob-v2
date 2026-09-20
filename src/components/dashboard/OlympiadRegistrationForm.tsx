@@ -2,8 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { registerForOlympiadAction } from "@/lib/exam/actions";
 import { Button } from "@/components/ui/Button";
+
+function formatDate(date: Date | null, fallback: string) {
+  if (!date) return fallback;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+}
 
 export function OlympiadRegistrationForm({
   olympiad,
@@ -17,6 +30,7 @@ export function OlympiadRegistrationForm({
     id: string;
     title: string;
     description: string | null;
+    posterUrl: string | null;
     durationMinutes: number;
     registrationStartAt: Date | null;
     registrationEndAt: Date | null;
@@ -37,6 +51,7 @@ export function OlympiadRegistrationForm({
   const [pending, setPending] = useState(false);
   const [confirmed, setConfirmed] = useState(registered);
   const [error, setError] = useState<string | null>(null);
+
   async function register() {
     setPending(true);
     setError(null);
@@ -46,15 +61,35 @@ export function OlympiadRegistrationForm({
     setConfirmed(true);
     router.refresh();
   }
+
   return (
-    <div className="mx-auto max-w-2xl rounded-lg border border-border bg-elevated p-6">
+    <div className="mx-auto max-w-2xl rounded-lg border border-border bg-elevated p-6 sm:p-8">
       <h1 className="font-display text-3xl text-primary">{olympiad.title}</h1>
+
       <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-accent">
         {phase.replace(/_/g, " ")}
       </p>
-      {olympiad.description ? (
-        <p className="mt-3 text-secondary">{olympiad.description}</p>
+
+      {/* Poster Banner embedded inside the card with full aspect containment */}
+      {olympiad.posterUrl ? (
+        <div className="relative w-full aspect-[16/9] rounded-md border border-border/60 bg-black/40 overflow-hidden my-5">
+          <Image
+            src={olympiad.posterUrl}
+            alt={olympiad.title}
+            fill
+            sizes="(max-width: 672px) 100vw, 672px"
+            unoptimized
+            className="object-contain"
+          />
+        </div>
       ) : null}
+
+      {olympiad.description ? (
+        <p className="mt-3 text-secondary leading-relaxed">
+          {olympiad.description}
+        </p>
+      ) : null}
+
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm text-secondary">
         <div>
           <dt className="text-muted">Duration</dt>
@@ -66,19 +101,20 @@ export function OlympiadRegistrationForm({
         </div>
         <div>
           <dt className="text-muted">Registration</dt>
-          <dd>
-            {olympiad.registrationStartAt?.toLocaleString() ?? "Now"} to{" "}
-            {olympiad.registrationEndAt?.toLocaleString() ?? "Exam start"}
+          <dd className="text-xs sm:text-sm mt-0.5">
+            {formatDate(olympiad.registrationStartAt, "Now")} —{" "}
+            {formatDate(olympiad.registrationEndAt, "Exam start")}
           </dd>
         </div>
         <div>
-          <dt className="text-muted">Exam</dt>
-          <dd>
-            {olympiad.startAt?.toLocaleString() ?? "Now"} to{" "}
-            {olympiad.endAt?.toLocaleString() ?? "No closing time"}
+          <dt className="text-muted">Exam Window</dt>
+          <dd className="text-xs sm:text-sm mt-0.5">
+            {formatDate(olympiad.startAt, "Now")} —{" "}
+            {formatDate(olympiad.endAt, "No close time")}
           </dd>
         </div>
       </dl>
+
       <p className="mt-6 text-sm text-secondary">
         Eligibility:{" "}
         {olympiad.eligibilityMode === "open"
@@ -91,12 +127,15 @@ export function OlympiadRegistrationForm({
               .filter(Boolean)
               .join(" / ") || "Configured criteria"}
       </p>
+
       {error ? <p className="mt-4 text-sm text-error">{error}</p> : null}
+
       {!registrationOpen && !confirmed ? (
         <p className="mt-4 text-sm text-warning">
           Registration is not currently open.
         </p>
       ) : null}
+
       {confirmed ? (
         <Button
           href={`/dashboard/olympiads/${olympiad.id}/attempt`}

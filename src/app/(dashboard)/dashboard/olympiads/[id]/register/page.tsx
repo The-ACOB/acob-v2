@@ -15,24 +15,32 @@ export default async function OlympiadRegistrationPage({
 }) {
   const session = await getCurrentSession();
   if (!session) redirect("/login");
+
   const { id } = await params;
+
   const olympiad = await db.olympiad.findUnique({
     where: { id },
     include: { _count: { select: { questions: true, registrations: true } } },
   });
+
   if (!olympiad || olympiad.status !== "published") notFound();
+
   const existing = await db.olympiadRegistration.findUnique({
     where: { olympiadId_userId: { olympiadId: id, userId: session.id } },
   });
+
   const eligible = await isEligibleForOlympiad(olympiad, session.id);
+
   return (
-    <OlympiadRegistrationForm
-      olympiad={olympiad}
-      questionCount={olympiad._count.questions}
-      registered={Boolean(existing)}
-      eligible={eligible}
-      registrationOpen={isRegistrationOpen(olympiad)}
-      phase={getOlympiadPhase(olympiad)}
-    />
+    <div className="max-w-2xl mx-auto">
+      <OlympiadRegistrationForm
+        olympiad={olympiad}
+        questionCount={olympiad._count.questions}
+        registered={Boolean(existing)}
+        eligible={eligible}
+        registrationOpen={isRegistrationOpen(olympiad)}
+        phase={getOlympiadPhase(olympiad)}
+      />
+    </div>
   );
 }

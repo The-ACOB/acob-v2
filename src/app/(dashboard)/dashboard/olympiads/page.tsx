@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { getCurrentSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/authz/guards";
 import { db } from "@/lib/db/client";
@@ -108,6 +109,8 @@ export default async function OlympiadsPage() {
     id: string;
     title: string;
     description: string | null;
+    posterUrl: string | null;
+    subject: string | null;
     durationMinutes: number;
     startAt: Date | null;
     endAt: Date | null;
@@ -115,6 +118,16 @@ export default async function OlympiadsPage() {
     where: { status: "published" },
     orderBy: { createdAt: "desc" },
     take: 50,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      posterUrl: true,
+      subject: true,
+      durationMinutes: true,
+      startAt: true,
+      endAt: true,
+    },
   });
 
   const [myAttempts, myRegistrations] = await Promise.all([
@@ -218,27 +231,59 @@ export default async function OlympiadsPage() {
             }
 
             return (
-              <div
+              <article
                 key={o.id}
-                className="flex flex-col gap-3 rounded-lg border border-border bg-elevated p-5 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col sm:flex-row overflow-hidden rounded-lg border border-border bg-elevated transition-all duration-300 hover:border-accent/40"
               >
-                <div>
-                  <p className="font-display text-lg text-primary">{o.title}</p>
+                {/* Left Thumbnail/Poster */}
+                {o.posterUrl ? (
+                  <div className="relative sm:w-64 sm:shrink-0 aspect-[16/9] sm:aspect-auto sm:min-h-full bg-black/40 border-b sm:border-b-0 sm:border-r border-border">
+                    <Image
+                      src={o.posterUrl}
+                      alt={o.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 256px"
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="sm:w-64 sm:shrink-0 h-28 sm:h-auto border-b sm:border-b-0 sm:border-r border-border bg-gradient-to-br from-neutral-900 to-neutral-950 flex items-center justify-center p-4">
+                    <span className="font-mono text-xs uppercase tracking-widest text-muted/60 text-center">
+                      {o.subject ?? "ACOB Olympiad"}
+                    </span>
+                  </div>
+                )}
 
-                  {o.description ? (
-                    <p className="mt-1 max-w-lg text-sm text-secondary">
-                      {o.description}
+                {/* Right Content Area */}
+                <div className="flex flex-1 flex-col justify-between p-6">
+                  <div>
+                    <h3 className="font-display text-xl text-primary">
+                      {o.title}
+                    </h3>
+
+                    {o.description ? (
+                      <p className="mt-2 text-sm leading-relaxed text-secondary line-clamp-2">
+                        {o.description}
+                      </p>
+                    ) : null}
+
+                    <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                      {o.durationMinutes} minutes
+                      {o.endAt ? ` · Closes ${o.endAt.toLocaleString()}` : ""}
                     </p>
-                  ) : null}
+                  </div>
 
-                  <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-                    {o.durationMinutes} minutes
-                    {o.endAt ? ` · Closes ${o.endAt.toLocaleString()}` : ""}
-                  </p>
+                  <div className="flex items-center justify-between border-t border-border/40 mt-4 pt-4">
+                    <span className="font-mono text-xs text-muted">
+                      {o.startAt
+                        ? `Opens ${o.startAt.toLocaleDateString()}`
+                        : "Open now"}
+                    </span>
+                    {action}
+                  </div>
                 </div>
-
-                {action}
-              </div>
+              </article>
             );
           })}
         </div>
