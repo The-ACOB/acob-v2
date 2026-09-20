@@ -16,13 +16,13 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { gender, institution, gradeLevel } = body;
 
-    // Fetch existing participant to get current fullName
-    const participant = await db.participant.findUnique({
-      where: { userId: session.id },
+    // Fetch user record to retrieve the account name
+    const user = await db.user.findUnique({
+      where: { id: session.id },
     });
 
     const result = await updateParticipantProfileAction(session.id, {
-      fullName: participant?.fullName || "",
+      fullName: (user as any)?.name || (user as any)?.fullName || "Participant",
       gender,
       institution,
       gradeLevel,
