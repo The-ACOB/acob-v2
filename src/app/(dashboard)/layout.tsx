@@ -20,6 +20,21 @@ export default async function DashboardLayout({
   const session = await getCurrentSession();
   if (!session) redirect("/login?next=/dashboard");
 
+  // Enforce mandatory onboarding check
+  const participant = await db.participant.findUnique({
+    where: { userId: session.id },
+    select: { gender: true, institution: true, gradeLevel: true },
+  });
+
+  if (
+    !participant ||
+    !participant.gender ||
+    !participant.institution ||
+    !participant.gradeLevel
+  ) {
+    redirect("/onboarding");
+  }
+
   const roleLabel = primaryRoleLabel(session.roleKeys);
 
   const rawNotifications = await db.notification.findMany({

@@ -37,7 +37,7 @@ function VerifyEmailContent() {
         if (result.ok) {
           setStatus("success");
           setTimeout(() => {
-            router.push("/dashboard");
+            router.push("/onboarding");
             router.refresh();
           }, 600);
         } else {
@@ -70,7 +70,7 @@ function VerifyEmailContent() {
       <AuthCard
         eyebrow="Account verification"
         title="Email verified!"
-        description="Signing you in and routing you to your dashboard..."
+        description="Signing you in and routing you to your onboarding..."
       >
         <div className="flex items-center justify-center py-6">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />

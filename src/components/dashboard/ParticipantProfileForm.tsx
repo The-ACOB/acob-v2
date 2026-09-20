@@ -47,7 +47,6 @@ export function ParticipantProfileForm({
     register,
     handleSubmit,
     setValue,
-    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
@@ -55,7 +54,7 @@ export function ParticipantProfileForm({
     defaultValues,
   });
 
-  const gradeLevelValue = watch("gradeLevel") || "";
+  const gradeRegistration = register("gradeLevel");
 
   // Handle class/grade dropdown change and auto-calculate academic level
   const handleGradeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -294,8 +293,11 @@ export function ParticipantProfileForm({
                   <select
                     id="gradeLevel"
                     className={`${fieldClasses} cursor-pointer`}
-                    value={gradeLevelValue}
-                    onChange={handleGradeChange}
+                    {...gradeRegistration}
+                    onChange={(e) => {
+                      gradeRegistration.onChange(e);
+                      handleGradeChange(e);
+                    }}
                   >
                     <option value="" disabled>
                       Select class or grade
