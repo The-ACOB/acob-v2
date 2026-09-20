@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
-export function NavigationProgress() {
+function NavigationProgressInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +16,7 @@ export function NavigationProgress() {
       const timer = setTimeout(() => {
         setIsLoading(false);
         setIsFading(false);
-      }, 200); // match transition duration
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [pathname, searchParams]);
@@ -38,7 +38,6 @@ export function NavigationProgress() {
       setIsFading(false);
       setIsLoading(true);
 
-      // Safety fallback: auto-hide after 5 seconds if navigation stalls
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         setIsFading(true);
@@ -67,5 +66,13 @@ export function NavigationProgress() {
           "acob-navigation-progress 2s cubic-bezier(0.1, 0.6, 0.1, 1) forwards",
       }}
     />
+  );
+}
+
+export function NavigationProgress() {
+  return (
+    <Suspense fallback={null}>
+      <NavigationProgressInner />
+    </Suspense>
   );
 }
