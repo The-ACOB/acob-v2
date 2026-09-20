@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { requirePermission, AuthError } from "@/lib/authz/guards";
 import { db } from "@/lib/db/client";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
@@ -47,8 +48,8 @@ export default async function ParticipantsPage({
   const selectedGrade = grade?.trim();
   const selectedRole = role?.trim();
 
-  // Base where clauses for global user search
-  const userWhereClause = {
+  // Base where clauses for global user search with explicit Prisma types
+  const userWhereClause: Prisma.UserWhereInput = {
     AND: [
       query
         ? {
@@ -104,7 +105,9 @@ export default async function ParticipantsPage({
     gradeLevel: user.participant?.gradeLevel ?? null,
     email: user.email,
     fullName: user.profile?.fullName ?? null,
-    roles: user.userRoles.map((assignment) => assignment.role.key),
+    roles: user.userRoles.map(
+      (assignment: { role: { key: string } }) => assignment.role.key,
+    ),
   }));
 
   // Fetch unique institutions from Participants
