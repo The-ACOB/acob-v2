@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { getCurrentSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
@@ -11,6 +10,18 @@ import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
 import { OlympiadParticipationCta } from "@/components/public/OlympiadParticipationCta";
 import { OlympiadShareButton } from "@/components/public/OlympiadShareButton";
 import { getSiteUrl } from "@/lib/env";
+
+function formatDate(date: Date | null, fallback: string) {
+  if (!date) return fallback;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+}
 
 export async function generateMetadata({
   params,
@@ -41,6 +52,7 @@ export default async function PublicOlympiadPage({
       title: true,
       description: true,
       subject: true,
+      posterUrl: true,
       durationMinutes: true,
       eligibilityMode: true,
       eligibilityGradeLevel: true,
@@ -69,93 +81,136 @@ export default async function PublicOlympiadPage({
   const publicUrl = `${getSiteUrl()}/olympiads/${olympiad.id}`;
 
   return (
-    <Section>
+    <div className="pt-4 pb-24">
       <Container>
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-4xl space-y-8">
+          {/* Top Bar: Badge & Share */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Badge tone="success">{phase.replace(/_/g, " ")}</Badge>
             <OlympiadShareButton url={publicUrl} />
           </div>
-          <h1 className="mt-6 font-display text-5xl leading-tight text-primary">
-            {olympiad.title}
-          </h1>
-          {olympiad.description ? (
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-secondary">
-              {olympiad.description}
-            </p>
-          ) : null}
-          <dl className="mt-10 grid gap-6 border-y border-border py-6 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-muted">
-                Subject
-              </dt>
-              <dd className="mt-2 text-primary">
-                {olympiad.subject ?? "General"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-muted">
-                Duration
-              </dt>
-              <dd className="mt-2 text-primary">
-                {olympiad.durationMinutes} minutes
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-muted">
-                Registration
-              </dt>
-              <dd className="mt-2 text-primary">
-                {olympiad.registrationStartAt?.toLocaleString() ?? "Now"} to{" "}
-                {olympiad.registrationEndAt?.toLocaleString() ?? "Exam start"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-muted">
-                Exam
-              </dt>
-              <dd className="mt-2 text-primary">
-                {olympiad.startAt?.toLocaleString() ?? "Now"} to{" "}
-                {olympiad.endAt?.toLocaleString() ?? "No closing time"}
-              </dd>
-            </div>
-          </dl>
-          <div className="mt-8 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
-            <div>
-              <h2 className="font-display text-2xl text-primary">
-                Eligibility
-              </h2>
-              <p className="mt-2 text-sm text-secondary">
-                {olympiad.eligibilityMode === "open"
-                  ? "Open to all eligible participants."
-                  : [
-                      olympiad.eligibilityAcademicLevel,
-                      olympiad.eligibilityGradeLevel,
-                      olympiad.eligibilityInstitution,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "Eligibility criteria apply."}
-              </p>
-              <p className="mt-5 text-sm text-muted">
-                Questions are available only to registered and eligible
-                participants during the live exam window.
-              </p>
-            </div>
-            <OlympiadParticipationCta
-              olympiadId={id}
-              phase={phase === "draft" ? "closed" : phase}
-              authenticated={Boolean(session)}
-              registered={Boolean(registration)}
-              eligible={eligible}
-            />
+
+          {/* Title */}
+          <div>
+            <h1 className="font-display text-4xl sm:text-5xl leading-tight text-primary">
+              {olympiad.title}
+            </h1>
           </div>
-          {registration ? (
-            <p className="mt-6 text-sm text-success">
-              Your participation state: registered.
-            </p>
+
+          {/* Natural Poster Showcase (Fluid scaling, zero letterboxing) */}
+          {olympiad.posterUrl ? (
+            <div className="relative w-full rounded-xl border border-border overflow-hidden shadow-2xl bg-card">
+              <Image
+                src={olympiad.posterUrl}
+                alt={olympiad.title}
+                width={1200}
+                height={675}
+                sizes="(max-width: 896px) 100vw, 896px"
+                unoptimized
+                className="w-full h-auto object-cover"
+              />
+            </div>
           ) : null}
+
+          {/* Two Column Details Grid */}
+          <div className="grid gap-10 lg:grid-cols-[1fr_320px] items-start pt-2">
+            {/* Left Column: Description & Eligibility */}
+            <div className="space-y-8">
+              {olympiad.description ? (
+                <div>
+                  <h2 className="text-xs uppercase tracking-[0.14em] text-muted mb-3">
+                    Overview
+                  </h2>
+                  <p className="text-lg leading-relaxed text-secondary">
+                    {olympiad.description}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="border-t border-border pt-6">
+                <h2 className="font-display text-xl text-primary mb-2">
+                  Eligibility Criteria
+                </h2>
+                <p className="text-sm text-secondary">
+                  {olympiad.eligibilityMode === "open"
+                    ? "Open to all eligible participants."
+                    : [
+                        olympiad.eligibilityAcademicLevel,
+                        olympiad.eligibilityGradeLevel,
+                        olympiad.eligibilityInstitution,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Eligibility criteria apply."}
+                </p>
+                <p className="mt-2 text-xs text-muted">
+                  Questions become accessible only to verified and registered
+                  participants during the live window.
+                </p>
+              </div>
+
+              {registration ? (
+                <div className="rounded-lg bg-success/10 border border-success/20 p-4 text-sm text-success font-medium">
+                  ✓ Your participation state: Registered successfully.
+                </div>
+              ) : null}
+            </div>
+
+            {/* Right Column: Key Details Card & CTA */}
+            <div className="rounded-xl border border-border bg-card/40 p-6 backdrop-blur-sm space-y-6 shadow-sm">
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs uppercase tracking-[0.14em] text-muted block mb-1">
+                    Subject
+                  </span>
+                  <span className="text-primary font-medium">
+                    {olympiad.subject ?? "General"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs uppercase tracking-[0.14em] text-muted block mb-1">
+                    Duration
+                  </span>
+                  <span className="text-primary font-medium">
+                    {olympiad.durationMinutes} minutes
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs uppercase tracking-[0.14em] text-muted block mb-1">
+                    Registration Window
+                  </span>
+                  <span className="text-primary text-sm block">
+                    {formatDate(olympiad.registrationStartAt, "Now")}
+                    <span className="text-muted block text-xs mt-0.5">
+                      to {formatDate(olympiad.registrationEndAt, "Exam start")}
+                    </span>
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs uppercase tracking-[0.14em] text-muted block mb-1">
+                    Exam Window
+                  </span>
+                  <span className="text-primary text-sm block">
+                    {formatDate(olympiad.startAt, "Now")}
+                    <span className="text-muted block text-xs mt-0.5">
+                      to {formatDate(olympiad.endAt, "No closing time")}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-5">
+                <OlympiadParticipationCta
+                  olympiadId={id}
+                  phase={phase === "draft" ? "closed" : phase}
+                  authenticated={Boolean(session)}
+                  registered={Boolean(registration)}
+                  eligible={eligible}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </Container>
-    </Section>
+    </div>
   );
 }

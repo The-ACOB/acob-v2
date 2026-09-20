@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
@@ -13,7 +14,7 @@ import { WordReveal } from "@/components/ui/WordReveal";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TextLink } from "@/components/ui/TextLink";
 import { OrganizationJsonLd } from "@/components/sections/OrganizationJsonLd";
-import { HeroAmbientCanvas } from "@/components/sections/HeroAmbientCanvas"; // <-- IMPORTED
+import { HeroAmbientCanvas } from "@/components/sections/HeroAmbientCanvas";
 import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = {
@@ -189,32 +190,49 @@ export default async function HomePage() {
                 {publishedOlympiads.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col justify-between rounded-xl border border-border bg-elevated/40 p-6 transition-all hover:border-accent/40"
+                    className="group flex flex-col justify-between rounded-xl border border-border bg-elevated/40 overflow-hidden transition-all hover:border-accent/40"
                   >
-                    <div>
-                      <span className="inline-block rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">
-                        Registration Open
-                      </span>
-                      <h3 className="mt-3 font-display text-xl text-primary">
-                        {item.title}
-                      </h3>
-                      {item.description && (
-                        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-secondary">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
+                    {/* Subtle Top Poster Preview Banner */}
+                    {item.posterUrl ? (
+                      <div className="relative w-full h-36 overflow-hidden border-b border-border/60 bg-black/40">
+                        <Image
+                          src={item.posterUrl}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          unoptimized
+                          className="object-cover opacity-85 group-hover:opacity-100 transition-all duration-300 group-hover:scale-[1.02]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-elevated via-transparent to-transparent opacity-90" />
+                      </div>
+                    ) : null}
 
-                    <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
-                      <span className="text-xs text-muted">
-                        Duration: {item.durationMinutes} mins
-                      </span>
-                      <Link
-                        href="/olympiads"
-                        className="text-xs font-semibold text-accent hover:underline"
-                      >
-                        View Olympiad →
-                      </Link>
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="inline-block rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">
+                          Registration Open
+                        </span>
+                        <h3 className="mt-3 font-display text-xl text-primary group-hover:text-accent transition-colors">
+                          {item.title}
+                        </h3>
+                        {item.description && (
+                          <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-secondary">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
+                        <span className="text-xs text-muted">
+                          Duration: {item.durationMinutes} mins
+                        </span>
+                        <Link
+                          href={`/olympiads/${item.id}`}
+                          className="text-xs font-semibold text-accent hover:underline"
+                        >
+                          View Olympiad →
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
