@@ -37,7 +37,7 @@ export default async function TeamPage() {
       <PageHero
         eyebrow=""
         title="Our Team"
-        description="Applied Cognitio Olympiad Bangladesh is built by people who care about what happens after a student finds the answer: the question, the reasoning, and the understanding that follows."
+        description="Applied Cognitio Olympiad Bangladesh is built by people who care about what happens after a student finds the answer, the question, the reasoning, and the understanding that follows."
       />
       <Section bordered className="pt-12 sm:pt-14 lg:pt-16">
         <Container>
@@ -49,10 +49,15 @@ export default async function TeamPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-0 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="mt-0 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-stretch">
               {members.map((member, index) => (
-                <Reveal key={member.id} weight="standard" order={index + 1}>
-                  <article className="group relative flex flex-col items-center rounded-xl border border-border bg-elevated/50 p-6 text-center transition-all duration-300 hover:border-accent/40 hover:bg-elevated">
+                <Reveal
+                  key={member.id}
+                  weight="standard"
+                  order={index + 1}
+                  className="h-full"
+                >
+                  <article className="group relative flex h-full flex-col items-center rounded-xl border border-border bg-elevated/50 p-6 text-center transition-all duration-300 hover:border-accent/40 hover:bg-elevated">
                     {/* Compact Circle Avatar Frame */}
                     <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-elevated-2 shadow-inner flex items-center justify-center">
                       {member.imageUrl ? (
@@ -87,7 +92,7 @@ export default async function TeamPage() {
 
                     {/* Social Links */}
                     {(member.linkedinUrl || member.websiteUrl) && (
-                      <div className="mt-5 flex w-full items-center justify-center gap-4 border-t border-border/40 pt-4 text-xs">
+                      <div className="mt-auto flex w-full items-center justify-center gap-4 border-t border-border/40 pt-4 text-xs pt-5">
                         {member.linkedinUrl && (
                           <a
                             href={member.linkedinUrl}
