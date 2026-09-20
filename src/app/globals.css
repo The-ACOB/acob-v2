@@ -229,7 +229,6 @@ body {
   }
 }
 
-/* Prevent any accidental horizontal scroll from atmospheric/decorative layers */
 html,
 body {
   overflow-x: clip;
