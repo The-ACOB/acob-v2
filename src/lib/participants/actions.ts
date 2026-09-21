@@ -404,3 +404,58 @@ export async function ambassadorRegisterParticipantAction(
   revalidatePath("/dashboard/referrals");
   return { ok: true };
 }
+
+/** Bulk update user roles. */
+export async function bulkUpdateUserRolesAction(
+  userIds: string[],
+  roleKey: string,
+): Promise<ActionResult> {
+  let actor;
+  try {
+    actor = await requirePermission("participant:update");
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
+  if (!userIds || userIds.length === 0) {
+    return { ok: false, error: "No participants selected." };
+  }
+
+  try {
+    const targetRole = await db.role.findUnique({
+      where: { key: roleKey },
+    });
+
+    if (!targetRole) {
+      return { ok: false, error: "Selected role does not exist." };
+    }
+
+    await db.$transaction(async (tx) => {
+      for (const userId of userIds) {
+        await tx.userRole.deleteMany({
+          where: { userId },
+        });
+        await tx.userRole.create({
+          data: {
+            userId,
+            roleId: targetRole.id,
+            assignedBy: actor.id,
+          },
+        });
+      }
+    });
+
+    await recordAudit({
+      actorId: actor.id,
+      action: "users:bulk-role-updated",
+      targetType: "user",
+      metadata: { count: userIds.length, newRole: roleKey },
+    });
+
+    revalidatePath("/dashboard/participants");
+    return { ok: true };
+  } catch (error: any) {
+    return { ok: false, error: error.message || "Failed to update roles." };
+  }
+}

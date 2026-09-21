@@ -21,12 +21,16 @@ export function DataTable<T>({
   getRowId,
   emptyTitle = "Nothing here yet",
   emptyDescription,
+  onRowClick,
+  rowClassName,
 }: {
   columns: Column<T>[];
   rows: T[];
   getRowId: (row: T) => string;
   emptyTitle?: string;
   emptyDescription?: string;
+  onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string;
 }) {
   if (rows.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
@@ -39,9 +43,9 @@ export function DataTable<T>({
         <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-border">
-              {columns.map((col) => (
+              {columns.map((col, i) => (
                 <th
-                  key={col.header}
+                  key={col.header ? `${col.header}-${i}` : `col-${i}`}
                   className="whitespace-nowrap px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted"
                 >
                   {col.header}
@@ -50,42 +54,74 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={getRowId(row)} className="border-b border-border last:border-b-0 hover:bg-elevated/40">
-                {columns.map((col) => (
-                  <td key={col.header} className={`px-4 py-3.5 align-middle text-secondary ${col.className ?? ""}`}>
-                    {col.cell(row)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const rowId = getRowId(row);
+              const customClass = rowClassName
+                ? rowClassName(row)
+                : "border-b border-border last:border-b-0 hover:bg-elevated/40";
+              return (
+                <tr
+                  key={rowId}
+                  onClick={() => onRowClick?.(row)}
+                  className={customClass}
+                >
+                  {columns.map((col, i) => (
+                    <td
+                      key={col.header ? `${col.header}-${i}` : `cell-${i}`}
+                      className={`px-4 py-3.5 align-middle text-secondary ${col.className ?? ""}`}
+                    >
+                      {col.cell(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Mobile: stacked label/value cards — no horizontal scroll */}
       <div className="flex flex-col gap-3 sm:hidden">
-        {rows.map((row) => (
-          <div key={getRowId(row)} className="rounded-lg border border-border bg-elevated p-4">
-            <dl className="flex flex-col gap-2.5">
+        {rows.map((row) => {
+          const rowId = getRowId(row);
+          return (
+            <div
+              key={rowId}
+              onClick={() => onRowClick?.(row)}
+              className="rounded-lg border border-border bg-elevated p-4 cursor-pointer"
+            >
+              <dl className="flex flex-col gap-2.5">
+                {columns
+                  .filter((col) => !col.hideLabel)
+                  .map((col, i) => (
+                    <div
+                      key={col.header ? `${col.header}-${i}` : `m-col-${i}`}
+                      className="flex items-baseline justify-between gap-4"
+                    >
+                      <dt className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                        {col.header}
+                      </dt>
+                      <dd className="text-right text-sm text-secondary">
+                        {col.cell(row)}
+                      </dd>
+                    </div>
+                  ))}
+              </dl>
               {columns
-                .filter((col) => !col.hideLabel)
-                .map((col) => (
-                  <div key={col.header} className="flex items-baseline justify-between gap-4">
-                    <dt className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{col.header}</dt>
-                    <dd className="text-right text-sm text-secondary">{col.cell(row)}</dd>
+                .filter((col) => col.hideLabel)
+                .map((col, i) => (
+                  <div
+                    key={
+                      col.header ? `${col.header}-hidden-${i}` : `m-hidden-${i}`
+                    }
+                    className="mt-3 border-t border-border pt-3"
+                  >
+                    {col.cell(row)}
                   </div>
                 ))}
-            </dl>
-            {columns
-              .filter((col) => col.hideLabel)
-              .map((col) => (
-                <div key={col.header} className="mt-3 border-t border-border pt-3">
-                  {col.cell(row)}
-                </div>
-              ))}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </>
   );

@@ -5,11 +5,14 @@ import { Prisma } from "@prisma/client";
 import { requirePermission, AuthError } from "@/lib/authz/guards";
 import { db } from "@/lib/db/client";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
-import { DataTable, type Column } from "@/components/dashboard/DataTable";
 import { RegisterParticipantForm } from "@/components/dashboard/RegisterParticipantForm";
-import { hrRegisterParticipantAction } from "@/lib/participants/actions";
+import {
+  hrRegisterParticipantAction,
+  bulkUpdateUserRolesAction,
+} from "@/lib/participants/actions";
 import { Badge } from "@/components/ui/Badge";
 import { ParticipantExportToolbar } from "@/components/dashboard/ParticipantExportToolbar";
+import { ParticipantsClientManager } from "@/components/dashboard/ParticipantsClientManager";
 
 export const metadata: Metadata = { title: "Participants" };
 
@@ -137,38 +140,6 @@ export default async function ParticipantsPage({
   });
   const uniqueRoles = dbRoles.map((r) => r.key);
 
-  const columns: Column<Row>[] = [
-    {
-      header: "Name",
-      cell: (r) => (
-        <span className="font-medium text-primary">{r.fullName ?? "—"}</span>
-      ),
-    },
-    {
-      header: "Email",
-      cell: (r) => <span className="text-muted">{r.email}</span>,
-    },
-    { header: "Roles", cell: (r) => r.roles.join(", ") || "—" },
-    { header: "Institution", cell: (r) => r.institution ?? "—" },
-    {
-      header: "Grade",
-      cell: (r) =>
-        r.gradeLevel ? <Badge tone="neutral">{r.gradeLevel}</Badge> : "—",
-    },
-    {
-      header: "",
-      hideLabel: true,
-      cell: (r) => (
-        <Link
-          href={`/dashboard/participants/${r.userId}`}
-          className="text-xs font-medium text-accent hover:underline underline-offset-4"
-        >
-          View
-        </Link>
-      ),
-    },
-  ];
-
   return (
     <div className="space-y-8 pb-12">
       <DashboardPageHeader
@@ -268,15 +239,12 @@ export default async function ParticipantsPage({
         </div>
       </form>
 
-      {/* Data Table */}
-      <div className="rounded-xl border border-border bg-elevated/20 overflow-hidden shadow-sm">
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowId={(r) => r.id}
-          emptyTitle="No participants found matching criteria"
-        />
-      </div>
+      {/* Participants Manager with Selection & DataTable */}
+      <ParticipantsClientManager
+        initialRows={rows}
+        availableRoles={uniqueRoles}
+        bulkAction={bulkUpdateUserRolesAction}
+      />
     </div>
   );
 }
