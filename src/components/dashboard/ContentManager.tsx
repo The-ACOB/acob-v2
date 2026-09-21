@@ -23,6 +23,8 @@ export type ContentRow = {
   body: string | null;
   externalUrl: string | null;
   thumbnailUrl?: string | null;
+  fileUrl?: string | null; // <--- Added
+  coverImageUrl?: string | null; // <--- Added
   status: "draft" | "published" | "unpublished" | "archived";
   publishedAt: string | null;
 };
@@ -137,6 +139,8 @@ export function ContentManager({
           description: editing.description ?? "",
           body: editing.body ?? "",
           externalUrl: editing.externalUrl ?? "",
+          fileUrl: editing.fileUrl ?? "", // <--- Passed to form
+          coverImageUrl: editing.coverImageUrl ?? "", // <--- Passed to form
         }}
         onSubmit={(values) => updateContentAction(editing.id, kind, values)}
         onDone={() => setMode("none")}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
@@ -6,6 +7,7 @@ import { MetadataLabel } from "@/components/ui/MetadataLabel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHero } from "@/components/sections/PageHero";
 import { db } from "@/lib/db/client";
+import { Download, ExternalLink, FileText } from "lucide-react";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/resources" },
@@ -37,6 +39,7 @@ export default async function ResourcesPage() {
     },
     orderBy: { publishedAt: "desc" },
   });
+
   return (
     <>
       <PageHero
@@ -69,29 +72,84 @@ export default async function ResourcesPage() {
               />
             </Reveal>
           ) : (
-            <div className="mt-20 flex flex-col divide-y divide-border border-t border-border">
-              {resources.map((resource) => (
-                <article key={resource.id} className="py-6">
-                  <MetadataLabel>
-                    {resource.kind.replace("_", " ")}
-                  </MetadataLabel>
-                  <h2 className="mt-2 font-display text-2xl text-primary">
-                    {resource.title}
-                  </h2>
-                  {resource.description ? (
-                    <p className="mt-2 text-sm text-secondary">
-                      {resource.description}
-                    </p>
-                  ) : null}
-                  {resource.externalUrl ? (
-                    <a
-                      className="mt-3 inline-block text-sm text-accent underline"
-                      href={resource.externalUrl}
-                    >
-                      Open resource
-                    </a>
-                  ) : null}
-                </article>
+            <div className="mt-20 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {resources.map((resource, index) => (
+                <Reveal key={resource.id} weight="standard" order={index}>
+                  <div className="group relative flex h-full flex-col justify-between rounded-2xl border border-border bg-card/40 p-5 backdrop-blur-xl transition-all duration-300 hover:border-border/80">
+                    <div>
+                      {/* Cover Thumbnail Preview */}
+                      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted border border-border/50 mb-5">
+                        {resource.coverImageUrl ? (
+                          <Image
+                            src={resource.coverImageUrl}
+                            alt={resource.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-muted-foreground">
+                            <FileText className="h-10 w-10 stroke-1" />
+                          </div>
+                        )}
+                        <span className="absolute top-3 right-3 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-md border border-border">
+                          {resource.kind.replace("_", " ")}
+                        </span>
+                      </div>
+
+                      {/* Content Details */}
+                      <MetadataLabel>
+                        {resource.publishedAt
+                          ? new Date(resource.publishedAt).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
+                          : "Undated"}
+                      </MetadataLabel>
+                      <h2 className="mt-2 font-display text-xl text-primary line-clamp-1">
+                        {resource.title}
+                      </h2>
+                      {resource.description ? (
+                        <p className="mt-2 text-sm text-secondary line-clamp-2 leading-relaxed">
+                          {resource.description}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    {/* Action Links */}
+                    <div className="mt-6 flex items-center gap-3 pt-4 border-t border-border/60">
+                      {resource.fileUrl ? (
+                        <a
+                          href={resource.fileUrl}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download File
+                        </a>
+                      ) : null}
+
+                      {resource.externalUrl ? (
+                        <a
+                          href={resource.externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center justify-center rounded-xl bg-secondary/20 px-3 py-2.5 text-xs font-medium text-secondary hover:bg-secondary/30 transition-colors border border-border ${
+                            !resource.fileUrl ? "w-full gap-2" : ""
+                          }`}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {!resource.fileUrl ? "Open External Link" : ""}
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                </Reveal>
               ))}
             </div>
           )}

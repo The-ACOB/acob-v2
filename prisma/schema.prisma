@@ -21,46 +21,46 @@ enum UserStatus {
 }
 
 model User {
-  id                    String       @id @default(uuid())
-  email                 String       @unique
-  pendingEmail          String?      @unique @map("pending_email")
-  passwordHash          String       @map("password_hash")
-  status                UserStatus   @default(active)
-  emailVerifiedAt       DateTime?    @map("email_verified_at")
-  createdAt             DateTime     @default(now()) @map("created_at")
-  updatedAt             DateTime     @updatedAt @map("updated_at")
+  id                        String                   @id @default(uuid())
+  email                     String                   @unique
+  pendingEmail              String?                  @unique @map("pending_email")
+  passwordHash              String                   @map("password_hash")
+  status                    UserStatus               @default(active)
+  emailVerifiedAt           DateTime?                @map("email_verified_at")
+  createdAt                 DateTime                 @default(now()) @map("created_at")
+  updatedAt                 DateTime                 @updatedAt @map("updated_at")
 
-  profile               Profile?
-  sessions              Session[]
-  passwordResetTokens     PasswordResetToken[]
-  emailVerificationTokens EmailVerificationToken[]
-  notifications         Notification[]
-  notificationPreference  NotificationPreference?
-  userRoles             UserRole[]               @relation("UserRoleUser")
-  rolesAssigned         UserRole[]               @relation("UserRoleAssignedBy")
-  approvalRequestsMade    ApprovalRequest[]        @relation("ApprovalRequester")
-  approvalRequestsReviewed ApprovalRequest[]       @relation("ApprovalReviewer")
-  auditLogs             AuditLog[]
-  participant           Participant?
-  ambassador            Ambassador?
-  ambassadorApprovals     Ambassador[]             @relation("AmbassadorApprover")
-  contactSubmissions    ContactSubmission[]
-  contactReplies        ContactReply[]
-  conversations         Conversation[]           @relation("ConversationParticipant")
-  messagesSent          Message[]                @relation("MessageSender")
-  olympiadsCreated      Olympiad[]               @relation("OlympiadCreator")
-  attempts              Attempt[]                @relation("AttemptUser")
-  olympiadRegistrations OlympiadRegistration[]
-  certificatesReceived  Certificate[]            @relation("CertificateRecipient")
-  certificatesIssued    Certificate[]            @relation("CertificateIssuer")
-  certificatesRevoked   Certificate[]            @relation("CertificateRevoker")
-  lettersReceived       RecommendationLetter[]   @relation("LetterRecipient")
-  lettersIssued         RecommendationLetter[]   @relation("LetterIssuer")
-  lettersRevoked        RecommendationLetter[]   @relation("LetterRevoker")
-  contentAuthored       Content[]                @relation("ContentAuthor")
-  careerListingsCreated CareerListing[]          @relation("CareerListingCreator")
-  popupsCreated         Popup[]                  @relation("PopupCreator")
-  organisationTeamMembers OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
+  profile                   Profile?
+  sessions                  Session[]
+  passwordResetTokens       PasswordResetToken[]
+  emailVerificationTokens   EmailVerificationToken[]
+  notifications             Notification[]
+  notificationPreference    NotificationPreference?
+  userRoles                 UserRole[]               @relation("UserRoleUser")
+  rolesAssigned             UserRole[]               @relation("UserRoleAssignedBy")
+  approvalRequestsMade      ApprovalRequest[]        @relation("ApprovalRequester")
+  approvalRequestsReviewed  ApprovalRequest[]        @relation("ApprovalReviewer")
+  auditLogs                 AuditLog[]
+  participant               Participant?
+  ambassador                Ambassador?
+  ambassadorApprovals       Ambassador[]             @relation("AmbassadorApprover")
+  contactSubmissions        ContactSubmission[]
+  contactReplies            ContactReply[]
+  conversations             Conversation[]           @relation("ConversationParticipant")
+  messagesSent              Message[]                @relation("MessageSender")
+  olympiadsCreated          Olympiad[]               @relation("OlympiadCreator")
+  attempts                  Attempt[]                @relation("AttemptUser")
+  olympiadRegistrations     OlympiadRegistration[]
+  certificatesReceived      Certificate[]            @relation("CertificateRecipient")
+  certificatesIssued        Certificate[]            @relation("CertificateIssuer")
+  certificatesRevoked       Certificate[]            @relation("CertificateRevoker")
+  lettersReceived           RecommendationLetter[]   @relation("LetterRecipient")
+  lettersIssued             RecommendationLetter[]   @relation("LetterIssuer")
+  lettersRevoked            RecommendationLetter[]   @relation("LetterRevoker")
+  contentAuthored           Content[]                @relation("ContentAuthor")
+  careerListingsCreated     CareerListing[]          @relation("CareerListingCreator")
+  popupsCreated             Popup[]                  @relation("PopupCreator")
+  organisationTeamMembers   OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
 
   @@map("users")
 }
@@ -277,8 +277,8 @@ model Participant {
   gradeLevel    String?  @map("grade_level")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referral AmbassadorReferral?
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referral  AmbassadorReferral?
 
   @@map("participants")
 }
@@ -560,9 +560,9 @@ model AttemptAnswer {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  attempt         Attempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question        Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOption  QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+  attempt        Attempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
 
   @@unique([attemptId, questionId])
   @@map("attempt_answers")
@@ -666,18 +666,20 @@ enum ContentStatus {
 }
 
 model Content {
-  id          String        @id @default(uuid())
-  kind        ContentKind
-  title       String
-  slug        String        @unique
-  description String?
-  body        String?
-  externalUrl String?       @map("external_url")
-  status      ContentStatus @default(draft)
-  publishedAt DateTime?     @map("published_at")
-  createdBy   String        @map("created_by")
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
+  id            String        @id @default(uuid())
+  kind          ContentKind
+  title         String
+  slug          String        @unique
+  description   String?
+  body          String?
+  externalUrl   String?       @map("external_url")
+  fileUrl       String?       @map("file_url")
+  coverImageUrl String?       @map("cover_image_url")
+  status        ContentStatus @default(draft)
+  publishedAt   DateTime?     @map("published_at")
+  createdBy     String        @map("created_by")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
 
   author User @relation("ContentAuthor", fields: [createdBy], references: [id], onDelete: Cascade)
 
