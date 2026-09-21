@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/dashboard/Toast";
 import type { z } from "zod";
 
+// Omit fileUrl from the form values since we aren't using it anymore
 type Values = z.infer<typeof issueCertificateSchema>;
 
 const ACHIEVEMENT_LABELS: Record<
@@ -34,6 +35,7 @@ export function IssueCertificateForm({
   const router = useRouter();
   const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -44,14 +46,16 @@ export function IssueCertificateForm({
   const submit = async (values: Values) => {
     setServerError(null);
     try {
-      // Map the selected achievement value to the capitalized name ('Prime', 'Elite', 'Merit')
-      const achievementMap: Record<string, "Prime" | "Elite" | "Merit"> = {
+      const achievementMap: Record<string, string> = {
         prime: "Prime",
         elite: "Elite",
         merit: "Merit",
+        honourable_mention: "Honourable Mention",
+        participation: "Participation",
       };
 
-      const selectedAchievement = achievementMap[values.achievement] || "Prime";
+      const selectedAchievement =
+        achievementMap[values.achievement] || values.achievement;
 
       const response = await fetch("/api/certificates/issue", {
         method: "POST",
@@ -99,8 +103,18 @@ export function IssueCertificateForm({
     <form
       onSubmit={handleSubmit(submit)}
       noValidate
-      className="flex flex-col gap-5 rounded-lg border border-border bg-elevated p-5"
+      className="flex flex-col gap-5 rounded-xl border border-white/10 bg-[#121212] p-6 text-white max-w-4xl shadow-xl"
     >
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-1">
+          Issue Certificate
+        </h2>
+        <p className="text-xs text-gray-400">
+          Generate and assign verified credentials to participants.
+        </p>
+      </div>
+
+      {/* Recipient Email */}
       <FormField
         label="Recipient email"
         htmlFor="recipientEmail"
@@ -109,12 +123,14 @@ export function IssueCertificateForm({
         <input
           id="recipientEmail"
           type="email"
+          placeholder="name@example.com"
           className={fieldClasses}
           {...register("recipientEmail")}
         />
       </FormField>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Olympiad & Achievement Grid */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <FormField
           label="Olympiad"
           htmlFor="olympiadId"
@@ -125,7 +141,7 @@ export function IssueCertificateForm({
             className={fieldClasses}
             {...register("olympiadId")}
           >
-            <option value="">Select…</option>
+            <option value="">Select olympiad...</option>
             {olympiads.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.title}
@@ -133,6 +149,7 @@ export function IssueCertificateForm({
             ))}
           </select>
         </FormField>
+
         <FormField
           label="Achievement"
           htmlFor="achievement"
@@ -143,7 +160,7 @@ export function IssueCertificateForm({
             className={fieldClasses}
             {...register("achievement")}
           >
-            <option value="">Select…</option>
+            <option value="">Select achievement...</option>
             {CERTIFICATE_ACHIEVEMENTS.map((a) => (
               <option key={a} value={a}>
                 {ACHIEVEMENT_LABELS[a]}
@@ -153,29 +170,20 @@ export function IssueCertificateForm({
         </FormField>
       </div>
 
-      <FormField
-        label="Certificate file URL (optional)"
-        htmlFor="fileUrl"
-        error={errors.fileUrl?.message}
-      >
-        <input
-          id="fileUrl"
-          className={fieldClasses}
-          placeholder="https://…"
-          {...register("fileUrl")}
-        />
-      </FormField>
+      {serverError ? (
+        <p className="text-xs text-red-400">{serverError}</p>
+      ) : null}
 
-      {serverError ? <p className="text-xs text-error">{serverError}</p> : null}
-
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={isSubmitting}
-        className="w-fit text-xs"
-      >
-        {isSubmitting ? "Generating PDF…" : "Issue certificate"}
-      </Button>
+      <div className="pt-2 flex items-center justify-end">
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting}
+          className="text-xs px-6 py-2.5 rounded-lg font-medium shadow-md transition-colors"
+        >
+          {isSubmitting ? "Generating PDF…" : "Issue certificate"}
+        </Button>
+      </div>
     </form>
   );
 }

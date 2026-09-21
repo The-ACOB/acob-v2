@@ -100,7 +100,7 @@ export async function generateCertificatePDF({
   });
 
   // 7. Verification QR Code (Cleanly positioned in the bottom gap)
-  const verifyUrl = `https://acob.org/verify/${cuid}`;
+  const verifyUrl = `https://theacob.com/verify/${cuid}`;
   const qrImageBuffer = await QRCode.toBuffer(verifyUrl, {
     type: "png",
     margin: 1,
