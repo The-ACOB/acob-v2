@@ -5,7 +5,6 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/authz/guards";
 import { db } from "@/lib/db/client";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
-import { DataTable, type Column } from "@/components/dashboard/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -38,41 +37,6 @@ export default async function OlympiadsPage() {
       take: 50,
     });
 
-    const columns: Column<StaffRow>[] = [
-      {
-        header: "Title",
-        cell: (r) => <span className="text-primary">{r.title}</span>,
-      },
-      {
-        header: "Status",
-        cell: (r) => <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>,
-      },
-      {
-        header: "Duration",
-        cell: (r) => `${r.durationMinutes} min`,
-      },
-      {
-        header: "Created",
-        cell: (r) => (
-          <span className="text-xs text-muted">
-            {r.createdAt.toLocaleDateString()}
-          </span>
-        ),
-      },
-      {
-        header: "",
-        hideLabel: true,
-        cell: (r) => (
-          <Link
-            href={`/dashboard/olympiads/${r.id}`}
-            className="text-xs text-accent underline underline-offset-4"
-          >
-            Manage
-          </Link>
-        ),
-      },
-    ];
-
     return (
       <div>
         <DashboardPageHeader
@@ -93,13 +57,53 @@ export default async function OlympiadsPage() {
           }
         />
 
-        <DataTable
-          columns={columns}
-          rows={olympiads}
-          getRowId={(r) => r.id}
-          emptyTitle="No Olympiads yet"
-          emptyDescription="Create the first Olympiad to get started."
-        />
+        {olympiads.length === 0 ? (
+          <EmptyState
+            title="No Olympiads yet"
+            description="Create the first Olympiad to get started."
+          />
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-border bg-elevated">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-black/20 text-xs font-mono uppercase tracking-wider text-muted">
+                  <th className="p-4">Title</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Duration</th>
+                  <th className="p-4">Created</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-sm">
+                {olympiads.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="transition-colors hover:bg-white/[0.02]"
+                  >
+                    <td className="p-4 font-medium text-primary">{r.title}</td>
+                    <td className="p-4">
+                      <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>
+                    </td>
+                    <td className="p-4 text-secondary font-mono text-xs">
+                      {r.durationMinutes} min
+                    </td>
+                    <td className="p-4 text-muted text-xs">
+                      {r.createdAt.toLocaleDateString()}
+                    </td>
+                    <td className="p-4 text-right">
+                      <Link
+                        href={`/dashboard/olympiads/${r.id}`}
+                        className="text-xs text-accent underline underline-offset-4 font-medium hover:text-accent/80"
+                      >
+                        Manage
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }

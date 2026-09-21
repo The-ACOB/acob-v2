@@ -9,7 +9,7 @@ import {
   type QuestionRow,
 } from "@/components/dashboard/QuestionsManager";
 import { OlympiadPublishControls } from "@/components/dashboard/OlympiadPublishControls";
-import { DataTable, type Column } from "@/components/dashboard/DataTable";
+import { type Column } from "@/components/dashboard/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
 
@@ -218,13 +218,46 @@ export default async function OlympiadDetailPage({
             {registrations.length} registered, {attemptedCount} attempted,{" "}
             {submittedCount} submitted
           </p>
-          <DataTable
-            columns={columns}
-            rows={resultRows}
-            getRowId={(r) => r.id}
-            emptyTitle="No attempts yet"
-            emptyDescription="Once participants start this Olympiad, their attempts will appear here."
-          />
+
+          {resultRows.length === 0 ? (
+            <div className="rounded-lg border border-border bg-elevated p-8 text-center">
+              <h3 className="font-display text-base text-primary">
+                No attempts yet
+              </h3>
+              <p className="mt-1 text-sm text-secondary">
+                Once participants start this Olympiad, their attempts will
+                appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-border bg-elevated">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-black/20 text-xs font-mono uppercase tracking-wider text-muted">
+                    {columns.map((col, idx) => (
+                      <th key={idx} className="p-4">
+                        {col.header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40 text-sm">
+                  {resultRows.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="transition-colors hover:bg-white/[0.02]"
+                    >
+                      {columns.map((col, idx) => (
+                        <td key={idx} className="p-4">
+                          {col.cell(r)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </div>
     </div>
