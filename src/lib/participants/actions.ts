@@ -89,9 +89,6 @@ export async function updateParticipantProfileAction(
     };
 
   const v = parsed.data;
-  const targetParticipant = await db.participant.findUnique({
-    where: { userId },
-  });
   if (v.email && v.email !== actor.email) {
     if (actor.id !== userId)
       return { ok: false, error: "You cannot change another user's email." };
@@ -132,6 +129,8 @@ export async function updateParticipantProfileAction(
           "We couldn't send the email confirmation. Your current email remains active.",
       };
   }
+
+  // FIXED: Always upsert both profile and participant info regardless of role or prior record existence
   await db.$transaction([
     db.profile.upsert({
       where: { userId },
@@ -147,32 +146,28 @@ export async function updateParticipantProfileAction(
         bio: v.bio || null,
       },
     }),
-    ...(actor.roleKeys.includes("PARTICIPANT") || targetParticipant
-      ? [
-          db.participant.upsert({
-            where: { userId },
-            create: {
-              userId,
-              gender: v.gender || null,
-              institution: v.institution || null,
-              gradeLevel: v.gradeLevel || null,
-              academicLevel: v.academicLevel || null,
-              district: v.district || null,
-              address: v.address || null,
-              city: v.city || null,
-            },
-            update: {
-              gender: v.gender || null,
-              institution: v.institution || null,
-              gradeLevel: v.gradeLevel || null,
-              academicLevel: v.academicLevel || null,
-              district: v.district || null,
-              address: v.address || null,
-              city: v.city || null,
-            },
-          }),
-        ]
-      : []),
+    db.participant.upsert({
+      where: { userId },
+      create: {
+        userId,
+        gender: v.gender || null,
+        institution: v.institution || null,
+        gradeLevel: v.gradeLevel || null,
+        academicLevel: v.academicLevel || null,
+        district: v.district || null,
+        address: v.address || null,
+        city: v.city || null,
+      },
+      update: {
+        gender: v.gender || null,
+        institution: v.institution || null,
+        gradeLevel: v.gradeLevel || null,
+        academicLevel: v.academicLevel || null,
+        district: v.district || null,
+        address: v.address || null,
+        city: v.city || null,
+      },
+    }),
   ]);
 
   await recordAudit({
