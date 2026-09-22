@@ -54,9 +54,11 @@ export default async function ResourcesPage() {
             {CATEGORIES.map((c, i) => (
               <Reveal key={c.label} weight="standard" order={i}>
                 <MetadataLabel>{`0${i + 1}`}</MetadataLabel>
+
                 <h3 className="mt-4 font-display text-xl text-primary">
                   {c.label}
                 </h3>
+
                 <p className="mt-3 text-sm leading-relaxed text-secondary">
                   {c.body}
                 </p>
@@ -91,27 +93,17 @@ export default async function ResourcesPage() {
                             <FileText className="h-10 w-10 stroke-1" />
                           </div>
                         )}
+
                         <span className="absolute top-3 right-3 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-md border border-border">
                           {resource.kind.replace("_", " ")}
                         </span>
                       </div>
 
                       {/* Content Details */}
-                      <MetadataLabel>
-                        {resource.publishedAt
-                          ? new Date(resource.publishedAt).toLocaleDateString(
-                              undefined,
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              },
-                            )
-                          : "Undated"}
-                      </MetadataLabel>
-                      <h2 className="mt-2 font-display text-xl text-primary line-clamp-1">
+                      <h2 className="font-display text-xl text-primary line-clamp-1">
                         {resource.title}
                       </h2>
+
                       {resource.description ? (
                         <p className="mt-2 text-sm text-secondary line-clamp-2 leading-relaxed">
                           {resource.description}
@@ -127,7 +119,7 @@ export default async function ResourcesPage() {
                           download
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-black hover:opacity-90 transition-opacity shadow-sm"
                         >
                           <Download className="h-3.5 w-3.5" />
                           Download File
@@ -144,6 +136,7 @@ export default async function ResourcesPage() {
                           }`}
                         >
                           <ExternalLink className="h-4 w-4" />
+
                           {!resource.fileUrl ? "Open External Link" : ""}
                         </a>
                       ) : null}

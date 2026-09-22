@@ -7,8 +7,13 @@ import { FileText, Download } from "lucide-react";
 
 export default async function StudyGuidesPage() {
   const items = await db.content.findMany({
-    where: { kind: "study_guide", status: "published" },
-    orderBy: { publishedAt: "desc" },
+    where: {
+      kind: "study_guide",
+      status: "published",
+    },
+    orderBy: {
+      publishedAt: "desc",
+    },
   });
 
   return (
@@ -18,6 +23,7 @@ export default async function StudyGuidesPage() {
         title="Build intuition first."
         description="Published study guides from ACOB."
       />
+
       <Section>
         <Container>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -48,6 +54,7 @@ export default async function StudyGuidesPage() {
                     <h2 className="font-display text-lg text-primary line-clamp-1">
                       {item.title}
                     </h2>
+
                     {item.description ? (
                       <p className="text-xs text-secondary line-clamp-2 leading-relaxed">
                         {item.description}
@@ -55,7 +62,7 @@ export default async function StudyGuidesPage() {
                     ) : null}
                   </div>
 
-                  {/* Action Link for PDF Download or External Link */}
+                  {/* Action Link */}
                   <div className="pt-4 flex items-center gap-3">
                     {item.fileUrl ? (
                       <a
@@ -64,7 +71,8 @@ export default async function StudyGuidesPage() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-medium bg-white/5 border border-border px-3 py-1.5 rounded-md"
                       >
-                        <Download className="h-3.5 w-3.5" /> Download PDF
+                        <Download className="h-3.5 w-3.5" />
+                        Download PDF
                       </a>
                     ) : item.externalUrl ? (
                       <a
