@@ -1,26 +1,30 @@
+﻿"use client";
+
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-export type Column<T> = {
+export type InteractiveColumn<T> = {
   header: string;
   cell: (row: T) => ReactNode;
   className?: string;
   hideLabel?: boolean;
 };
 
-export function DataTable<T>({
+export function InteractiveDataTable<T>({
   columns,
   rows,
   getRowId,
   emptyTitle = "Nothing here yet",
   emptyDescription,
+  onRowClick,
   rowClassName,
 }: {
-  columns: Column<T>[];
+  columns: InteractiveColumn<T>[];
   rows: T[];
   getRowId: (row: T) => string;
   emptyTitle?: string;
   emptyDescription?: string;
+  onRowClick: (row: T) => void;
   rowClassName?: (row: T) => string;
 }) {
   if (rows.length === 0) {
@@ -49,10 +53,14 @@ export function DataTable<T>({
               const rowId = getRowId(row);
               const customClass = rowClassName
                 ? rowClassName(row)
-                : "border-b border-border last:border-b-0 hover:bg-elevated/40";
+                : "cursor-pointer border-b border-border last:border-b-0 hover:bg-elevated/40";
 
               return (
-                <tr key={rowId} className={customClass}>
+                <tr
+                  key={rowId}
+                  onClick={() => onRowClick(row)}
+                  className={customClass}
+                >
                   {columns.map((col, i) => (
                     <td
                       key={col.header ? `${col.header}-${i}` : `cell-${i}`}
@@ -73,9 +81,11 @@ export function DataTable<T>({
           const rowId = getRowId(row);
 
           return (
-            <div
+            <button
               key={rowId}
-              className="rounded-lg border border-border bg-elevated p-4"
+              type="button"
+              onClick={() => onRowClick(row)}
+              className="w-full rounded-lg border border-border bg-elevated p-4 text-left"
             >
               <dl className="flex flex-col gap-2.5">
                 {columns
@@ -108,7 +118,7 @@ export function DataTable<T>({
                     {col.cell(row)}
                   </div>
                 ))}
-            </div>
+            </button>
           );
         })}
       </div>
