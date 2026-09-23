@@ -31,7 +31,11 @@ export function Sidebar({
 
             <ul className="flex flex-col gap-0.5">
               {section.items.map((item) => {
-                const active = pathname === item.href;
+                const active =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" &&
+                    pathname.startsWith(item.href + "/"));
+
                 const Icon = item.icon;
 
                 return (
@@ -39,14 +43,17 @@ export function Sidebar({
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                        "flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] transition-all",
                         active
-                          ? "bg-elevated text-primary"
+                          ? "border border-border/70 bg-elevated font-medium text-primary shadow-xs"
                           : "text-secondary hover:bg-elevated/60 hover:text-primary",
                       )}
                     >
                       <Icon
-                        className="h-[15px] w-[15px] shrink-0"
+                        className={cn(
+                          "h-[15px] w-[15px] shrink-0",
+                          active ? "text-accent" : "text-muted",
+                        )}
                         strokeWidth={1.75}
                       />
                       <span className="truncate">{item.label}</span>

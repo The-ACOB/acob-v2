@@ -51,8 +51,10 @@ export default function OnboardingPage() {
 
         router.push("/dashboard");
         router.refresh();
-      } catch (err: any) {
-        setError(err.message || "An unexpected error occurred.");
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred.";
+        setError(message);
       }
     });
   };
@@ -72,7 +74,7 @@ export default function OnboardingPage() {
         >
           <form onSubmit={handleSubmit} className="space-y-6 pt-4">
             {error && (
-              <div className="rounded-xl bg-red-500/10 p-3.5 text-sm text-red-400 border border-red-500/20 backdrop-blur-md">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3.5 text-sm text-red-400 backdrop-blur-md">
                 {error}
               </div>
             )}

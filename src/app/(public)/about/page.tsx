@@ -36,7 +36,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHero
-        eyebrow=""
+        eyebrow="About ACOB"
         title="Founded on the gap between knowing and understanding."
         description="Applied Cognitio Olympiad Bangladesh began in 2025 with a question: what happens to a student's curiosity once they've learned to pass the test?"
       />
@@ -46,6 +46,10 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
             <Reveal weight="standard">
               <MetadataLabel>Our origin</MetadataLabel>
+              <h2 className="mt-4 font-display text-3xl leading-[1.1] tracking-tight text-primary sm:text-4xl">
+                Education should do more than measure what a student can
+                remember.
+              </h2>
             </Reveal>
             <div className="flex flex-col gap-7">
               <Reveal weight="standard" order={1}>

@@ -20,6 +20,7 @@ export const revalidate = 60;
 
 export default async function CareersPage() {
   const now = new Date();
+
   const raw: {
     id: string;
     title: string;
@@ -46,10 +47,10 @@ export default async function CareersPage() {
 
       <Section>
         <Container>
-          <div className="flex items-center justify-between border-b border-border/80 pb-6 mb-10">
+          <div className="mb-10 flex items-center justify-between border-b border-border/80 pb-6">
             <Reveal weight="standard">
               <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-primary" />
+                <Sparkles className="h-4 w-4 text-primary" />
                 <MetadataLabel>
                   Open Positions ({openRoles.length})
                 </MetadataLabel>
@@ -61,7 +62,7 @@ export default async function CareersPage() {
             <Reveal weight="minor" order={1} className="mt-8">
               <EmptyState
                 title="No open roles right now"
-                description="ACOB is a young organization — when a position opens, it will be listed here first."
+                description="ACOB is a young organization � when a position opens, it will be listed here first."
                 action={
                   <Button href="/contact" variant="secondary" className="mt-2">
                     Reach out anyway
@@ -77,39 +78,38 @@ export default async function CareersPage() {
                     href={`/careers/${role.id}`}
                     className="group relative block rounded-2xl border border-border/70 bg-card/40 p-8 transition-all duration-300 hover:border-primary/50 hover:bg-card/70 hover:shadow-xl hover:shadow-primary/5"
                   >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      {/* Left: Role Info Snippet */}
-                      <div className="space-y-3 flex-1">
+                    <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+                      <div className="flex-1 space-y-3">
                         <div className="flex flex-wrap items-center gap-3">
                           {role.department ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 font-mono text-xs uppercase tracking-wider text-primary border border-primary/20">
-                              <Briefcase className="w-3.5 h-3.5" />
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 font-mono text-xs uppercase tracking-wider text-primary">
+                              <Briefcase className="h-3.5 w-3.5" />
                               {role.department}
                             </span>
                           ) : null}
 
                           {role.deadline ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 font-mono text-xs text-muted-foreground border border-border">
-                              <Calendar className="w-3.5 h-3.5 text-primary/70" />
-                              Apply by {role.deadline.toLocaleDateString()}
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 font-mono text-xs text-muted">
+                              <Calendar className="h-3.5 w-3.5 text-primary/70" />
+                              Apply by{" "}
+                              {role.deadline.toLocaleDateString()}
                             </span>
                           ) : null}
                         </div>
 
-                        <h2 className="font-display text-2xl sm:text-3xl text-primary tracking-tight group-hover:text-primary/90 transition-colors">
+                        <h2 className="font-display text-2xl tracking-tight text-primary transition-colors group-hover:text-primary/90 sm:text-3xl">
                           {role.title}
                         </h2>
 
-                        <p className="max-w-3xl text-sm leading-relaxed text-secondary line-clamp-2">
+                        <p className="line-clamp-2 max-w-3xl text-sm leading-relaxed text-secondary">
                           {role.description}
                         </p>
                       </div>
 
-                      {/* Right: Action Indicator */}
-                      <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary pt-4 md:pt-0 border-t md:border-t-0 border-border/40">
+                      <div className="flex items-center gap-2 border-border/40 pt-4 font-mono text-xs uppercase tracking-widest text-primary md:border-t-0 md:pt-0">
                         <span className="group-hover:underline">View Role</span>
-                        <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:bg-primary group-hover:text-primary-foreground">
-                          <ArrowRight className="w-4 h-4" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10 transition-transform duration-300 group-hover:translate-x-1 group-hover:bg-primary group-hover:text-primary-foreground">
+                          <ArrowRight className="h-4 w-4" />
                         </div>
                       </div>
                     </div>

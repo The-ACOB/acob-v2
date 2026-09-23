@@ -17,6 +17,11 @@ export function PageHero({
         <Reveal weight="minor">
           <MetadataLabel>{eyebrow}</MetadataLabel>
         </Reveal>
+        {eyebrow ? (
+          <Reveal weight="minor">
+            <MetadataLabel>{eyebrow}</MetadataLabel>
+          </Reveal>
+        ) : null}
         <Reveal weight="major" order={1}>
           <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] tracking-tight text-primary sm:text-5xl lg:text-6xl">
             {title}

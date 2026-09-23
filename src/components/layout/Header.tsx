@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
 import { TextLink } from "@/components/ui/TextLink";
 import { logoutAction } from "@/lib/auth/actions";
@@ -22,21 +22,18 @@ export function Header({ user = null }: { user?: HeaderUser }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    if (open) setOpen(false);
-  }
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -80,6 +77,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
               Sign in
             </TextLink>
           )}
+
           <ThemeSwitcher />
         </div>
 
@@ -88,7 +86,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-nav"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen((value) => !value)}
           className="relative flex h-9 w-9 flex-col items-center justify-center gap-[5px] lg:hidden"
         >
           <span
@@ -129,6 +127,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
                 >
                   <TextLink
                     href={link.href}
+                    onClick={() => setOpen(false)}
                     className="block py-3 font-display text-2xl tracking-tight after:hidden"
                   >
                     {link.label}
@@ -141,8 +140,10 @@ export function Header({ user = null }: { user?: HeaderUser }) {
                   <span className="text-sm text-secondary">Appearance</span>
                   <ThemeSwitcher />
                 </div>
+
                 <TextLink
                   href="/verify"
+                  onClick={() => setOpen(false)}
                   className="text-sm font-medium tracking-tight text-secondary after:hidden"
                 >
                   Verify a certificate
@@ -152,10 +153,12 @@ export function Header({ user = null }: { user?: HeaderUser }) {
                   <>
                     <TextLink
                       href="/dashboard"
+                      onClick={() => setOpen(false)}
                       className="text-sm font-medium tracking-tight after:hidden"
                     >
                       Dashboard
                     </TextLink>
+
                     <form action={logoutAction}>
                       <button
                         type="submit"
@@ -168,6 +171,7 @@ export function Header({ user = null }: { user?: HeaderUser }) {
                 ) : (
                   <TextLink
                     href="/login"
+                    onClick={() => setOpen(false)}
                     className="text-sm font-medium tracking-tight after:hidden"
                   >
                     Sign in

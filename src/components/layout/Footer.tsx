@@ -137,6 +137,8 @@ export function Footer() {
             © 2025-{year} Applied Cognitio Olympiad Bangladesh. All rights
             reserved.
             <br></br>Technology Partner <b>Glitched Tech</b>
+            <br />
+            Technology Partner <b>Glitched Tech</b>
           </p>
           <p className="font-mono uppercase tracking-[0.14em]">
             Founded 2025 · Dhaka, Bangladesh

@@ -1,142 +1,189 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Monitor, Moon, Sun, Check } from "lucide-react";
-import { useTheme, type Theme } from "./ThemeProvider";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
 
-const OPTIONS: {
-  value: Theme;
-  label: string;
-  description: string;
-  icon: typeof Sun;
-}[] = [
-  {
-    value: "system",
-    label: "System",
-    description: "Follow device",
-    icon: Monitor,
-  },
-  {
-    value: "light",
-    label: "Light",
-    description: "Daylight palette",
-    icon: Sun,
-  },
-  {
-    value: "dark",
-    label: "Dark",
-    description: "Low-light palette",
-    icon: Moon,
-  },
-];
+type Theme = "light" | "dark" | "system";
+
+const THEME_KEY = "acob-theme";
+
+function getStoredTheme(): Theme {
+  if (typeof window === "undefined") {
+    return "system";
+  }
+
+  const stored = window.localStorage.getItem(THEME_KEY);
+
+  if (stored === "light" || stored === "dark" || stored === "system") {
+    return stored;
+  }
+
+  return "system";
+}
+
+function getSystemTheme(): "light" | "dark" {
+  if (typeof window === "undefined") {
+    return "dark";
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
+function applyTheme(theme: Theme) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
+
+  document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+
+  document.documentElement.classList.toggle("light", resolvedTheme === "light");
+
+  document.documentElement.style.colorScheme = resolvedTheme;
+}
+
+function subscribeToTheme(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+  const handleChange = () => {
+    callback();
+  };
+
+  mediaQuery.addEventListener("change", handleChange);
+
+  return () => {
+    mediaQuery.removeEventListener("change", handleChange);
+  };
+}
+
+function getThemeSnapshot(): Theme {
+  return getStoredTheme();
+}
+
+function getServerThemeSnapshot(): Theme {
+  return "system";
+}
 
 export function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
+
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
-    function close(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
+    if (!open) {
+      return;
     }
 
-    function onKey(event: KeyboardEvent) {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [open]);
 
-  /*
-   * Theme state can differ between the server and the browser.
-   * Don't render theme-dependent UI until the client has mounted.
-   * This prevents React hydration mismatches.
-   */
-  if (!mounted) {
-    return (
-      <div
-        aria-hidden="true"
-        className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border-strong"
-      >
-        <Monitor className="h-4 w-4 text-secondary" strokeWidth={1.7} />
-      </div>
+  const handleThemeChange = (nextTheme: Theme) => {
+    window.localStorage.setItem(THEME_KEY, nextTheme);
+    applyTheme(nextTheme);
+
+    window.dispatchEvent(new Event("acob-theme-change"));
+
+    setOpen(false);
+  };
+
+  const currentIcon =
+    theme === "light" ? (
+      <Sun className="h-4 w-4" />
+    ) : theme === "dark" ? (
+      <Moon className="h-4 w-4" />
+    ) : (
+      <Monitor className="h-4 w-4" />
     );
-  }
-
-  const active = OPTIONS.find((option) => option.value === theme) ?? OPTIONS[0];
-
-  const ActiveIcon = active.icon;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
-        aria-label={`Theme: ${active.label}`}
-        aria-haspopup="menu"
-        aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-border-strong text-secondary transition-colors duration-200 hover:border-accent hover:text-primary motion-safe:hover:rotate-[-8deg]"
+        aria-label="Change theme"
+        aria-expanded={open}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-elevated text-secondary transition-colors hover:border-accent/40 hover:text-primary"
       >
-        <ActiveIcon className="h-4 w-4" strokeWidth={1.7} />
+        {currentIcon}
       </button>
 
       {open ? (
-        <div
-          role="menu"
-          aria-label="Theme options"
-          className="absolute right-0 top-11 z-[80] w-44 rounded-lg border border-border-strong bg-elevated p-1.5 shadow-[0_18px_50px_-20px_var(--color-glow)]"
-        >
-          {OPTIONS.map((option) => {
-            const Icon = option.icon;
-            const selected = option.value === theme;
+        <div className="absolute right-0 top-full z-50 mt-2 w-36 overflow-hidden rounded-xl border border-border bg-elevated p-1 shadow-xl">
+          <button
+            type="button"
+            onClick={() => handleThemeChange("light")}
+            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+              theme === "light"
+                ? "bg-accent/10 text-accent"
+                : "text-secondary hover:bg-background hover:text-primary"
+            }`}
+          >
+            <Sun className="h-4 w-4" />
+            Light
+          </button>
 
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="menuitemradio"
-                aria-checked={selected}
-                onClick={() => {
-                  setTheme(option.value);
-                  setOpen(false);
-                }}
-                className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors duration-150 hover:bg-elevated-2"
-              >
-                <Icon
-                  className="h-4 w-4 shrink-0 text-secondary"
-                  strokeWidth={1.7}
-                />
+          <button
+            type="button"
+            onClick={() => handleThemeChange("dark")}
+            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+              theme === "dark"
+                ? "bg-accent/10 text-accent"
+                : "text-secondary hover:bg-background hover:text-primary"
+            }`}
+          >
+            <Moon className="h-4 w-4" />
+            Dark
+          </button>
 
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs text-primary">
-                    {option.label}
-                  </span>
-                  <span className="block text-[10px] text-muted">
-                    {option.description}
-                  </span>
-                </span>
-
-                {selected ? (
-                  <Check className="h-3.5 w-3.5 text-accent" strokeWidth={2} />
-                ) : null}
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            onClick={() => handleThemeChange("system")}
+            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+              theme === "system"
+                ? "bg-accent/10 text-accent"
+                : "text-secondary hover:bg-background hover:text-primary"
+            }`}
+          >
+            <Monitor className="h-4 w-4" />
+            System
+          </button>
         </div>
       ) : null}
     </div>

@@ -10,6 +10,8 @@ interface GenerateCertificateProps {
   cuid: string;
 }
 
+type FontkitModule = Parameters<PDFDocument["registerFontkit"]>[0];
+
 export async function generateCertificatePDF({
   recipientName,
   achievementType,
@@ -44,7 +46,9 @@ export async function generateCertificatePDF({
 
   // 2. Load PDF Document
   const pdfDoc = await PDFDocument.load(templateBytes);
-  pdfDoc.registerFontkit(fontkit as any);
+
+  const compatibleFontkit = fontkit as unknown as FontkitModule;
+  pdfDoc.registerFontkit(compatibleFontkit);
 
   // 3. Load custom font (Trajan Pro Bold)
   const fontPath = path.join(
@@ -64,6 +68,7 @@ export async function generateCertificatePDF({
   const formattedName = recipientName.toUpperCase();
   const fontSizeName = 24;
   const textWidth = trajanBold.widthOfTextAtSize(formattedName, fontSizeName);
+
   page.drawText(formattedName, {
     x: (width - textWidth) / 2,
     y: height * 0.67,
@@ -78,8 +83,10 @@ export async function generateCertificatePDF({
     month: "long",
     year: "numeric",
   });
+
   const dateFontSize = 10;
   const dateWidth = trajanBold.widthOfTextAtSize(currentDate, dateFontSize);
+
   page.drawText(currentDate, {
     x: width * 0.33 - dateWidth / 2,
     y: height * 0.455,
@@ -91,8 +98,9 @@ export async function generateCertificatePDF({
   // 6. CUID Number (Adjusted to 0.675)
   const cuidFontSize = 10;
   const cuidWidth = trajanBold.widthOfTextAtSize(cuid, cuidFontSize);
+
   page.drawText(cuid, {
-    x: width * 0.675 - cuidWidth / 2, // Adjusted to 0.675
+    x: width * 0.675 - cuidWidth / 2,
     y: height * 0.455,
     size: cuidFontSize,
     font: trajanBold,
@@ -101,11 +109,13 @@ export async function generateCertificatePDF({
 
   // 7. Verification QR Code (Cleanly positioned in the bottom gap)
   const verifyUrl = `https://theacob.com/verify/${cuid}`;
+
   const qrImageBuffer = await QRCode.toBuffer(verifyUrl, {
     type: "png",
     margin: 1,
     width: 300,
   });
+
   const embeddedQrImage = await pdfDoc.embedPng(qrImageBuffer);
 
   page.drawImage(embeddedQrImage, {

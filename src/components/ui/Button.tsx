@@ -9,6 +9,8 @@ const variants = {
   primary: "bg-primary text-background px-6 py-3 hover:bg-accent-strong",
   secondary:
     "border border-border-strong text-primary px-6 py-3 hover:border-accent hover:text-accent",
+  danger: "bg-error text-background px-6 py-3 hover:opacity-90",
+  outline: "border border-border text-secondary px-4 py-2 hover:border-accent hover:text-primary",
   ghost: "text-secondary px-1 py-1 hover:text-primary",
 };
 

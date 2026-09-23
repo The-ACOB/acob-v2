@@ -9,19 +9,20 @@ import { Logo } from "@/components/brand/Logo";
 import { resolveNavSections } from "@/lib/dashboard/nav-config";
 import { cn } from "@/lib/utils";
 
-export function MobileSidebar({ roleKeys, roleLabel }: { roleKeys: string[]; roleLabel: string }) {
+export function MobileSidebar({
+  roleKeys,
+  roleLabel,
+}: {
+  roleKeys: string[];
+  roleLabel: string;
+}) {
   const sections = resolveNavSections(roleKeys);
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    if (open) setOpen(false);
-  }
-
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -35,7 +36,8 @@ export function MobileSidebar({ roleKeys, roleLabel }: { roleKeys: string[]; rol
         aria-label="Open navigation"
         className="flex h-9 w-9 items-center justify-center text-primary"
       >
-        <Menu className="h-5 w-5" strokeWidth={1.75} />
+        {" "}
+        <Menu className="h-5 w-5" strokeWidth={1.75} />{" "}
       </button>
 
       <AnimatePresence>
@@ -49,6 +51,7 @@ export function MobileSidebar({ roleKeys, roleLabel }: { roleKeys: string[]; rol
           >
             <div className="flex h-16 items-center justify-between border-b border-border px-6">
               <Logo href="/" className="h-6" />
+
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -65,20 +68,35 @@ export function MobileSidebar({ roleKeys, roleLabel }: { roleKeys: string[]; rol
                   <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
                     {section.label}
                   </p>
+
                   <ul className="flex flex-col gap-1">
                     {section.items.map((item) => {
-                      const active = pathname === item.href;
+                      const active =
+                        pathname === item.href ||
+                        (item.href !== "/dashboard" &&
+                          pathname.startsWith(item.href + "/"));
+
                       const Icon = item.icon;
+
                       return (
                         <li key={item.href}>
                           <Link
                             href={item.href}
+                            onClick={() => setOpen(false)}
                             className={cn(
-                              "flex items-center gap-3 rounded-md px-3 py-3 text-base transition-colors",
-                              active ? "bg-elevated text-primary" : "text-secondary"
+                              "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-all",
+                              active
+                                ? "border border-border/80 bg-elevated font-medium text-primary shadow-sm"
+                                : "text-secondary hover:bg-elevated/60 hover:text-primary",
                             )}
                           >
-                            <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                            <Icon
+                              className={cn(
+                                "h-[18px] w-[18px] shrink-0",
+                                active ? "text-accent" : "text-muted",
+                              )}
+                              strokeWidth={1.75}
+                            />
                             {item.label}
                           </Link>
                         </li>
@@ -87,7 +105,10 @@ export function MobileSidebar({ roleKeys, roleLabel }: { roleKeys: string[]; rol
                   </ul>
                 </div>
               ))}
-              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">{roleLabel}</p>
+
+              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+                {roleLabel}
+              </p>
             </nav>
           </motion.div>
         )}

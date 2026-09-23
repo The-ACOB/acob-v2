@@ -43,7 +43,7 @@ export default async function ResourcesPage() {
   return (
     <>
       <PageHero
-        eyebrow=""
+        eyebrow="Resources"
         title="Study material built for understanding, not repetition."
         description="Everything here is designed to build intuition for a subject — not to be memorised the night before a competition."
       />
@@ -51,16 +51,16 @@ export default async function ResourcesPage() {
       <Section>
         <Container>
           <div className="grid grid-cols-1 gap-x-10 gap-y-14 sm:grid-cols-3">
-            {CATEGORIES.map((c, i) => (
-              <Reveal key={c.label} weight="standard" order={i}>
-                <MetadataLabel>{`0${i + 1}`}</MetadataLabel>
+            {CATEGORIES.map((category, index) => (
+              <Reveal key={category.label} weight="standard" order={index}>
+                <MetadataLabel>{`0${index + 1}`}</MetadataLabel>
 
                 <h3 className="mt-4 font-display text-xl text-primary">
-                  {c.label}
+                  {category.label}
                 </h3>
 
                 <p className="mt-3 text-sm leading-relaxed text-secondary">
-                  {c.body}
+                  {category.body}
                 </p>
               </Reveal>
             ))}
@@ -79,8 +79,7 @@ export default async function ResourcesPage() {
                 <Reveal key={resource.id} weight="standard" order={index}>
                   <div className="group relative flex h-full flex-col justify-between rounded-2xl border border-border bg-card/40 p-5 backdrop-blur-xl transition-all duration-300 hover:border-border/80">
                     <div>
-                      {/* Cover Thumbnail Preview */}
-                      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted border border-border/50 mb-5">
+                      <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl border border-border/50 bg-muted">
                         {resource.coverImageUrl ? (
                           <Image
                             src={resource.coverImageUrl}
@@ -89,37 +88,35 @@ export default async function ResourcesPage() {
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-muted-foreground">
+                          <div className="flex h-full items-center justify-center text-muted">
                             <FileText className="h-10 w-10 stroke-1" />
                           </div>
                         )}
 
-                        <span className="absolute top-3 right-3 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-md border border-border">
+                        <span className="absolute right-3 top-3 rounded-full border border-border bg-background/80 px-3 py-1 text-xs font-medium capitalize text-primary backdrop-blur-md">
                           {resource.kind.replace("_", " ")}
                         </span>
                       </div>
 
-                      {/* Content Details */}
-                      <h2 className="font-display text-xl text-primary line-clamp-1">
+                      <h2 className="line-clamp-1 font-display text-xl text-primary">
                         {resource.title}
                       </h2>
 
                       {resource.description ? (
-                        <p className="mt-2 text-sm text-secondary line-clamp-2 leading-relaxed">
+                        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-secondary">
                           {resource.description}
                         </p>
                       ) : null}
                     </div>
 
-                    {/* Action Links */}
-                    <div className="mt-6 flex items-center gap-3 pt-4 border-t border-border/60">
+                    <div className="mt-6 flex items-center gap-3 border-t border-border/60 pt-4">
                       {resource.fileUrl ? (
                         <a
                           href={resource.fileUrl}
                           download
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-black hover:opacity-90 transition-opacity shadow-sm"
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-background shadow-sm transition-opacity hover:opacity-90"
                         >
                           <Download className="h-3.5 w-3.5" />
                           Download File
@@ -131,13 +128,12 @@ export default async function ResourcesPage() {
                           href={resource.externalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`inline-flex items-center justify-center rounded-xl bg-secondary/20 px-3 py-2.5 text-xs font-medium text-secondary hover:bg-secondary/30 transition-colors border border-border ${
+                          className={`inline-flex items-center justify-center rounded-xl border border-border bg-elevated-2 px-3 py-2.5 text-xs font-medium text-primary transition-colors hover:bg-elevated ${
                             !resource.fileUrl ? "w-full gap-2" : ""
                           }`}
                         >
                           <ExternalLink className="h-4 w-4" />
-
-                          {!resource.fileUrl ? "Open External Link" : ""}
+                          {!resource.fileUrl ? "Open External Link" : null}
                         </a>
                       ) : null}
                     </div>

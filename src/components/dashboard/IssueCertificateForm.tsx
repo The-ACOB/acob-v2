@@ -45,6 +45,7 @@ export function IssueCertificateForm({
 
   const submit = async (values: Values) => {
     setServerError(null);
+
     try {
       const achievementMap: Record<string, string> = {
         prime: "Prime",
@@ -92,10 +93,13 @@ export function IssueCertificateForm({
       );
       reset();
       router.refresh();
-    } catch (error: any) {
-      setServerError(
-        error.message || "An error occurred while issuing the certificate.",
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "An error occurred while issuing the certificate.";
+
+      setServerError(message);
     }
   };
 
@@ -103,10 +107,10 @@ export function IssueCertificateForm({
     <form
       onSubmit={handleSubmit(submit)}
       noValidate
-      className="flex flex-col gap-5 rounded-xl border border-white/10 bg-[#121212] p-6 text-white max-w-4xl shadow-xl"
+      className="flex max-w-4xl flex-col gap-5 rounded-xl border border-white/10 bg-[#121212] p-6 text-white shadow-xl"
     >
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">
+        <h2 className="mb-1 text-lg font-semibold text-white">
           Issue Certificate
         </h2>
         <p className="text-xs text-gray-400">
@@ -174,12 +178,12 @@ export function IssueCertificateForm({
         <p className="text-xs text-red-400">{serverError}</p>
       ) : null}
 
-      <div className="pt-2 flex items-center justify-end">
+      <div className="flex items-center justify-end pt-2">
         <Button
           type="submit"
           variant="primary"
           disabled={isSubmitting}
-          className="text-xs px-6 py-2.5 rounded-lg font-medium shadow-md transition-colors"
+          className="rounded-lg px-6 py-2.5 text-xs font-medium shadow-md transition-colors"
         >
           {isSubmitting ? "Generating PDF…" : "Issue certificate"}
         </Button>

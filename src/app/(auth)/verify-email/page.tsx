@@ -1,13 +1,12 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState, useTransition, Suspense } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { verifyEmailAction } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/Button";
 
-// Force dynamic rendering so Next.js doesn't attempt static prerendering at build time
 export const dynamic = "force-dynamic";
 
 function VerifyEmailContent() {
@@ -16,17 +15,17 @@ function VerifyEmailContent() {
   const token = searchParams.get("token");
 
   const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading",
+    token ? "loading" : "error",
   );
-  const [errorMessage, setErrorMessage] = useState<string>(
-    "Invalid or expired token.",
+  const [errorMessage, setErrorMessage] = useState(
+    token
+      ? "Invalid or expired token."
+      : "This link is missing its verification token.",
   );
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!token) {
-      setStatus("error");
-      setErrorMessage("This link is missing its verification token.");
       return;
     }
 
@@ -36,6 +35,7 @@ function VerifyEmailContent() {
 
         if (result.ok) {
           setStatus("success");
+
           setTimeout(() => {
             router.push("/onboarding");
             router.refresh();
@@ -44,7 +44,7 @@ function VerifyEmailContent() {
           setStatus("error");
           setErrorMessage(result.error);
         }
-      } catch (err) {
+      } catch {
         setStatus("error");
         setErrorMessage("An unexpected error occurred during verification.");
       }
@@ -88,6 +88,7 @@ function VerifyEmailContent() {
       <Button href="/login" variant="secondary">
         Continue to sign in
       </Button>
+
       <p className="mt-4 text-xs text-muted">
         <Link href="/" className="underline underline-offset-4">
           Back to ACOB

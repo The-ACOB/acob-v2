@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { logoutAction } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
 
@@ -14,29 +15,34 @@ type HeaderUser = {
 function initials(user: HeaderUser): string {
   const source = user.fullName?.trim() || user.email;
   const parts = source.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   return source.slice(0, 2).toUpperCase();
 }
 
-/**
- * Compact account trigger — an avatar badge or initials badge that opens a small menu,
- * replacing the old inline "Sign out (full email)" text that made the
- * header feel cluttered.
- */
 export function AccountMenu({ user }: { user: HeaderUser }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node))
+      if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
+      }
     }
+
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
     }
+
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
+
     return () => {
       document.removeEventListener("mousedown", onClick);
       document.removeEventListener("keydown", onKey);
@@ -51,13 +57,16 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border-strong font-mono text-[11px] uppercase tracking-widest text-primary transition-colors hover:border-accent"
+        className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border-strong font-mono text-[11px] uppercase tracking-widest text-primary transition-colors hover:border-accent"
       >
         {user.avatarUrl ? (
-          <img
+          <Image
             src={user.avatarUrl}
             alt={user.fullName ?? user.email}
-            className="h-full w-full object-cover"
+            fill
+            sizes="32px"
+            unoptimized
+            className="object-cover"
           />
         ) : (
           initials(user)
@@ -79,6 +88,7 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
           </p>
           <p className="truncate text-xs text-muted">{user.email}</p>
         </div>
+
         <Link
           href="/dashboard"
           role="menuitem"
@@ -86,6 +96,7 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
         >
           Dashboard
         </Link>
+
         <Link
           href="/dashboard/profile"
           role="menuitem"
@@ -93,6 +104,7 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
         >
           My profile
         </Link>
+
         <form action={logoutAction}>
           <button
             type="submit"

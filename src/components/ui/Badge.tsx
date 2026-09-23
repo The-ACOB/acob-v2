@@ -1,30 +1,33 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "neutral" | "accent" | "success" | "warning" | "error";
+type BadgeTone = "neutral" | "accent" | "success" | "warning" | "error";
 
-const toneClasses: Record<Tone, string> = {
-  neutral: "border-border text-secondary",
-  accent: "border-accent/40 text-accent",
-  success: "border-success/40 text-success",
-  warning: "border-warning/40 text-warning",
-  error: "border-error/40 text-error",
+interface BadgeProps {
+  children: ReactNode;
+  tone?: BadgeTone;
+  className?: string;
+}
+
+const tones: Record<BadgeTone, string> = {
+  neutral: "border-border bg-elevated/80 text-secondary",
+  accent: "border-accent/30 bg-accent/10 text-accent",
+  success: "border-success/30 bg-success/10 text-success",
+  warning: "border-warning/30 bg-warning/10 text-warning",
+  error: "border-error/30 bg-error/10 text-error",
 };
 
 export function Badge({
   children,
   tone = "neutral",
   className,
-}: {
-  children: React.ReactNode;
-  tone?: Tone;
-  className?: string;
-}) {
+}: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em]",
-        toneClasses[tone],
-        className
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+        tones[tone],
+        className,
       )}
     >
       {children}

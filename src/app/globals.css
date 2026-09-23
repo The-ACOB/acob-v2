@@ -92,9 +92,14 @@
   --color-background: var(--color-background);
   --color-elevated: var(--color-elevated);
   --color-elevated-2: var(--color-elevated-2);
+  --color-card: var(--color-elevated);
+  --color-card-foreground: var(--color-text-primary);
   --color-primary: var(--color-text-primary);
+  --color-primary-foreground: var(--color-background);
   --color-secondary: var(--color-text-secondary);
   --color-muted: var(--color-text-muted);
+  --color-foreground: var(--color-text-primary);
+  --color-muted-foreground: var(--color-text-muted);
   --color-border: var(--color-border);
   --color-border-strong: var(--color-border-strong);
   --color-accent: var(--color-accent);
@@ -104,6 +109,7 @@
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
+  --color-danger: var(--color-error);
 
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import Cropper from "react-easy-crop";
+import Cropper, { type Area } from "react-easy-crop";
 import { getCroppedImg } from "@/lib/canvasUtils";
 
 type Props = {
@@ -18,13 +18,13 @@ export default function AvatarUploadModal({
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onCropComplete = useCallback(
-    (croppedArea: any, croppedAreaPixels: any) => {
+    (_croppedArea: Area, croppedAreaPixels: Area) => {
       setCroppedAreaPixels(croppedAreaPixels);
     },
     [],
@@ -41,6 +41,7 @@ export default function AvatarUploadModal({
 
   const handleUpload = async () => {
     if (!imageSrc || !croppedAreaPixels) return;
+
     try {
       setLoading(true);
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
@@ -70,14 +71,14 @@ export default function AvatarUploadModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#0c0c0c] border border-[#222222] rounded-xl w-full max-w-md p-6 text-white">
-        <h2 className="text-lg font-medium mb-4">Update Profile Picture</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-xl border border-[#222222] bg-[#0c0c0c] p-6 text-white">
+        <h2 className="mb-4 text-lg font-medium">Update Profile Picture</h2>
 
         {!imageSrc ? (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-[#555] transition"
+            className="cursor-pointer rounded-lg border-2 border-dashed border-[#333] p-8 text-center transition hover:border-[#555]"
           >
             <input
               ref={fileInputRef}
@@ -86,13 +87,13 @@ export default function AvatarUploadModal({
               onChange={handleFileChange}
               className="hidden"
             />
-            <p className="text-sm text-gray-400 pointer-events-none">
+            <p className="pointer-events-none text-sm text-gray-400">
               Click anywhere here to select an image from your device
             </p>
           </div>
         ) : (
           <div>
-            <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden mb-4">
+            <div className="relative mb-4 h-64 w-full overflow-hidden rounded-lg bg-black">
               <Cropper
                 image={imageSrc}
                 crop={crop}
@@ -107,7 +108,7 @@ export default function AvatarUploadModal({
             </div>
 
             <div className="mb-6">
-              <label className="text-xs text-gray-400 block mb-1">Zoom</label>
+              <label className="mb-1 block text-xs text-gray-400">Zoom</label>
               <input
                 type="range"
                 value={zoom}
@@ -116,27 +117,28 @@ export default function AvatarUploadModal({
                 step={0.1}
                 aria-label="Zoom profile picture"
                 onChange={(e) => setZoom(Number(e.target.value))}
-                className="w-full accent-white cursor-pointer"
+                className="w-full cursor-pointer accent-white"
               />
             </div>
           </div>
         )}
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={() => {
               setImageSrc(null);
               onClose();
             }}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition"
+            className="px-4 py-2 text-sm text-gray-400 transition hover:text-white"
           >
             Cancel
           </button>
+
           {imageSrc && (
             <button
               onClick={handleUpload}
               disabled={loading}
-              className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition disabled:opacity-50"
+              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-gray-200 disabled:opacity-50"
             >
               {loading ? "Saving..." : "Set Profile Picture"}
             </button>
