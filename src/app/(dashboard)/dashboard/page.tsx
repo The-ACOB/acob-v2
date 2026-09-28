@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
+import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { primaryRoleLabel } from "@/lib/dashboard/nav-config";
@@ -134,7 +135,7 @@ async function ExecutiveOverview({ actorId }: { actorId: string }) {
   );
 }
 
-function RolePanels({ roleKeys }: { roleKeys: string[] }) {
+async function RolePanels({ roleKeys, userId }: { roleKeys: string[]; userId: string }) {
   if (roleKeys.includes("HR_PR")) {
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -227,12 +228,96 @@ function RolePanels({ roleKeys }: { roleKeys: string[] }) {
   }
 
   // PARTICIPANT (default)
+  const registrations = await db.olympiadRegistration.findMany({
+    where: {
+      userId,
+      olympiad: {
+        status: "published",
+      },
+    },
+    orderBy: { registeredAt: "desc" },
+    take: 6,
+    select: {
+      olympiad: {
+        select: {
+          id: true,
+          title: true,
+          posterUrl: true,
+          durationMinutes: true,
+          startAt: true,
+          endAt: true,
+        },
+      },
+    },
+  });
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      <EmptyState
-        title="Active Olympiads"
-        description="Olympiads you're registered for will appear here."
-      />
+      <section className="rounded-lg border border-border bg-elevated p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-xl text-primary">
+              Active Olympiads
+            </h2>
+            <p className="mt-1 text-sm text-secondary">
+              Olympiads you're registered for.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/olympiads"
+            className="text-xs font-medium text-accent underline underline-offset-4"
+          >
+            View all
+          </Link>
+        </div>
+
+        {registrations.length === 0 ? (
+          <p className="text-sm text-muted">
+            You aren't registered for any published Olympiads yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {registrations.map(({ olympiad }) => (
+              <Link
+                key={olympiad.id}
+                href={`/dashboard/olympiads/${olympiad.id}/attempt`}
+                className="flex items-center gap-4 rounded-md border border-border/60 p-3 transition-colors hover:border-accent/40 hover:bg-white/[0.02]"
+              >
+                {olympiad.posterUrl ? (
+                  <img
+                    src={olympiad.posterUrl}
+                    alt=""
+                    className="h-14 w-20 shrink-0 rounded object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded bg-black/30">
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted">
+                      ACOB
+                    </span>
+                  </div>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-sm font-medium text-primary">
+                    {olympiad.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    {olympiad.durationMinutes} minutes
+                    {olympiad.endAt
+                      ? ` ? Closes ${olympiad.endAt.toLocaleDateString()}`
+                      : ""}
+                  </p>
+                </div>
+
+                <span className="shrink-0 text-xs font-medium text-accent">
+                  View Exam
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
       <EmptyState
         title="Certificates"
         description="Certificates you've earned will appear here once issued."
@@ -255,8 +340,9 @@ export default async function DashboardOverviewPage() {
       {session.roleKeys.some((r) => ["CEO", "COO", "CTO"].includes(r)) ? (
         <ExecutiveOverview actorId={session.id} />
       ) : (
-        <RolePanels roleKeys={session.roleKeys} />
+        <RolePanels roleKeys={session.roleKeys} userId={session.id} />
       )}
     </div>
   );
 }
+
