@@ -1,9 +1,53 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createQuestionArchiveAction, updateQuestionArchiveAction } from "@/lib/question-archive/actions";
 import { translateQuestionArchiveAction } from "@/lib/question-archive/translation-actions";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+
+
+function LatexToolbar({
+  onInsert,
+}: {
+  onInsert: (value: string) => void;
+}) {
+  const buttons = [
+    ["x?", "^{2}"],
+    ["x?", "_{n}"],
+    ["?x", "\\sqrt{}"],
+    ["a?b", "\\frac{}{}"],
+    ["?", "\\int"],
+    ["?", "\\sum"],
+    ["?", "\\pi"],
+    ["?", "\\theta"],
+    ["?", "\\alpha"],
+    ["?", "\\beta"],
+    ["?", "\\leq"],
+    ["?", "\\geq"],
+    ["?", "\\neq"],
+    ["?", "\\times"],
+    ["?", "\\div"],
+    ["$ $", "$"],
+  ] as const;
+
+  return (
+    <div className="flex flex-wrap gap-1.5 rounded-lg border bg-muted/40 p-2">
+      {buttons.map(([label, value]) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => onInsert(value)}
+          className="rounded-md border bg-background px-2.5 py-1.5 text-sm font-medium hover:bg-muted"
+          title={value}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 type InitialQuestion = {
   id: string;
@@ -77,6 +121,53 @@ export function QuestionArchiveForm({
         }))
       : makeOptions(),
   );
+
+  const questionEnRef = useRef<HTMLTextAreaElement>(null);
+  const questionBnRef = useRef<HTMLTextAreaElement>(null);
+  const explanationEnRef = useRef<HTMLTextAreaElement>(null);
+  const explanationBnRef = useRef<HTMLTextAreaElement>(null);
+
+  function insertLatex(
+    ref: React.RefObject<HTMLTextAreaElement | null>,
+    value: string,
+    setter: (value: string) => void,
+  ) {
+    const element = ref.current;
+
+    if (!element) {
+      setter(value);
+      return;
+    }
+
+    const start = element.selectionStart;
+    const end = element.selectionEnd;
+    const current = element.value;
+    const selected = current.slice(start, end);
+
+    let insertion = value;
+
+    if (value === "$") {
+      insertion = selected ? "$" + selected + "$" : "$";
+    } else if (value === "\\sqrt{}") {
+      insertion = selected ? "\\sqrt{" + selected + "}" : "\\sqrt{}";
+    } else if (value === "\\frac{}{}") {
+      insertion = selected ? "\\frac{" + selected + "}{}" : "\\frac{}{}";
+    } else if (value === "^{2}") {
+      insertion = selected ? "^{" + selected + "}" : "^{2}";
+    } else if (value === "_{n}") {
+      insertion = selected ? "_{" + selected + "}" : "_{n}";
+    }
+
+    const next = current.slice(0, start) + insertion + current.slice(end);
+    setter(next);
+
+    requestAnimationFrame(() => {
+      element.focus();
+      const cursor = start + insertion.length;
+      element.setSelectionRange(cursor, cursor);
+    });
+  }
+
   const [translating, setTranslating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -302,7 +393,13 @@ export function QuestionArchiveForm({
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm font-medium">English Question</span>
+                <LatexToolbar
+                  onInsert={(value) =>
+                    insertLatex(questionEnRef, value, setQuestionEn)
+                  }
+                />
                 <textarea
+                  ref={questionEnRef}
                   value={questionEn}
                   onChange={(event) => setQuestionEn(event.target.value)}
                   className="min-h-40 w-full rounded-lg border bg-background p-3"
@@ -313,7 +410,13 @@ export function QuestionArchiveForm({
 
               <label className="space-y-2">
                 <span className="text-sm font-medium">Bangla Question</span>
+                <LatexToolbar
+                  onInsert={(value) =>
+                    insertLatex(questionBnRef, value, setQuestionBn)
+                  }
+                />
                 <textarea
+                  ref={questionBnRef}
                   value={questionBn}
                   onChange={(event) => setQuestionBn(event.target.value)}
                   className="min-h-40 w-full rounded-lg border bg-background p-3"
@@ -384,19 +487,35 @@ export function QuestionArchiveForm({
             </p>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <textarea
-                value={explanationEn}
-                onChange={(event) => setExplanationEn(event.target.value)}
-                className="min-h-32 rounded-lg border bg-background p-3"
-                placeholder="English solution explanation..."
-              />
+              <div className="space-y-2">
+                <LatexToolbar
+                  onInsert={(value) =>
+                    insertLatex(explanationEnRef, value, setExplanationEn)
+                  }
+                />
+                <textarea
+                  ref={explanationEnRef}
+                  value={explanationEn}
+                  onChange={(event) => setExplanationEn(event.target.value)}
+                  className="min-h-32 w-full rounded-lg border bg-background p-3"
+                  placeholder="English solution explanation..."
+                />
+              </div>
 
-              <textarea
-                value={explanationBn}
-                onChange={(event) => setExplanationBn(event.target.value)}
-                className="min-h-32 rounded-lg border bg-background p-3"
-                placeholder="Bangla solution explanation..."
-              />
+              <div className="space-y-2">
+                <LatexToolbar
+                  onInsert={(value) =>
+                    insertLatex(explanationBnRef, value, setExplanationBn)
+                  }
+                />
+                <textarea
+                  ref={explanationBnRef}
+                  value={explanationBn}
+                  onChange={(event) => setExplanationBn(event.target.value)}
+                  className="min-h-32 w-full rounded-lg border bg-background p-3"
+                  placeholder="Bangla solution explanation..."
+                />
+              </div>
             </div>
           </section>
 
@@ -486,5 +605,6 @@ export function QuestionArchiveForm({
     </div>
   );
 }
+
 
 
