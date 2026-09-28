@@ -20,60 +20,70 @@ enum UserStatus {
   @@map("user_status")
 }
 
-model User {
-  id                        String                   @id @default(uuid())
-  email                     String                   @unique
-  pendingEmail              String?                  @unique @map("pending_email")
-  passwordHash              String                   @map("password_hash")
-  status                    UserStatus               @default(active)
-  emailVerifiedAt           DateTime?                @map("email_verified_at")
-  createdAt                 DateTime                 @default(now()) @map("created_at")
-  updatedAt                 DateTime                 @updatedAt @map("updated_at")
+enum QuestionLanguage {
+  en
+  bn
 
-  profile                   Profile?
-  sessions                  Session[]
-  passwordResetTokens       PasswordResetToken[]
-  emailVerificationTokens   EmailVerificationToken[]
-  notifications             Notification[]
-  notificationPreference    NotificationPreference?
-  userRoles                 UserRole[]               @relation("UserRoleUser")
-  rolesAssigned             UserRole[]               @relation("UserRoleAssignedBy")
-  approvalRequestsMade      ApprovalRequest[]        @relation("ApprovalRequester")
-  approvalRequestsReviewed  ApprovalRequest[]        @relation("ApprovalReviewer")
-  auditLogs                 AuditLog[]
-  participant               Participant?
-  ambassador                Ambassador?
-  ambassadorApprovals       Ambassador[]             @relation("AmbassadorApprover")
-  contactSubmissions        ContactSubmission[]
-  contactReplies            ContactReply[]
-  conversations             Conversation[]           @relation("ConversationParticipant")
-  messagesSent              Message[]                @relation("MessageSender")
-  olympiadsCreated          Olympiad[]               @relation("OlympiadCreator")
-  attempts                  Attempt[]                @relation("AttemptUser")
-  olympiadRegistrations     OlympiadRegistration[]
-  certificatesReceived      Certificate[]            @relation("CertificateRecipient")
-  certificatesIssued        Certificate[]            @relation("CertificateIssuer")
-  certificatesRevoked       Certificate[]            @relation("CertificateRevoker")
-  lettersReceived           RecommendationLetter[]   @relation("LetterRecipient")
-  lettersIssued             RecommendationLetter[]   @relation("LetterIssuer")
-  lettersRevoked            RecommendationLetter[]   @relation("LetterRevoker")
-  contentAuthored           Content[]                @relation("ContentAuthor")
-  careerListingsCreated     CareerListing[]          @relation("CareerListingCreator")
-  popupsCreated             Popup[]                  @relation("PopupCreator")
-  organisationTeamMembers   OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
+  @@map("question_language")
+}
+
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  pendingEmail    String?    @unique @map("pending_email")
+  passwordHash    String     @map("password_hash")
+  status          UserStatus @default(active)
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  profile                  Profile?
+  sessions                 Session[]
+  passwordResetTokens      PasswordResetToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  notifications            Notification[]
+  notificationPreference   NotificationPreference?
+  userRoles                UserRole[]               @relation("UserRoleUser")
+  rolesAssigned            UserRole[]               @relation("UserRoleAssignedBy")
+  approvalRequestsMade     ApprovalRequest[]        @relation("ApprovalRequester")
+  approvalRequestsReviewed ApprovalRequest[]        @relation("ApprovalReviewer")
+  auditLogs                AuditLog[]
+  participant              Participant?
+  ambassador               Ambassador?
+  ambassadorApprovals      Ambassador[]             @relation("AmbassadorApprover")
+  contactSubmissions       ContactSubmission[]
+  contactReplies           ContactReply[]
+  conversations            Conversation[]           @relation("ConversationParticipant")
+  messagesSent             Message[]                @relation("MessageSender")
+  olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
+  questionArchives         QuestionArchive[]        @relation("QuestionArchiveCreator")
+  attempts                 Attempt[]                @relation("AttemptUser")
+  olympiadRegistrations    OlympiadRegistration[]
+  certificatesReceived     Certificate[]            @relation("CertificateRecipient")
+  certificatesIssued       Certificate[]            @relation("CertificateIssuer")
+  certificatesRevoked      Certificate[]            @relation("CertificateRevoker")
+  lettersReceived          RecommendationLetter[]   @relation("LetterRecipient")
+  lettersIssued            RecommendationLetter[]   @relation("LetterIssuer")
+  lettersRevoked           RecommendationLetter[]   @relation("LetterRevoker")
+  contentAuthored          Content[]                @relation("ContentAuthor")
+  careerListingsCreated    CareerListing[]          @relation("CareerListingCreator")
+  popupsCreated            Popup[]                  @relation("PopupCreator")
+  popups                   Popup[]                  @relation("PopupUser")
+  organisationTeamMembers  OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
 
   @@map("users")
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  userId    String   @unique @map("user_id")
-  fullName  String   @map("full_name")
-  phone     String?
-  avatarUrl String?  @map("avatar_url")
-  bio       String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                String           @id @default(uuid())
+  userId            String           @unique @map("user_id")
+  fullName          String           @map("full_name")
+  phone             String?
+  avatarUrl         String?          @map("avatar_url")
+  bio               String?
+  preferredLanguage QuestionLanguage @default(en) @map("preferred_language")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -277,8 +287,8 @@ model Participant {
   gradeLevel    String?  @map("grade_level")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referral  AmbassadorReferral?
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referral AmbassadorReferral?
 
   @@map("participants")
 }
@@ -406,6 +416,13 @@ enum QuestionDifficulty {
   @@map("question_difficulty")
 }
 
+enum QuestionType {
+  mcq
+  short
+
+  @@map("question_type")
+}
+
 enum AttemptStatus {
   in_progress
   submitted
@@ -449,23 +466,34 @@ model Olympiad {
   @@map("olympiads")
 }
 
+// ---------------------------------------------------------------
+// Live Olympiad questions
+// ---------------------------------------------------------------
+
 model Question {
-  id          String             @id @default(uuid())
-  olympiadId  String             @map("olympiad_id")
-  text        String
-  imageUrl    String?            @map("image_url")
-  subject     String?
-  difficulty  QuestionDifficulty @default(medium)
-  marks       Float              @default(1)
-  order       Int
-  explanation String?
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
+  id                String             @id @default(uuid())
+  olympiadId        String             @map("olympiad_id")
+  archiveQuestionId String?            @map("archive_question_id")
+  type              QuestionType       @default(mcq)
+  text              String
+  textBn            String?            @map("text_bn")
+  imageUrl          String?            @map("image_url")
+  subject           String?
+  difficulty        QuestionDifficulty @default(medium)
+  marks             Float              @default(1)
+  order             Int
+  explanation       String?
+  explanationBn     String?            @map("explanation_bn")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
 
-  olympiad Olympiad         @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
-  options  QuestionOption[]
-  answers  AttemptAnswer[]
+  olympiad        Olympiad         @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  archiveQuestion QuestionArchive? @relation(fields: [archiveQuestionId], references: [id], onDelete: SetNull)
+  options         QuestionOption[]
+  answers         AttemptAnswer[]
 
+  @@index([olympiadId, order])
+  @@index([archiveQuestionId])
   @@map("questions")
 }
 
@@ -473,6 +501,7 @@ model QuestionOption {
   id         String  @id @default(uuid())
   questionId String  @map("question_id")
   text       String
+  textBn     String? @map("text_bn")
   isCorrect  Boolean @default(false) @map("is_correct")
   order      Int
 
@@ -481,6 +510,68 @@ model QuestionOption {
 
   @@map("question_options")
 }
+
+// ---------------------------------------------------------------
+// Question archive
+// ---------------------------------------------------------------
+
+model QuestionArchiveSubject {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  questions QuestionArchive[] @relation("QuestionArchiveSubject")
+
+  @@map("question_archive_subjects")
+}
+
+model QuestionArchive {
+  id            String             @id @default(uuid())
+  type          QuestionType       @default(mcq)
+  questionEn    String             @map("question_en")
+  questionBn    String             @map("question_bn")
+  subjectId     String?            @map("subject_id")
+  difficulty    QuestionDifficulty @default(medium)
+  marks         Float              @default(1)
+  explanationEn String?            @map("explanation_en")
+  explanationBn String?            @map("explanation_bn")
+  imageUrl      String?            @map("image_url")
+  createdBy     String             @map("created_by")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  creator   User                    @relation("QuestionArchiveCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  subject   QuestionArchiveSubject? @relation("QuestionArchiveSubject", fields: [subjectId], references: [id], onDelete: SetNull)
+  options   QuestionArchiveOption[]
+  questions Question[]
+
+  @@index([type])
+  @@index([subjectId])
+  @@index([difficulty])
+  @@index([createdAt])
+  @@map("question_archives")
+}
+
+model QuestionArchiveOption {
+  id                String  @id @default(uuid())
+  archiveQuestionId String  @map("archive_question_id")
+  label             String
+  textEn            String  @map("text_en")
+  textBn            String  @map("text_bn")
+  isCorrect         Boolean @default(false) @map("is_correct")
+  order             Int
+
+  question QuestionArchive @relation(fields: [archiveQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([archiveQuestionId, label])
+  @@index([archiveQuestionId, order])
+  @@map("question_archive_options")
+}
+
+// ---------------------------------------------------------------
+// Attempts
+// ---------------------------------------------------------------
 
 model Attempt {
   id                      String        @id @default(uuid())
@@ -526,6 +617,10 @@ model OlympiadRegistration {
   @@map("olympiad_registrations")
 }
 
+// ---------------------------------------------------------------
+// Organisation team
+// ---------------------------------------------------------------
+
 model OrganisationTeamMember {
   id           String   @id @default(uuid())
   name         String
@@ -545,6 +640,10 @@ model OrganisationTeamMember {
   @@index([active, displayOrder])
   @@map("organisation_team_members")
 }
+
+// ---------------------------------------------------------------
+// Attempt answers
+// ---------------------------------------------------------------
 
 model AttemptAnswer {
   id                String    @id @default(uuid())
@@ -644,7 +743,7 @@ model RecommendationLetter {
 }
 
 // ---------------------------------------------------------------
-// Content (Inside Excellence, Study Guides, Video Tutorials, Resources)
+// Content
 // ---------------------------------------------------------------
 
 enum ContentKind {
@@ -730,10 +829,12 @@ model Popup {
   endAt     DateTime? @map("end_at")
   priority  Int       @default(0)
   createdBy String    @map("created_by")
+  userId    String?   @map("user_id")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  creator User @relation("PopupCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  creator User  @relation("PopupCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  user    User? @relation("PopupUser", fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("popups")
 }

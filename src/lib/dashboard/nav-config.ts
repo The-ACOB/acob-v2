@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+﻿import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   CheckSquare,
@@ -18,6 +18,7 @@ import {
   FileText,
   GraduationCap,
   Bell,
+  Archive,
 } from "lucide-react";
 import type { RoleKey } from "@/lib/authz/roles";
 
@@ -32,22 +33,22 @@ export type NavSection = {
   items: NavItem[];
 };
 
-/**
- * Dashboard navigation, entirely driven by role. Nothing here is a
- * permission check by itself (the routes behind these links still
- * enforce their own guards) — this is purely "don't show irrelevant
- * navigation" so each role sees a dashboard shaped around their job,
- * not a shared admin template with everything visible.
- */
 const OVERVIEW: NavItem = {
   href: "/dashboard",
   label: "Overview",
   icon: LayoutDashboard,
 };
+
 const NOTIFICATIONS: NavItem = {
   href: "/dashboard/notifications",
   label: "Notifications",
   icon: Bell,
+};
+
+const QUESTION_ARCHIVE: NavItem = {
+  href: "/dashboard/question-archive",
+  label: "Question Archive",
+  icon: Archive,
 };
 
 const EXECUTIVE_SECTION: NavSection = {
@@ -73,6 +74,7 @@ const COMMAND_CENTER_SECTIONS: NavSection[] = [
         label: "Olympiads & Questions",
         icon: Trophy,
       },
+      QUESTION_ARCHIVE,
       {
         href: "/dashboard/results",
         label: "Results & Rankings",
@@ -138,6 +140,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   CEO: EXECUTIVE_NAV,
   COO: EXECUTIVE_NAV,
   CTO: EXECUTIVE_NAV,
+
   HR_PR: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
@@ -165,6 +168,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       ],
     },
   ],
+
   CONTENT_MEDIA: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
@@ -186,6 +190,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       ],
     },
   ],
+
   SUPPORT: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
@@ -200,12 +205,14 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       ],
     },
   ],
+
   ACADEMIC: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
       label: "Olympiads",
       items: [
         { href: "/dashboard/olympiads", label: "Olympiads", icon: Trophy },
+        QUESTION_ARCHIVE,
       ],
     },
     {
@@ -230,6 +237,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       ],
     },
   ],
+
   AMBASSADOR: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
@@ -277,6 +285,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       ],
     },
   ],
+
   PARTICIPANT: [
     { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
     {
@@ -310,7 +319,6 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   ],
 };
 
-/** A user's dashboard nav is the union of every role they hold, deduped by href, in a stable role-priority order. */
 export function resolveNavSections(roleKeys: string[]): NavSection[] {
   const priority: RoleKey[] = [
     "CEO",
@@ -323,8 +331,10 @@ export function resolveNavSections(roleKeys: string[]): NavSection[] {
     "AMBASSADOR",
     "PARTICIPANT",
   ];
+
   const primaryRole =
     priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
+
   return NAV_BY_ROLE[primaryRole] ?? NAV_BY_ROLE.PARTICIPANT;
 }
 
@@ -340,7 +350,9 @@ export function primaryRoleLabel(roleKeys: string[]): string {
     "AMBASSADOR",
     "PARTICIPANT",
   ];
+
   const key = priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
+
   const labels: Record<RoleKey, string> = {
     CEO: "Chief Executive Officer",
     COO: "Chief Operating Officer",
@@ -352,5 +364,6 @@ export function primaryRoleLabel(roleKeys: string[]): string {
     AMBASSADOR: "Ambassador",
     PARTICIPANT: "Participant",
   };
+
   return labels[key];
 }
