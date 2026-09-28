@@ -39,6 +39,12 @@ const OVERVIEW: NavItem = {
   icon: LayoutDashboard,
 };
 
+const MY_PROFILE: NavItem = {
+  href: "/dashboard/profile",
+  label: "My Profile",
+  icon: UserPlus,
+};
+
 const NOTIFICATIONS: NavItem = {
   href: "/dashboard/notifications",
   label: "Notifications",
@@ -130,7 +136,7 @@ const EXECUTIVE_PEOPLE_SECTION: NavSection = {
 };
 
 const EXECUTIVE_NAV: NavSection[] = [
-  { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+  { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
   EXECUTIVE_PEOPLE_SECTION,
   EXECUTIVE_SECTION,
   ...COMMAND_CENTER_SECTIONS.slice(1),
@@ -142,7 +148,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   CTO: EXECUTIVE_NAV,
 
   HR_PR: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
     {
       label: "People",
       items: [
@@ -170,7 +176,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   ],
 
   CONTENT_MEDIA: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
     {
       label: "Media",
       items: [
@@ -192,7 +198,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   ],
 
   SUPPORT: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
     {
       label: "Support",
       items: [
@@ -207,7 +213,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   ],
 
   ACADEMIC: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
     {
       label: "Olympiads",
       items: [
@@ -239,7 +245,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   ],
 
   AMBASSADOR: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
     {
       label: "Olympiads",
       items: [
@@ -287,7 +293,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   ],
 
   PARTICIPANT: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS] },
+    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
     {
       label: "Olympiads",
       items: [
@@ -367,3 +373,4 @@ export function primaryRoleLabel(roleKeys: string[]): string {
 
   return labels[key];
 }
+
