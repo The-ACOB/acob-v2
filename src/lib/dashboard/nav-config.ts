@@ -11,14 +11,13 @@ import {
   MonitorPlay,
   Mic,
   BookOpen,
-  Image as ImageIcon,
   Trophy,
   BarChart3,
   Award,
   FileText,
-  GraduationCap,
   Bell,
   Archive,
+  Megaphone,
 } from "lucide-react";
 import type { RoleKey } from "@/lib/authz/roles";
 
@@ -33,16 +32,14 @@ export type NavSection = {
   items: NavItem[];
 };
 
+/* -------------------------------------------------------------------------- */
+/* Canonical navigation items                                                 */
+/* -------------------------------------------------------------------------- */
+
 const OVERVIEW: NavItem = {
   href: "/dashboard",
   label: "Overview",
   icon: LayoutDashboard,
-};
-
-const MY_PROFILE: NavItem = {
-  href: "/dashboard/profile",
-  label: "My Profile",
-  icon: UserPlus,
 };
 
 const NOTIFICATIONS: NavItem = {
@@ -51,95 +48,229 @@ const NOTIFICATIONS: NavItem = {
   icon: Bell,
 };
 
+const MY_PROFILE: NavItem = {
+  href: "/dashboard/profile",
+  label: "My Profile",
+  icon: UserPlus,
+};
+
+const ORGANISATION_TEAM: NavItem = {
+  href: "/dashboard/organisation-team",
+  label: "Organisation Team",
+  icon: Users,
+};
+
+const PARTICIPANTS: NavItem = {
+  href: "/dashboard/participants",
+  label: "Participants",
+  icon: Users,
+};
+
+const APPROVALS: NavItem = {
+  href: "/dashboard/approvals",
+  label: "Approvals",
+  icon: CheckSquare,
+};
+
+const AUDIT_LOG: NavItem = {
+  href: "/dashboard/audit",
+  label: "Audit Log",
+  icon: ScrollText,
+};
+
+const OLYMPIADS: NavItem = {
+  href: "/dashboard/olympiads",
+  label: "Olympiads",
+  icon: Trophy,
+};
+
 const QUESTION_ARCHIVE: NavItem = {
   href: "/dashboard/question-archive",
   label: "Question Archive",
   icon: Archive,
 };
 
+const RESULTS: NavItem = {
+  href: "/dashboard/results",
+  label: "Results & Rankings",
+  icon: BarChart3,
+};
+
+const CERTIFICATES: NavItem = {
+  href: "/dashboard/certificates",
+  label: "Certificates",
+  icon: Award,
+};
+
+const RECOMMENDATION_LETTERS: NavItem = {
+  href: "/dashboard/recommendation-letters",
+  label: "Recommendation Letters",
+  icon: FileText,
+};
+
+const CONTACT_MESSAGES: NavItem = {
+  href: "/dashboard/contact",
+  label: "Contact Messages",
+  icon: Inbox,
+};
+
+const SUPPORT: NavItem = {
+  href: "/dashboard/support",
+  label: "Support",
+  icon: MessageCircle,
+};
+
+const ANNOUNCEMENTS: NavItem = {
+  href: "/dashboard/popups",
+  label: "Announcements",
+  icon: Megaphone,
+};
+
+const RESOURCES: NavItem = {
+  href: "/dashboard/resources",
+  label: "Resources",
+  icon: FileText,
+};
+
+const STUDY_GUIDES: NavItem = {
+  href: "/dashboard/study-guides",
+  label: "Study Guides",
+  icon: BookOpen,
+};
+
+const TUTORIALS: NavItem = {
+  href: "/dashboard/tutorials",
+  label: "Tutorials",
+  icon: MonitorPlay,
+};
+
+const PODCASTS: NavItem = {
+  href: "/dashboard/podcasts",
+  label: "Podcasts",
+  icon: Mic,
+};
+
+const CAREERS: NavItem = {
+  href: "/dashboard/careers",
+  label: "Careers",
+  icon: Briefcase,
+};
+
+const REGISTER_PARTICIPANT: NavItem = {
+  href: "/dashboard/register-participant",
+  label: "Register Participant",
+  icon: UserPlus,
+};
+
+const REFERRED_PARTICIPANTS: NavItem = {
+  href: "/dashboard/referrals",
+  label: "Referred Participants",
+  icon: Users,
+};
+
+const MESSAGES: NavItem = {
+  href: "/dashboard/messages",
+  label: "Messages",
+  icon: MessageCircle,
+};
+
+/* -------------------------------------------------------------------------- */
+/* Canonical section builders                                                  */
+/* -------------------------------------------------------------------------- */
+
+const GENERAL_SECTION: NavSection = {
+  label: "General",
+  items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE],
+};
+
+const PEOPLE_SECTION: NavSection = {
+  label: "People",
+  items: [ORGANISATION_TEAM, PARTICIPANTS],
+};
+
+const PARTICIPANTS_ONLY_SECTION: NavSection = {
+  label: "People",
+  items: [PARTICIPANTS],
+};
+
 const EXECUTIVE_SECTION: NavSection = {
   label: "Executive",
-  items: [
-    { href: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },
-    { href: "/dashboard/audit", label: "Audit Log", icon: ScrollText },
-  ],
+  items: [APPROVALS, AUDIT_LOG],
 };
 
-const COMMAND_CENTER_SECTIONS: NavSection[] = [
-  {
-    label: "People",
-    items: [
-      { href: "/dashboard/participants", label: "Participants", icon: Users },
-    ],
-  },
-  {
-    label: "Olympiads",
-    items: [
-      {
-        href: "/dashboard/olympiads",
-        label: "Olympiads & Questions",
-        icon: Trophy,
-      },
-      QUESTION_ARCHIVE,
-      {
-        href: "/dashboard/results",
-        label: "Results & Rankings",
-        icon: BarChart3,
-      },
-    ],
-  },
-  {
-    label: "Recognition",
-    items: [
-      { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-      {
-        href: "/dashboard/recommendation-letters",
-        label: "Recommendation Letters",
-        icon: FileText,
-      },
-    ],
-  },
-  {
-    label: "Communications",
-    items: [
-      { href: "/dashboard/contact", label: "Contact Messages", icon: Inbox },
-      { href: "/dashboard/support", label: "Support", icon: MessageCircle },
-      { href: "/dashboard/popups", label: "Announcements", icon: MonitorPlay },
-    ],
-  },
-  {
-    label: "Content & Careers",
-    items: [
-      { href: "/dashboard/resources", label: "Resources", icon: FileText },
-      {
-        href: "/dashboard/study-guides",
-        label: "Study Guides",
-        icon: BookOpen,
-      },
-      { href: "/dashboard/tutorials", label: "Tutorials", icon: MonitorPlay },
-      { href: "/dashboard/podcasts", label: "Podcasts", icon: Mic },
-      { href: "/dashboard/careers", label: "Careers", icon: Briefcase },
-    ],
-  },
-];
-
-const EXECUTIVE_PEOPLE_SECTION: NavSection = {
-  label: "People",
-  items: [
-    {
-      href: "/dashboard/organisation-team",
-      label: "Organisation Team",
-      icon: Users,
-    },
-    { href: "/dashboard/participants", label: "Participants", icon: Users },
-  ],
+const OLYMPIADS_SECTION: NavSection = {
+  label: "Olympiads",
+  items: [OLYMPIADS, QUESTION_ARCHIVE, RESULTS],
 };
+
+const OLYMPIADS_WITHOUT_ARCHIVE_SECTION: NavSection = {
+  label: "Olympiads",
+  items: [OLYMPIADS, RESULTS],
+};
+
+const OLYMPIADS_WITH_ARCHIVE_NO_RESULTS_SECTION: NavSection = {
+  label: "Olympiads",
+  items: [OLYMPIADS, QUESTION_ARCHIVE],
+};
+
+const RECOGNITION_SECTION: NavSection = {
+  label: "Recognition",
+  items: [CERTIFICATES, RECOMMENDATION_LETTERS],
+};
+
+const COMMUNICATIONS_SECTION: NavSection = {
+  label: "Communications",
+  items: [CONTACT_MESSAGES, SUPPORT, ANNOUNCEMENTS],
+};
+
+const CONTACT_SUPPORT_SECTION: NavSection = {
+  label: "Communications",
+  items: [CONTACT_MESSAGES, SUPPORT],
+};
+
+const ANNOUNCEMENTS_SECTION: NavSection = {
+  label: "Communications",
+  items: [ANNOUNCEMENTS],
+};
+
+const CONTENT_SECTION: NavSection = {
+  label: "Content",
+  items: [RESOURCES, STUDY_GUIDES, TUTORIALS, PODCASTS],
+};
+
+const RESOURCES_SECTION: NavSection = {
+  label: "Content",
+  items: [RESOURCES],
+};
+
+const CAREERS_SECTION: NavSection = {
+  label: "Careers",
+  items: [CAREERS],
+};
+
+const REFERRALS_SECTION: NavSection = {
+  label: "Referrals",
+  items: [REGISTER_PARTICIPANT, REFERRED_PARTICIPANTS],
+};
+
+const ACCOUNT_SECTION: NavSection = {
+  label: "Account",
+  items: [MESSAGES],
+};
+
+/* -------------------------------------------------------------------------- */
+/* Role navigation                                                             */
+/* -------------------------------------------------------------------------- */
 
 const EXECUTIVE_NAV: NavSection[] = [
-  { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
-  EXECUTIVE_PEOPLE_SECTION,
+  GENERAL_SECTION,
+  PEOPLE_SECTION,
   EXECUTIVE_SECTION,
-  ...COMMAND_CENTER_SECTIONS.slice(1),
+  OLYMPIADS_SECTION,
+  RECOGNITION_SECTION,
+  COMMUNICATIONS_SECTION,
+  CONTENT_SECTION,
+  CAREERS_SECTION,
 ];
 
 const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
@@ -148,180 +279,47 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
   CTO: EXECUTIVE_NAV,
 
   HR_PR: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
-    {
-      label: "People",
-      items: [
-        { href: "/dashboard/participants", label: "Participants", icon: Users },
-      ],
-    },
-    {
-      label: "Communications",
-      items: [
-        { href: "/dashboard/contact", label: "Contact Inbox", icon: Inbox },
-        { href: "/dashboard/support", label: "Support", icon: MessageCircle },
-      ],
-    },
-    {
-      label: "Operations",
-      items: [
-        { href: "/dashboard/careers", label: "Careers", icon: Briefcase },
-        {
-          href: "/dashboard/popups",
-          label: "Popup Management",
-          icon: MonitorPlay,
-        },
-      ],
-    },
+    GENERAL_SECTION,
+    PARTICIPANTS_ONLY_SECTION,
+    CONTACT_SUPPORT_SECTION,
+    ANNOUNCEMENTS_SECTION,
+    CAREERS_SECTION,
   ],
 
   CONTENT_MEDIA: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
+    GENERAL_SECTION,
     {
-      label: "Media",
-      items: [
-        { href: "/dashboard/podcasts", label: "Inside Excellence", icon: Mic },
-        {
-          href: "/dashboard/study-guides",
-          label: "Study Guides",
-          icon: BookOpen,
-        },
-        {
-          href: "/dashboard/tutorials",
-          label: "Video Tutorials",
-          icon: MonitorPlay,
-        },
-        { href: "/dashboard/resources", label: "Resources", icon: FileText },
-        { href: "/dashboard/popups", label: "Popup Content", icon: ImageIcon },
-      ],
+      label: "Communications",
+      items: [ANNOUNCEMENTS],
     },
+    CONTENT_SECTION,
   ],
 
   SUPPORT: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
-    {
-      label: "Support",
-      items: [
-        { href: "/dashboard/contact", label: "Contact Messages", icon: Inbox },
-        {
-          href: "/dashboard/support",
-          label: "Support Conversations",
-          icon: MessageCircle,
-        },
-      ],
-    },
+    GENERAL_SECTION,
+    CONTACT_SUPPORT_SECTION,
   ],
 
   ACADEMIC: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
-    {
-      label: "Olympiads",
-      items: [
-        { href: "/dashboard/olympiads", label: "Olympiads", icon: Trophy },
-        QUESTION_ARCHIVE,
-      ],
-    },
-    {
-      label: "Recognition",
-      items: [
-        { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-        {
-          href: "/dashboard/recommendation-letters",
-          label: "Recommendation Letters",
-          icon: FileText,
-        },
-      ],
-    },
-    {
-      label: "Reference",
-      items: [
-        {
-          href: "/dashboard/resources",
-          label: "Resources",
-          icon: GraduationCap,
-        },
-      ],
-    },
+    GENERAL_SECTION,
+    OLYMPIADS_WITH_ARCHIVE_NO_RESULTS_SECTION,
+    RECOGNITION_SECTION,
+    RESOURCES_SECTION,
   ],
 
   AMBASSADOR: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
-    {
-      label: "Olympiads",
-      items: [
-        {
-          href: "/dashboard/olympiads",
-          label: "Active Olympiads",
-          icon: Trophy,
-        },
-        { href: "/dashboard/results", label: "Results", icon: BarChart3 },
-      ],
-    },
-    {
-      label: "Referrals",
-      items: [
-        {
-          href: "/dashboard/register-participant",
-          label: "Register Participant",
-          icon: UserPlus,
-        },
-        {
-          href: "/dashboard/referrals",
-          label: "Referred Participants",
-          icon: Users,
-        },
-      ],
-    },
-    {
-      label: "Recognition",
-      items: [
-        { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-        {
-          href: "/dashboard/recommendation-letters",
-          label: "Recommendation Letters",
-          icon: FileText,
-        },
-      ],
-    },
-    {
-      label: "Account",
-      items: [
-        { href: "/dashboard/profile", label: "My Profile", icon: Users },
-        { href: "/dashboard/messages", label: "Messages", icon: MessageCircle },
-      ],
-    },
+    GENERAL_SECTION,
+    OLYMPIADS_WITHOUT_ARCHIVE_SECTION,
+    REFERRALS_SECTION,
+    RECOGNITION_SECTION,
+    ACCOUNT_SECTION,
   ],
 
   PARTICIPANT: [
-    { label: "General", items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE] },
-    {
-      label: "Olympiads",
-      items: [
-        {
-          href: "/dashboard/olympiads",
-          label: "Active Olympiads",
-          icon: Trophy,
-        },
-        { href: "/dashboard/results", label: "Results", icon: BarChart3 },
-      ],
-    },
-    {
-      label: "Recognition",
-      items: [
-        { href: "/dashboard/certificates", label: "Certificates", icon: Award },
-        {
-          href: "/dashboard/recommendation-letters",
-          label: "Recommendation Letters",
-          icon: FileText,
-        },
-      ],
-    },
-    {
-      label: "Account",
-      items: [
-        { href: "/dashboard/messages", label: "Messages", icon: MessageCircle },
-      ],
-    },
+    GENERAL_SECTION,
+    OLYMPIADS_WITHOUT_ARCHIVE_SECTION,
+    RECOGNITION_SECTION,
+    ACCOUNT_SECTION,
   ],
 };
 
@@ -339,7 +337,7 @@ export function resolveNavSections(roleKeys: string[]): NavSection[] {
   ];
 
   const primaryRole =
-    priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
+    priority.find((role) => roleKeys.includes(role)) ?? "PARTICIPANT";
 
   return NAV_BY_ROLE[primaryRole] ?? NAV_BY_ROLE.PARTICIPANT;
 }
@@ -357,7 +355,8 @@ export function primaryRoleLabel(roleKeys: string[]): string {
     "PARTICIPANT",
   ];
 
-  const key = priority.find((r) => roleKeys.includes(r)) ?? "PARTICIPANT";
+  const key =
+    priority.find((role) => roleKeys.includes(role)) ?? "PARTICIPANT";
 
   const labels: Record<RoleKey, string> = {
     CEO: "Chief Executive Officer",
@@ -373,4 +372,3 @@ export function primaryRoleLabel(roleKeys: string[]): string {
 
   return labels[key];
 }
-
