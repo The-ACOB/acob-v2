@@ -1,4 +1,4 @@
-﻿import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   CheckSquare,
@@ -18,23 +18,23 @@ import {
   Bell,
   Archive,
   Megaphone,
+  ShieldCheck,
 } from "lucide-react";
+import type { Permission } from "@/lib/authz/permissions";
 import type { RoleKey } from "@/lib/authz/roles";
 
 export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  permissions?: Permission[];
+  roles?: RoleKey[];
 };
 
 export type NavSection = {
   label: string;
   items: NavItem[];
 };
-
-/* -------------------------------------------------------------------------- */
-/* Canonical navigation items                                                 */
-/* -------------------------------------------------------------------------- */
 
 const OVERVIEW: NavItem = {
   href: "/dashboard",
@@ -46,6 +46,7 @@ const NOTIFICATIONS: NavItem = {
   href: "/dashboard/notifications",
   label: "Notifications",
   icon: Bell,
+  permissions: ["notifications:view"],
 };
 
 const MY_PROFILE: NavItem = {
@@ -58,114 +59,156 @@ const ORGANISATION_TEAM: NavItem = {
   href: "/dashboard/organisation-team",
   label: "Organisation Team",
   icon: Users,
+  permissions: ["user:view"],
 };
 
 const PARTICIPANTS: NavItem = {
   href: "/dashboard/participants",
   label: "Participants",
   icon: Users,
+  permissions: ["participant:view"],
 };
 
 const APPROVALS: NavItem = {
   href: "/dashboard/approvals",
   label: "Approvals",
   icon: CheckSquare,
+  permissions: ["approval:view"],
 };
 
 const AUDIT_LOG: NavItem = {
   href: "/dashboard/audit",
   label: "Audit Log",
   icon: ScrollText,
+  roles: ["CEO", "COO", "CTO"],
+};
+
+const ROLE_CONTROLS: NavItem = {
+  href: "/dashboard/role-controls",
+  label: "Role Controls",
+  icon: ShieldCheck,
+  roles: ["CEO", "COO", "CTO"],
 };
 
 const OLYMPIADS: NavItem = {
   href: "/dashboard/olympiads",
   label: "Olympiads",
   icon: Trophy,
+  permissions: ["olympiad:create", "olympiad:results:view"],
+  roles: ["AMBASSADOR", "PARTICIPANT"],
 };
 
 const QUESTION_ARCHIVE: NavItem = {
   href: "/dashboard/question-archive",
   label: "Question Archive",
   icon: Archive,
+  permissions: ["question:create"],
 };
 
 const RESULTS: NavItem = {
   href: "/dashboard/results",
   label: "Results & Rankings",
   icon: BarChart3,
+  permissions: ["olympiad:results:view"],
 };
 
 const CERTIFICATES: NavItem = {
   href: "/dashboard/certificates",
   label: "Certificates",
   icon: Award,
+  permissions: ["certificate:view"],
 };
 
 const RECOMMENDATION_LETTERS: NavItem = {
   href: "/dashboard/recommendation-letters",
   label: "Recommendation Letters",
   icon: FileText,
+  permissions: ["recommendation_letter:view"],
 };
 
 const CONTACT_MESSAGES: NavItem = {
   href: "/dashboard/contact",
   label: "Contact Messages",
   icon: Inbox,
+  permissions: ["contact:view"],
 };
 
 const SUPPORT: NavItem = {
   href: "/dashboard/support",
   label: "Support",
   icon: MessageCircle,
+  permissions: ["support:view"],
 };
 
 const ANNOUNCEMENTS: NavItem = {
   href: "/dashboard/popups",
   label: "Announcements",
   icon: Megaphone,
+  permissions: ["popup:manage"],
 };
 
 const RESOURCES: NavItem = {
   href: "/dashboard/resources",
   label: "Resources",
   icon: FileText,
+  permissions: [
+    "content:create",
+    "content:update",
+    "content:publish",
+    "content:delete",
+  ],
 };
 
 const STUDY_GUIDES: NavItem = {
   href: "/dashboard/study-guides",
   label: "Study Guides",
   icon: BookOpen,
+  permissions: [
+    "content:create",
+    "content:update",
+    "content:publish",
+    "content:delete",
+  ],
 };
 
 const TUTORIALS: NavItem = {
   href: "/dashboard/tutorials",
   label: "Tutorials",
   icon: MonitorPlay,
+  permissions: [
+    "content:create",
+    "content:update",
+    "content:publish",
+    "content:delete",
+  ],
 };
 
 const PODCASTS: NavItem = {
   href: "/dashboard/podcasts",
   label: "Podcasts",
   icon: Mic,
+  permissions: ["podcast:create", "podcast:update", "podcast:delete"],
 };
 
 const CAREERS: NavItem = {
   href: "/dashboard/careers",
   label: "Careers",
   icon: Briefcase,
+  permissions: ["career:create", "career:update", "career:delete"],
 };
 
 const REGISTER_PARTICIPANT: NavItem = {
   href: "/dashboard/register-participant",
   label: "Register Participant",
   icon: UserPlus,
+  permissions: ["participant:create"],
 };
 
 const REFERRED_PARTICIPANTS: NavItem = {
   href: "/dashboard/referrals",
   label: "Referred Participants",
   icon: Users,
+  permissions: ["participant:referrals:view"],
 };
 
 const MESSAGES: NavItem = {
@@ -173,10 +216,6 @@ const MESSAGES: NavItem = {
   label: "Messages",
   icon: MessageCircle,
 };
-
-/* -------------------------------------------------------------------------- */
-/* Canonical section builders                                                  */
-/* -------------------------------------------------------------------------- */
 
 const GENERAL_SECTION: NavSection = {
   label: "General",
@@ -188,29 +227,14 @@ const PEOPLE_SECTION: NavSection = {
   items: [ORGANISATION_TEAM, PARTICIPANTS],
 };
 
-const PARTICIPANTS_ONLY_SECTION: NavSection = {
-  label: "People",
-  items: [PARTICIPANTS],
-};
-
 const EXECUTIVE_SECTION: NavSection = {
   label: "Executive",
-  items: [APPROVALS, AUDIT_LOG],
+  items: [APPROVALS, AUDIT_LOG, ROLE_CONTROLS],
 };
 
 const OLYMPIADS_SECTION: NavSection = {
   label: "Olympiads",
   items: [OLYMPIADS, QUESTION_ARCHIVE, RESULTS],
-};
-
-const OLYMPIADS_WITHOUT_ARCHIVE_SECTION: NavSection = {
-  label: "Olympiads",
-  items: [OLYMPIADS, RESULTS],
-};
-
-const OLYMPIADS_WITH_ARCHIVE_NO_RESULTS_SECTION: NavSection = {
-  label: "Olympiads",
-  items: [OLYMPIADS, QUESTION_ARCHIVE],
 };
 
 const RECOGNITION_SECTION: NavSection = {
@@ -223,24 +247,9 @@ const COMMUNICATIONS_SECTION: NavSection = {
   items: [CONTACT_MESSAGES, SUPPORT, ANNOUNCEMENTS],
 };
 
-const CONTACT_SUPPORT_SECTION: NavSection = {
-  label: "Communications",
-  items: [CONTACT_MESSAGES, SUPPORT],
-};
-
-const ANNOUNCEMENTS_SECTION: NavSection = {
-  label: "Communications",
-  items: [ANNOUNCEMENTS],
-};
-
 const CONTENT_SECTION: NavSection = {
   label: "Content",
   items: [RESOURCES, STUDY_GUIDES, TUTORIALS, PODCASTS],
-};
-
-const RESOURCES_SECTION: NavSection = {
-  label: "Content",
-  items: [RESOURCES],
 };
 
 const CAREERS_SECTION: NavSection = {
@@ -258,34 +267,49 @@ const ACCOUNT_SECTION: NavSection = {
   items: [MESSAGES],
 };
 
-/* -------------------------------------------------------------------------- */
-/* Role navigation                                                             */
-/* -------------------------------------------------------------------------- */
-
-const EXECUTIVE_NAV: NavSection[] = [
-  GENERAL_SECTION,
-  PEOPLE_SECTION,
-  EXECUTIVE_SECTION,
-  OLYMPIADS_SECTION,
-  RECOGNITION_SECTION,
-  COMMUNICATIONS_SECTION,
-  CONTENT_SECTION,
-  CAREERS_SECTION,
-];
-
 const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
-  CEO: EXECUTIVE_NAV,
-  COO: EXECUTIVE_NAV,
-  CTO: EXECUTIVE_NAV,
-
-  HR_PR: [
+  CEO: [
     GENERAL_SECTION,
-    PARTICIPANTS_ONLY_SECTION,
-    CONTACT_SUPPORT_SECTION,
-    ANNOUNCEMENTS_SECTION,
+    PEOPLE_SECTION,
+    EXECUTIVE_SECTION,
+    OLYMPIADS_SECTION,
+    RECOGNITION_SECTION,
+    COMMUNICATIONS_SECTION,
+    CONTENT_SECTION,
     CAREERS_SECTION,
   ],
-
+  COO: [
+    GENERAL_SECTION,
+    PEOPLE_SECTION,
+    EXECUTIVE_SECTION,
+    OLYMPIADS_SECTION,
+    RECOGNITION_SECTION,
+    COMMUNICATIONS_SECTION,
+    CONTENT_SECTION,
+    CAREERS_SECTION,
+  ],
+  CTO: [
+    GENERAL_SECTION,
+    PEOPLE_SECTION,
+    EXECUTIVE_SECTION,
+    OLYMPIADS_SECTION,
+    RECOGNITION_SECTION,
+    COMMUNICATIONS_SECTION,
+    CONTENT_SECTION,
+    CAREERS_SECTION,
+  ],
+  HR_PR: [
+    GENERAL_SECTION,
+    {
+      label: "People",
+      items: [PARTICIPANTS],
+    },
+    {
+      label: "Communications",
+      items: [CONTACT_MESSAGES, SUPPORT, ANNOUNCEMENTS],
+    },
+    CAREERS_SECTION,
+  ],
   CONTENT_MEDIA: [
     GENERAL_SECTION,
     {
@@ -294,36 +318,65 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     },
     CONTENT_SECTION,
   ],
-
   SUPPORT: [
     GENERAL_SECTION,
-    CONTACT_SUPPORT_SECTION,
+    {
+      label: "Communications",
+      items: [CONTACT_MESSAGES, SUPPORT],
+    },
   ],
-
   ACADEMIC: [
     GENERAL_SECTION,
-    OLYMPIADS_WITH_ARCHIVE_NO_RESULTS_SECTION,
+    OLYMPIADS_SECTION,
     RECOGNITION_SECTION,
-    RESOURCES_SECTION,
+    {
+      label: "Content",
+      items: [RESOURCES],
+    },
   ],
-
   AMBASSADOR: [
     GENERAL_SECTION,
-    OLYMPIADS_WITHOUT_ARCHIVE_SECTION,
+    {
+      label: "Olympiads",
+      items: [OLYMPIADS, RESULTS],
+    },
     REFERRALS_SECTION,
     RECOGNITION_SECTION,
     ACCOUNT_SECTION,
   ],
-
   PARTICIPANT: [
     GENERAL_SECTION,
-    OLYMPIADS_WITHOUT_ARCHIVE_SECTION,
+    {
+      label: "Olympiads",
+      items: [OLYMPIADS, RESULTS],
+    },
     RECOGNITION_SECTION,
     ACCOUNT_SECTION,
   ],
 };
 
-export function resolveNavSections(roleKeys: string[]): NavSection[] {
+function hasAccess(
+  item: NavItem,
+  roleKeys: string[],
+  permissions: Set<string>,
+): boolean {
+  if (item.roles?.some((role) => roleKeys.includes(role))) {
+    return true;
+  }
+
+  if (!item.permissions?.length) {
+    return true;
+  }
+
+  return item.permissions.some((permission) =>
+    permissions.has(permission),
+  );
+}
+
+export function resolveNavSections(
+  roleKeys: string[],
+  permissionKeys: string[] = [],
+): NavSection[] {
   const priority: RoleKey[] = [
     "CEO",
     "COO",
@@ -339,7 +392,17 @@ export function resolveNavSections(roleKeys: string[]): NavSection[] {
   const primaryRole =
     priority.find((role) => roleKeys.includes(role)) ?? "PARTICIPANT";
 
-  return NAV_BY_ROLE[primaryRole] ?? NAV_BY_ROLE.PARTICIPANT;
+  const sections = NAV_BY_ROLE[primaryRole] ?? NAV_BY_ROLE.PARTICIPANT;
+  const permissions = new Set(permissionKeys);
+
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) =>
+        hasAccess(item, roleKeys, permissions),
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
 }
 
 export function primaryRoleLabel(roleKeys: string[]): string {

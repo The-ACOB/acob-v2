@@ -8,12 +8,14 @@ import { cn } from "@/lib/utils";
 
 export function Sidebar({
   roleKeys,
+  permissions,
   roleLabel,
 }: {
   roleKeys: string[];
+  permissions: string[];
   roleLabel: string;
 }) {
-  const sections = resolveNavSections(roleKeys);
+  const sections = resolveNavSections(roleKeys, permissions);
   const pathname = usePathname();
 
   return (

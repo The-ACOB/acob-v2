@@ -6,10 +6,38 @@ import type { RoleKey } from "./roles";
 
 export class AuthError extends Error {
   status: number;
+
   constructor(message: string, status = 401) {
     super(message);
     this.status = status;
   }
+}
+
+/**
+ * Resolves the full permission set granted to a user's roles from the
+ * database. Runtime permissions always come from RolePermission.
+ */
+export async function resolvePermissions(
+  roleKeys: string[],
+): Promise<Set<string>> {
+  if (roleKeys.length === 0) return new Set();
+
+  const rows = await db.rolePermission.findMany({
+    where: {
+      role: {
+        key: {
+          in: roleKeys,
+        },
+      },
+    },
+    include: {
+      permission: true,
+    },
+  });
+
+  return new Set(
+    rows.map((row: { permission: { key: string } }) => row.permission.key),
+  );
 }
 
 /**
@@ -19,46 +47,62 @@ export class AuthError extends Error {
  */
 export async function requireAuth(): Promise<SessionUser> {
   const session = await getCurrentSession();
-  if (!session) throw new AuthError("Authentication required.", 401);
-  if (session.status !== "active") throw new AuthError("Account is not active.", 403);
+
+  if (!session) {
+    throw new AuthError("Authentication required.", 401);
+  }
+
+  if (session.status !== "active") {
+    throw new AuthError("Account is not active.", 403);
+  }
+
   return session;
 }
 
-export async function requireRole(...allowed: RoleKey[]): Promise<SessionUser> {
+export async function requireRole(
+  ...allowed: RoleKey[]
+): Promise<SessionUser> {
   const session = await requireAuth();
-  const hasRole = session.roleKeys.some((r) => allowed.includes(r as RoleKey));
-  if (!hasRole) throw new AuthError("You do not have the required role.", 403);
+
+  const hasRole = session.roleKeys.some((role) =>
+    allowed.includes(role as RoleKey),
+  );
+
+  if (!hasRole) {
+    throw new AuthError("You do not have the required role.", 403);
+  }
+
   return session;
 }
 
-/** Resolves the full permission set granted to a user's roles, via the database — never hard-coded. */
-async function resolvePermissions(roleKeys: string[]): Promise<Set<string>> {
-  if (roleKeys.length === 0) return new Set();
-
-  const rows = await db.rolePermission.findMany({
-    where: { role: { key: { in: roleKeys } } },
-    include: { permission: true },
-  });
-
-  return new Set(rows.map((r: { permission: { key: string } }) => r.permission.key));
-}
-
-export async function requirePermission(permission: Permission): Promise<SessionUser> {
+export async function requirePermission(
+  permission: Permission,
+): Promise<SessionUser> {
   const session = await requireAuth();
   const granted = await resolvePermissions(session.roleKeys);
+
   if (!granted.has(permission)) {
     throw new AuthError(`Missing permission: ${permission}`, 403);
   }
+
   return session;
 }
 
-export async function requireAnyPermission(...allowed: Permission[]): Promise<SessionUser> {
+export async function requireAnyPermission(
+  ...allowed: Permission[]
+): Promise<SessionUser> {
   const session = await requireAuth();
   const granted = await resolvePermissions(session.roleKeys);
-  const ok = allowed.some((p) => granted.has(p));
+
+  const ok = allowed.some((permission) => granted.has(permission));
+
   if (!ok) {
-    throw new AuthError(`Missing one of permissions: ${allowed.join(", ")}`, 403);
+    throw new AuthError(
+      `Missing one of permissions: ${allowed.join(", ")}`,
+      403,
+    );
   }
+
   return session;
 }
 
@@ -74,21 +118,31 @@ export async function requireOwnership(params: {
 }): Promise<SessionUser> {
   const session = await requireAuth();
 
-  if (params.bypassRoles?.some((r) => session.roleKeys.includes(r))) {
+  if (params.bypassRoles?.some((role) => session.roleKeys.includes(role))) {
     return session;
   }
 
   const ownerId = await params.resolveOwnerId();
+
   if (!ownerId || ownerId !== session.id) {
     throw new AuthError("You do not have access to this resource.", 403);
   }
+
   return session;
 }
 
-/** True/false variant for use inside UI logic (never a substitute for the guards above in mutations). */
-export async function hasPermission(permission: Permission): Promise<boolean> {
+/**
+ * True/false variant for use inside UI logic.
+ * Never use this as a substitute for a server-side mutation guard.
+ */
+export async function hasPermission(
+  permission: Permission,
+): Promise<boolean> {
   const session = await getCurrentSession();
+
   if (!session) return false;
+
   const granted = await resolvePermissions(session.roleKeys);
+
   return granted.has(permission);
 }
