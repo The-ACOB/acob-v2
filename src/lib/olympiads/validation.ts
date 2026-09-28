@@ -6,26 +6,41 @@ export const olympiadSchema = z
     description: z.string().trim().max(2000).optional().or(z.literal("")),
     posterUrl: z.string().trim().url().optional().or(z.literal("")),
     subject: z.string().trim().max(120).optional().or(z.literal("")),
+
     durationMinutes: z.number().int().min(5, "Minimum 5 minutes.").max(600),
+
+    registrationType: z.enum(["free", "paid"]),
+
+    registrationFee: z
+      .number()
+      .min(0, "Registration fee cannot be negative.")
+      .max(100000, "Registration fee is too high.")
+      .optional(),
+
     registrationStartAt: z.string().min(1, "Registration opening is required."),
     registrationEndAt: z.string().min(1, "Registration closing is required."),
     startAt: z.string().optional().or(z.literal("")),
     endAt: z.string().optional().or(z.literal("")),
+
     negativeMarkingEnabled: z.boolean().optional(),
     negativeMarkingValue: z.number().min(0).max(10).optional(),
+
     eligibilityMode: z.enum(["open", "criteria"]).optional(),
+
     eligibilityGradeLevel: z
       .string()
       .trim()
       .max(50)
       .optional()
       .or(z.literal("")),
+
     eligibilityInstitution: z
       .string()
       .trim()
       .max(200)
       .optional()
       .or(z.literal("")),
+
     eligibilityAcademicLevel: z
       .string()
       .trim()
@@ -55,6 +70,7 @@ export const olympiadSchema = z
         message: "Registration must close after it opens.",
       });
     }
+
     if (!examStart || Number.isNaN(examStart.getTime())) {
       ctx.addIssue({
         code: "custom",
@@ -62,6 +78,7 @@ export const olympiadSchema = z
         message: "Exam start is required.",
       });
     }
+
     if (!examEnd || Number.isNaN(examEnd.getTime())) {
       ctx.addIssue({
         code: "custom",
@@ -69,6 +86,7 @@ export const olympiadSchema = z
         message: "Exam end is required.",
       });
     }
+
     if (
       examStart &&
       examEnd &&
@@ -82,6 +100,7 @@ export const olympiadSchema = z
           message: "Registration must close before the exam starts.",
         });
       }
+
       if (examStart >= examEnd) {
         ctx.addIssue({
           code: "custom",
@@ -90,6 +109,31 @@ export const olympiadSchema = z
         });
       }
     }
+
+    if (
+      value.registrationType === "paid" &&
+      (value.registrationFee === undefined || value.registrationFee <= 0)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["registrationFee"],
+        message:
+          "Enter a registration fee greater than zero for paid Olympiads.",
+      });
+    }
+
+    if (
+      value.registrationType === "free" &&
+      value.registrationFee !== undefined &&
+      value.registrationFee !== 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["registrationFee"],
+        message: "Free Olympiads cannot have a registration fee.",
+      });
+    }
+
     if (
       value.negativeMarkingEnabled &&
       (value.negativeMarkingValue ?? 0) <= 0

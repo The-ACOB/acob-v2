@@ -39,28 +39,37 @@ const EXECUTIVE_PERMISSIONS: Permission[] = [
   "user:delete",
   "role:assign",
   "role:remove",
+
   "participant:create",
   "participant:view",
   "participant:update",
   "participant:delete",
   "participant:referrals:view",
+
   "olympiad:create",
   "olympiad:update",
   "olympiad:publish",
   "olympiad:schedule",
   "olympiad:results:view",
+
   "question:create",
   "question:update",
   "question:delete",
   "question:publish",
+
+  "payment:view",
+  "payment:approve",
+
   "certificate:view",
   "certificate:issue",
   "certificate:revoke",
   "certificate:verify",
+
   "recommendation_letter:view",
   "recommendation_letter:create",
   "recommendation_letter:publish",
   "recommendation_letter:revoke",
+
   "content:create",
   "content:update",
   "content:publish",
@@ -68,16 +77,21 @@ const EXECUTIVE_PERMISSIONS: Permission[] = [
   "podcast:create",
   "podcast:update",
   "podcast:delete",
+
   "popup:manage",
+
   "contact:view",
   "contact:reply",
   "support:view",
   "support:reply",
+
   "approval:view",
   "approval:approve",
   "approval:reject",
+
   "notifications:view",
   "notifications:manage",
+
   "career:create",
   "career:update",
   "career:delete",
@@ -91,62 +105,87 @@ const EXECUTIVE_PERMISSIONS: Permission[] = [
  */
 export const ROLE_PERMISSIONS: Record<RoleKey, Permission[]> = {
   CEO: all([...EXECUTIVE_PERMISSIONS]),
+
   COO: all([...EXECUTIVE_PERMISSIONS]),
+
   CTO: all([...EXECUTIVE_PERMISSIONS]),
+
   HR_PR: all([
     "user:view",
     "user:update",
+
     "participant:view",
     "participant:create",
     "participant:update",
+
     "career:create",
     "career:update",
     "career:delete",
+
     "content:create",
     "content:update",
     "content:publish",
+
     "popup:manage",
+
     "contact:view",
     "contact:reply",
+
     "approval:view",
+
     "notifications:view",
   ]),
+
   CONTENT_MEDIA: all([
     "content:create",
     "content:update",
     "content:publish",
     "content:delete",
+
     "podcast:create",
     "podcast:update",
     "podcast:delete",
+
     "notifications:view",
   ]),
+
   SUPPORT: all([
     "contact:view",
     "contact:reply",
+
     "support:view",
     "support:reply",
+
     "notifications:view",
   ]),
+
   ACADEMIC: all([
     "olympiad:create",
     "olympiad:update",
     "olympiad:publish",
     "olympiad:schedule",
     "olympiad:results:view",
+
     "question:create",
     "question:update",
     "question:delete",
     "question:publish",
+
+    "payment:view",
+    "payment:approve",
+
     "certificate:view",
     "certificate:issue",
     "certificate:revoke",
+
     "recommendation_letter:view",
     "recommendation_letter:create",
     "recommendation_letter:publish",
     "recommendation_letter:revoke",
+
     "notifications:view",
   ]),
+
   AMBASSADOR: all([
     "participant:create",
     "participant:referrals:view",
@@ -154,6 +193,7 @@ export const ROLE_PERMISSIONS: Record<RoleKey, Permission[]> = {
     "recommendation_letter:view",
     "notifications:view",
   ]),
+
   PARTICIPANT: all([
     "certificate:view",
     "recommendation_letter:view",

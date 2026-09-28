@@ -14,29 +14,61 @@ export default async function OlympiadRegistrationPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getCurrentSession();
-  if (!session) redirect("/login");
+
+  if (!session) {
+    redirect("/login");
+  }
 
   const { id } = await params;
 
   const olympiad = await db.olympiad.findUnique({
     where: { id },
-    include: { _count: { select: { questions: true, registrations: true } } },
+    include: {
+      _count: {
+        select: {
+          questions: true,
+          registrations: true,
+        },
+      },
+    },
   });
 
-  if (!olympiad || olympiad.status !== "published") notFound();
+  if (!olympiad || olympiad.status !== "published") {
+    notFound();
+  }
 
   const existing = await db.olympiadRegistration.findUnique({
-    where: { olympiadId_userId: { olympiadId: id, userId: session.id } },
+    where: {
+      olympiadId_userId: {
+        olympiadId: id,
+        userId: session.id,
+      },
+    },
+    include: {
+      payments: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+      },
+    },
   });
 
   const eligible = await isEligibleForOlympiad(olympiad, session.id);
 
+  const latestPayment = existing?.payments[0] ?? null;
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto max-w-2xl">
       <OlympiadRegistrationForm
-        olympiad={olympiad}
+        olympiad={{
+          ...olympiad,
+          registrationFee: olympiad.registrationFee?.toString() ?? null,
+        }}
         questionCount={olympiad._count.questions}
-        registered={Boolean(existing)}
+        registered={existing?.status === "confirmed"}
+        registrationStatus={existing?.status ?? null}
+        latestPaymentStatus={latestPayment?.status ?? null}
         eligible={eligible}
         registrationOpen={isRegistrationOpen(olympiad)}
         phase={getOlympiadPhase(olympiad)}

@@ -11,17 +11,23 @@ import { isExamLive, isRegistrationOpen } from "@/lib/olympiads/lifecycle";
 
 const EXAM_ROLES = ["PARTICIPANT", "AMBASSADOR"];
 
-/** Lazily flips a scheduled Olympiad to "published" once its publishAt has passed — mirrors the auto-submit pattern, no cron required. */
+/** Lazily flips a scheduled Olympiad to "published" once its publishAt has passed. */
 async function resolveEffectiveOlympiad(id: string): Promise<Olympiad | null> {
   const olympiad = await db.olympiad.findUnique({ where: { id } });
+
   if (!olympiad) return null;
+
   if (
     olympiad.status === "draft" &&
     olympiad.publishAt &&
     olympiad.publishAt.getTime() <= Date.now()
   ) {
-    return db.olympiad.update({ where: { id }, data: { status: "published" } });
+    return db.olympiad.update({
+      where: { id },
+      data: { status: "published" },
+    });
   }
+
   return olympiad;
 }
 
@@ -29,30 +35,80 @@ function isBeforeExam(olympiad: Olympiad): boolean {
   return Boolean(olympiad.startAt && Date.now() < olympiad.startAt.getTime());
 }
 
+/**
+ * A registration is only considered valid for exam access once it is confirmed.
+ *
+ * Free Olympiads become confirmed immediately.
+ * Paid Olympiads remain pending until an authorized admin approves payment.
+ */
+function isConfirmedRegistration(
+  registration: { status: string } | null,
+): boolean {
+  return registration?.status === "confirmed";
+}
+
 export async function registerForOlympiadAction(
   olympiadId: string,
 ): Promise<ActionResult> {
   let session;
+
   try {
     session = await requireAuth();
   } catch (err) {
     if (err instanceof AuthError) return { ok: false, error: err.message };
     throw err;
   }
-  if (!session.roleKeys.some((r) => EXAM_ROLES.includes(r)))
+
+  if (!session.roleKeys.some((r) => EXAM_ROLES.includes(r))) {
     return { ok: false, error: "Only participants can register." };
+  }
+
   const olympiad = await resolveEffectiveOlympiad(olympiadId);
-  if (!olympiad || olympiad.status !== "published")
+
+  if (!olympiad || olympiad.status !== "published") {
     return { ok: false, error: "Registration is not open." };
-  if (!isRegistrationOpen(olympiad))
+  }
+
+  if (!isRegistrationOpen(olympiad)) {
     return { ok: false, error: "Registration is closed." };
-  if (!(await isEligibleForOlympiad(olympiad, session.id)))
+  }
+
+  if (!(await isEligibleForOlympiad(olympiad, session.id))) {
     return { ok: false, error: "You are not eligible to register." };
+  }
+
+  /*
+   * Paid Olympiads cannot be registered through the old one-click flow.
+   * The payment form will create the pending registration together with
+   * the submitted payment details.
+   */
+  if (olympiad.registrationType === "paid") {
+    return {
+      ok: false,
+      error:
+        "This is a paid Olympiad. Submit your bKash payment details to complete registration.",
+    };
+  }
+
   await db.olympiadRegistration.upsert({
-    where: { olympiadId_userId: { olympiadId, userId: session.id } },
-    create: { olympiadId, userId: session.id },
-    update: {},
+    where: {
+      olympiadId_userId: {
+        olympiadId,
+        userId: session.id,
+      },
+    },
+    create: {
+      olympiadId,
+      userId: session.id,
+      status: "confirmed",
+      confirmedAt: new Date(),
+    },
+    update: {
+      status: "confirmed",
+      confirmedAt: new Date(),
+    },
   });
+
   return { ok: true };
 }
 
@@ -61,44 +117,79 @@ export async function recordIntegrityViolationAction(
   reason: string,
 ): Promise<ActionResult<{ count: number; autoSubmitted: boolean }>> {
   void reason;
+
   let session;
+
   try {
     session = await requireAuth();
   } catch (err) {
     if (err instanceof AuthError) return { ok: false, error: err.message };
     throw err;
   }
-  const attempt = await db.attempt.findUnique({ where: { id: attemptId } });
+
+  const attempt = await db.attempt.findUnique({
+    where: { id: attemptId },
+  });
+
   if (
     !attempt ||
     attempt.userId !== session.id ||
     attempt.status !== "in_progress"
-  )
+  ) {
     return { ok: false, error: "Attempt not found." };
+  }
+
   const updated = await db.attempt.updateMany({
     where: {
       id: attemptId,
       status: "in_progress",
       integrityViolationCount: { lt: 3 },
     },
-    data: { integrityViolationCount: { increment: 1 } },
+    data: {
+      integrityViolationCount: { increment: 1 },
+    },
   });
-  if (updated.count !== 1)
+
+  if (updated.count !== 1) {
     return { ok: false, error: "Attempt is no longer active." };
-  const current = await db.attempt.findUnique({ where: { id: attemptId } });
+  }
+
+  const current = await db.attempt.findUnique({
+    where: { id: attemptId },
+  });
+
   const count = current?.integrityViolationCount ?? 0;
+
   if (count >= 3) {
     const result = await submitAttemptAction(attemptId, "integrity_violation");
-    if (!result.ok) return { ok: false, error: result.error };
-    return { ok: true, data: { count, autoSubmitted: true } };
+
+    if (!result.ok) {
+      return { ok: false, error: result.error };
+    }
+
+    return {
+      ok: true,
+      data: {
+        count,
+        autoSubmitted: true,
+      },
+    };
   }
-  return { ok: true, data: { count, autoSubmitted: false } };
+
+  return {
+    ok: true,
+    data: {
+      count,
+      autoSubmitted: false,
+    },
+  };
 }
 
 export async function startAttemptAction(
   olympiadId: string,
 ): Promise<ActionResult<{ attemptId: string }>> {
   let session;
+
   try {
     session = await requireAuth();
   } catch (err) {
@@ -114,12 +205,19 @@ export async function startAttemptAction(
   }
 
   const olympiad = await resolveEffectiveOlympiad(olympiadId);
+
   if (!olympiad || olympiad.status !== "published") {
-    return { ok: false, error: "This Olympiad is not currently available." };
+    return {
+      ok: false,
+      error: "This Olympiad is not currently available.",
+    };
   }
 
   if (isBeforeExam(olympiad)) {
-    return { ok: false, error: "This Olympiad has not started yet." };
+    return {
+      ok: false,
+      error: "This Olympiad has not started yet.",
+    };
   }
 
   if (!(await isEligibleForOlympiad(olympiad, session.id))) {
@@ -130,8 +228,14 @@ export async function startAttemptAction(
   }
 
   const registration = await db.olympiadRegistration.findUnique({
-    where: { olympiadId_userId: { olympiadId, userId: session.id } },
+    where: {
+      olympiadId_userId: {
+        olympiadId,
+        userId: session.id,
+      },
+    },
   });
+
   if (!registration) {
     return {
       ok: false,
@@ -139,7 +243,40 @@ export async function startAttemptAction(
     };
   }
 
-  const questionCount = await db.question.count({ where: { olympiadId } });
+  if (!isConfirmedRegistration(registration)) {
+    if (registration.status === "pending_payment") {
+      return {
+        ok: false,
+        error: "Payment is required before you can start this Olympiad.",
+      };
+    }
+
+    if (registration.status === "pending_approval") {
+      return {
+        ok: false,
+        error:
+          "Your payment is waiting for admin approval before you can start the Olympiad.",
+      };
+    }
+
+    if (registration.status === "rejected") {
+      return {
+        ok: false,
+        error:
+          "Your registration payment was rejected. Please submit valid payment details.",
+      };
+    }
+
+    return {
+      ok: false,
+      error: "Your registration is not confirmed.",
+    };
+  }
+
+  const questionCount = await db.question.count({
+    where: { olympiadId },
+  });
+
   if (questionCount === 0) {
     return {
       ok: false,
@@ -148,15 +285,30 @@ export async function startAttemptAction(
   }
 
   const existing = await db.attempt.findUnique({
-    where: { olympiadId_userId: { olympiadId, userId: session.id } },
+    where: {
+      olympiadId_userId: {
+        olympiadId,
+        userId: session.id,
+      },
+    },
   });
 
   if (existing) {
     const refreshed = await autoSubmitIfExpired(existing, olympiad);
+
     if (refreshed.status !== "in_progress") {
-      return { ok: false, error: "You have already attempted this Olympiad." };
+      return {
+        ok: false,
+        error: "You have already attempted this Olympiad.",
+      };
     }
-    return { ok: true, data: { attemptId: refreshed.id } };
+
+    return {
+      ok: true,
+      data: {
+        attemptId: refreshed.id,
+      },
+    };
   }
 
   if (!isExamLive(olympiad)) {
@@ -168,15 +320,25 @@ export async function startAttemptAction(
 
   const startedAt = new Date();
   const deadlineAt = computeDeadline(olympiad, startedAt);
+
   const attempt = await db.attempt.create({
-    data: { olympiadId, userId: session.id, deadlineAt },
+    data: {
+      olympiadId,
+      userId: session.id,
+      deadlineAt,
+    },
   });
 
-  return { ok: true, data: { attemptId: attempt.id } };
+  return {
+    ok: true,
+    data: {
+      attemptId: attempt.id,
+    },
+  };
 }
 
 /**
- * Debounced from the client — called on question navigation or every
+ * Debounced from the client, called on question navigation or every
  * ~15s while an answer is selected, never per keystroke/millisecond.
  */
 export async function saveAnswerAction(
@@ -186,6 +348,7 @@ export async function saveAnswerAction(
   timeSpentDeltaSeconds: number,
 ): Promise<ActionResult> {
   let session;
+
   try {
     session = await requireAuth();
   } catch (err) {
@@ -193,7 +356,10 @@ export async function saveAnswerAction(
     throw err;
   }
 
-  const attempt = await db.attempt.findUnique({ where: { id: attemptId } });
+  const attempt = await db.attempt.findUnique({
+    where: { id: attemptId },
+  });
+
   if (!attempt || attempt.userId !== session.id) {
     return { ok: false, error: "Attempt not found." };
   }
@@ -201,32 +367,67 @@ export async function saveAnswerAction(
   const olympiad = await db.olympiad.findUnique({
     where: { id: attempt.olympiadId },
   });
-  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  if (!olympiad) {
+    return { ok: false, error: "Olympiad not found." };
+  }
 
   if (olympiad.status !== "published" || isBeforeExam(olympiad)) {
-    return { ok: false, error: "The exam questions are not available yet." };
+    return {
+      ok: false,
+      error: "The exam questions are not available yet.",
+    };
   }
+
   if (!(await isEligibleForOlympiad(olympiad, session.id))) {
-    return { ok: false, error: "You are not eligible to access this exam." };
+    return {
+      ok: false,
+      error: "You are not eligible to access this exam.",
+    };
   }
+
   const registration = await db.olympiadRegistration.findUnique({
     where: {
-      olympiadId_userId: { olympiadId: olympiad.id, userId: session.id },
+      olympiadId_userId: {
+        olympiadId: olympiad.id,
+        userId: session.id,
+      },
     },
   });
-  if (!registration)
-    return { ok: false, error: "Exam registration not found." };
+
+  if (!registration) {
+    return {
+      ok: false,
+      error: "Exam registration not found.",
+    };
+  }
+
+  if (!isConfirmedRegistration(registration)) {
+    return {
+      ok: false,
+      error: "Your registration is not confirmed.",
+    };
+  }
 
   const current = await autoSubmitIfExpired(attempt, olympiad);
+
   if (current.status !== "in_progress") {
-    return { ok: false, error: "Time has expired for this attempt." };
+    return {
+      ok: false,
+      error: "Time has expired for this attempt.",
+    };
   }
 
   const questionCount = await db.question.count({
     where: { olympiadId: attempt.olympiadId },
   });
-  if (questionCount === 0)
-    return { ok: false, error: "This exam has no questions yet." };
+
+  if (questionCount === 0) {
+    return {
+      ok: false,
+      error: "This exam has no questions yet.",
+    };
+  }
 
   const question: {
     id: string;
@@ -236,28 +437,46 @@ export async function saveAnswerAction(
     where: { id: questionId },
     include: { options: true },
   });
+
   if (!question || question.olympiadId !== attempt.olympiadId) {
-    return { ok: false, error: "Question does not belong to this attempt." };
+    return {
+      ok: false,
+      error: "Question does not belong to this attempt.",
+    };
   }
 
   if (
     selectedOptionId &&
     !question.options.some((o) => o.id === selectedOptionId)
   ) {
-    return { ok: false, error: "Invalid option for this question." };
+    return {
+      ok: false,
+      error: "Invalid option for this question.",
+    };
   }
 
   const existingAnswer = await db.attemptAnswer.findUnique({
-    where: { attemptId_questionId: { attemptId, questionId } },
+    where: {
+      attemptId_questionId: {
+        attemptId,
+        questionId,
+      },
+    },
   });
 
   const changed = Boolean(
     existingAnswer && existingAnswer.selectedOptionId !== selectedOptionId,
   );
+
   const now = new Date();
 
   await db.attemptAnswer.upsert({
-    where: { attemptId_questionId: { attemptId, questionId } },
+    where: {
+      attemptId_questionId: {
+        attemptId,
+        questionId,
+      },
+    },
     update: {
       selectedOptionId,
       timeSpentSeconds:
@@ -282,15 +501,16 @@ export async function saveAnswerAction(
 
 /**
  * Scores are computed here, server-side, from the question's own
- * option data — never returned to the client in this response. A
- * participant only ever learns their score from the results page,
- * and only once the Olympiad's results have been officially published.
+ * option data. A participant only learns their score from the results
+ * page, and only once the Olympiad's results have been officially
+ * published.
  */
 export async function submitAttemptAction(
   attemptId: string,
   autoSubmissionReason?: string,
 ): Promise<ActionResult> {
   let session;
+
   try {
     session = await requireAuth();
   } catch (err) {
@@ -298,7 +518,10 @@ export async function submitAttemptAction(
     throw err;
   }
 
-  const attempt = await db.attempt.findUnique({ where: { id: attemptId } });
+  const attempt = await db.attempt.findUnique({
+    where: { id: attemptId },
+  });
+
   if (!attempt || attempt.userId !== session.id) {
     return { ok: false, error: "Attempt not found." };
   }
@@ -306,25 +529,60 @@ export async function submitAttemptAction(
   const olympiad = await db.olympiad.findUnique({
     where: { id: attempt.olympiadId },
   });
-  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  if (!olympiad) {
+    return { ok: false, error: "Olympiad not found." };
+  }
 
   if (olympiad.status !== "published" || isBeforeExam(olympiad)) {
-    return { ok: false, error: "The exam questions are not available yet." };
+    return {
+      ok: false,
+      error: "The exam questions are not available yet.",
+    };
   }
+
   if (!(await isEligibleForOlympiad(olympiad, session.id))) {
-    return { ok: false, error: "You are not eligible to submit this exam." };
+    return {
+      ok: false,
+      error: "You are not eligible to submit this exam.",
+    };
+  }
+
+  const registration = await db.olympiadRegistration.findUnique({
+    where: {
+      olympiadId_userId: {
+        olympiadId: olympiad.id,
+        userId: session.id,
+      },
+    },
+  });
+
+  if (!registration || !isConfirmedRegistration(registration)) {
+    return {
+      ok: false,
+      error: "Your registration is not confirmed.",
+    };
   }
 
   const current = await autoSubmitIfExpired(attempt, olympiad);
+
   if (current.status !== "in_progress") {
-    return { ok: false, error: "This attempt has already been submitted." };
+    return {
+      ok: false,
+      error: "This attempt has already been submitted.",
+    };
   }
 
   const questionCount = await db.question.count({
     where: { olympiadId: attempt.olympiadId },
   });
-  if (questionCount === 0)
-    return { ok: false, error: "This exam has no questions yet." };
+
+  if (questionCount === 0) {
+    return {
+      ok: false,
+      error: "This exam has no questions yet.",
+    };
+  }
 
   const questions: {
     id: string;
@@ -335,10 +593,12 @@ export async function submitAttemptAction(
     include: { options: true },
   });
 
-  const answers: { questionId: string; selectedOptionId: string | null }[] =
-    await db.attemptAnswer.findMany({
-      where: { attemptId },
-    });
+  const answers: {
+    questionId: string;
+    selectedOptionId: string | null;
+  }[] = await db.attemptAnswer.findMany({
+    where: { attemptId },
+  });
 
   const result = scoreAttempt(
     questions,
@@ -346,6 +606,7 @@ export async function submitAttemptAction(
     olympiad.negativeMarkingEnabled,
     olympiad.negativeMarkingValue,
   );
+
   const submittedAt = new Date();
 
   await db.attempt.update({
@@ -372,9 +633,15 @@ export async function submitAttemptAction(
   });
 
   for (const [questionId, outcome] of result.perQuestion) {
-    if (!answers.some((a) => a.questionId === questionId)) continue; // don't create rows for unanswered questions
+    if (!answers.some((a) => a.questionId === questionId)) continue;
+
     await db.attemptAnswer.upsert({
-      where: { attemptId_questionId: { attemptId, questionId } },
+      where: {
+        attemptId_questionId: {
+          attemptId,
+          questionId,
+        },
+      },
       update: {
         isCorrect: outcome.isCorrect,
         marksAwarded: outcome.marksAwarded,
@@ -391,7 +658,11 @@ export async function submitAttemptAction(
   return { ok: true };
 }
 
-export type SanitizedOption = { id: string; text: string };
+export type SanitizedOption = {
+  id: string;
+  text: string;
+};
+
 export type SanitizedQuestion = {
   id: string;
   text: string;
@@ -404,45 +675,94 @@ export type SanitizedQuestion = {
 /**
  * Fetches everything the exam-taking UI needs, with `isCorrect` and
  * `explanation` stripped from every question before it ever leaves
- * the server — this is what prevents a participant from reading
- * correct answers out of the page source or the RSC payload.
+ * the server.
  */
 export async function getExamData(attemptId: string): Promise<
   | {
       ok: true;
-      attempt: { id: string; deadlineAt: string; status: string };
+      attempt: {
+        id: string;
+        deadlineAt: string;
+        status: string;
+      };
       questions: SanitizedQuestion[];
       existingAnswers: Record<string, string | null>;
     }
   | { ok: false; error: string }
 > {
   const session = await requireAuth().catch(() => null);
-  if (!session) return { ok: false, error: "Authentication required." };
 
-  const attempt = await db.attempt.findUnique({ where: { id: attemptId } });
+  if (!session) {
+    return {
+      ok: false,
+      error: "Authentication required.",
+    };
+  }
+
+  const attempt = await db.attempt.findUnique({
+    where: { id: attemptId },
+  });
+
   if (!attempt || attempt.userId !== session.id) {
-    return { ok: false, error: "Attempt not found." };
+    return {
+      ok: false,
+      error: "Attempt not found.",
+    };
   }
 
   const olympiad = await db.olympiad.findUnique({
     where: { id: attempt.olympiadId },
   });
-  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  if (!olympiad) {
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
+  }
 
   if (olympiad.status !== "published" || isBeforeExam(olympiad)) {
-    return { ok: false, error: "The exam questions are not available yet." };
+    return {
+      ok: false,
+      error: "The exam questions are not available yet.",
+    };
+  }
+
+  const registration = await db.olympiadRegistration.findUnique({
+    where: {
+      olympiadId_userId: {
+        olympiadId: olympiad.id,
+        userId: session.id,
+      },
+    },
+  });
+
+  if (!registration || !isConfirmedRegistration(registration)) {
+    return {
+      ok: false,
+      error: "Your registration is not confirmed.",
+    };
   }
 
   const current = await autoSubmitIfExpired(attempt, olympiad);
+
   if (current.status !== "in_progress") {
-    return { ok: false, error: "This attempt is no longer in progress." };
+    return {
+      ok: false,
+      error: "This attempt is no longer in progress.",
+    };
   }
 
   const questionCount = await db.question.count({
     where: { olympiadId: attempt.olympiadId },
   });
-  if (questionCount === 0)
-    return { ok: false, error: "This exam has no questions yet." };
+
+  if (questionCount === 0) {
+    return {
+      ok: false,
+      error: "This exam has no questions yet.",
+    };
+  }
 
   const rawQuestions: {
     id: string;
@@ -450,7 +770,11 @@ export async function getExamData(attemptId: string): Promise<
     imageUrl: string | null;
     marks: number;
     order: number;
-    options: { id: string; text: string; isCorrect: boolean }[];
+    options: {
+      id: string;
+      text: string;
+      isCorrect: boolean;
+    }[];
   }[] = await db.question.findMany({
     where: { olympiadId: attempt.olympiadId },
     include: { options: true },
@@ -464,15 +788,24 @@ export async function getExamData(attemptId: string): Promise<
       imageUrl: q.imageUrl,
       marks: q.marks,
       order: q.order,
-      options: q.options.map((o) => ({ id: o.id, text: o.text })), // isCorrect deliberately omitted
+      options: q.options.map((o) => ({
+        id: o.id,
+        text: o.text,
+      })),
     }));
 
-  const answers: { questionId: string; selectedOptionId: string | null }[] =
-    await db.attemptAnswer.findMany({
-      where: { attemptId: current.id },
-    });
+  const answers: {
+    questionId: string;
+    selectedOptionId: string | null;
+  }[] = await db.attemptAnswer.findMany({
+    where: { attemptId: current.id },
+  });
+
   const existingAnswers: Record<string, string | null> = {};
-  for (const a of answers) existingAnswers[a.questionId] = a.selectedOptionId;
+
+  for (const answer of answers) {
+    existingAnswers[answer.questionId] = answer.selectedOptionId;
+  }
 
   return {
     ok: true,

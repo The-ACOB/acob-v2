@@ -27,6 +27,36 @@ enum QuestionLanguage {
   @@map("question_language")
 }
 
+enum OlympiadRegistrationType {
+  free
+  paid
+
+  @@map("olympiad_registration_type")
+}
+
+enum OlympiadRegistrationStatus {
+  pending_payment
+  pending_approval
+  confirmed
+  rejected
+
+  @@map("olympiad_registration_status")
+}
+
+enum PaymentMethod {
+  bkash
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  pending
+  approved
+  rejected
+
+  @@map("payment_status")
+}
+
 model User {
   id              String     @id @default(uuid())
   email           String     @unique
@@ -59,6 +89,8 @@ model User {
   questionArchives         QuestionArchive[]        @relation("QuestionArchiveCreator")
   attempts                 Attempt[]                @relation("AttemptUser")
   olympiadRegistrations    OlympiadRegistration[]
+  paymentsMade             OlympiadPayment[]        @relation("PaymentPayer")
+  paymentsReviewed         OlympiadPayment[]        @relation("PaymentReviewer")
   certificatesReceived     Certificate[]            @relation("CertificateRecipient")
   certificatesIssued       Certificate[]            @relation("CertificateIssuer")
   certificatesRevoked      Certificate[]            @relation("CertificateRevoker")
@@ -432,35 +464,38 @@ enum AttemptStatus {
 }
 
 model Olympiad {
-  id                       String         @id @default(uuid())
+  id                       String                   @id @default(uuid())
   title                    String
-  slug                     String         @unique
+  slug                     String                   @unique
   description              String?
-  posterUrl                String?        @map("poster_url")
+  posterUrl                String?                  @map("poster_url")
   subject                  String?
-  status                   OlympiadStatus @default(draft)
-  durationMinutes          Int            @map("duration_minutes")
-  registrationEnabled      Boolean        @default(true) @map("registration_enabled")
-  registrationStartAt      DateTime?      @map("registration_start_at")
-  registrationEndAt        DateTime?      @map("registration_end_at")
-  startAt                  DateTime?      @map("start_at")
-  endAt                    DateTime?      @map("end_at")
-  publishAt                DateTime?      @map("publish_at")
-  negativeMarkingEnabled   Boolean        @default(false) @map("negative_marking_enabled")
-  negativeMarkingValue     Float          @default(0) @map("negative_marking_value")
-  eligibilityMode          String         @default("open") @map("eligibility_mode")
-  eligibilityGradeLevel    String?        @map("eligibility_grade_level")
-  eligibilityInstitution   String?        @map("eligibility_institution")
-  eligibilityAcademicLevel String?        @map("eligibility_academic_level")
-  resultsPublishedAt       DateTime?      @map("results_published_at")
-  createdBy                String         @map("created_by")
-  createdAt                DateTime       @default(now()) @map("created_at")
-  updatedAt                DateTime       @updatedAt @map("updated_at")
+  status                   OlympiadStatus           @default(draft)
+  durationMinutes          Int                      @map("duration_minutes")
+  registrationEnabled      Boolean                  @default(true) @map("registration_enabled")
+  registrationType         OlympiadRegistrationType @default(free) @map("registration_type")
+  registrationFee          Decimal?                 @map("registration_fee") @db.Decimal(10, 2)
+  registrationStartAt      DateTime?                @map("registration_start_at")
+  registrationEndAt        DateTime?                @map("registration_end_at")
+  startAt                  DateTime?                @map("start_at")
+  endAt                    DateTime?                @map("end_at")
+  publishAt                DateTime?                @map("publish_at")
+  negativeMarkingEnabled   Boolean                  @default(false) @map("negative_marking_enabled")
+  negativeMarkingValue     Float                    @default(0) @map("negative_marking_value")
+  eligibilityMode          String                   @default("open") @map("eligibility_mode")
+  eligibilityGradeLevel    String?                  @map("eligibility_grade_level")
+  eligibilityInstitution   String?                  @map("eligibility_institution")
+  eligibilityAcademicLevel String?                  @map("eligibility_academic_level")
+  resultsPublishedAt       DateTime?                @map("results_published_at")
+  createdBy                String                   @map("created_by")
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  updatedAt                DateTime                 @updatedAt @map("updated_at")
 
   creator       User                   @relation("OlympiadCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   questions     Question[]
   attempts      Attempt[]
   registrations OlympiadRegistration[]
+  payments      OlympiadPayment[]
   certificates  Certificate[]
 
   @@map("olympiads")
@@ -603,18 +638,54 @@ model Attempt {
   @@map("attempts")
 }
 
-model OlympiadRegistration {
-  id           String   @id @default(uuid())
-  olympiadId   String   @map("olympiad_id")
-  userId       String   @map("user_id")
-  registeredAt DateTime @default(now()) @map("registered_at")
+// ---------------------------------------------------------------
+// Olympiad registration & payments
+// ---------------------------------------------------------------
 
-  olympiad Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model OlympiadRegistration {
+  id           String                     @id @default(uuid())
+  olympiadId   String                     @map("olympiad_id")
+  userId       String                     @map("user_id")
+  status       OlympiadRegistrationStatus @default(confirmed)
+  registeredAt DateTime                   @default(now()) @map("registered_at")
+  confirmedAt  DateTime?                  @map("confirmed_at")
+
+  olympiad Olympiad          @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments OlympiadPayment[]
 
   @@unique([olympiadId, userId])
   @@index([userId])
+  @@index([olympiadId, status])
   @@map("olympiad_registrations")
+}
+
+model OlympiadPayment {
+  id              String        @id @default(uuid())
+  olympiadId      String        @map("olympiad_id")
+  registrationId  String        @map("registration_id")
+  userId          String        @map("user_id")
+  method          PaymentMethod @default(bkash)
+  amount          Decimal       @db.Decimal(10, 2)
+  senderNumber    String        @map("sender_number")
+  transactionId   String        @map("transaction_id")
+  status          PaymentStatus @default(pending)
+  reviewedBy      String?       @map("reviewed_by")
+  reviewedAt      DateTime?     @map("reviewed_at")
+  rejectionReason String?       @map("rejection_reason")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  olympiad     Olympiad             @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  registration OlympiadRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  payer        User                 @relation("PaymentPayer", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer     User?                @relation("PaymentReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([olympiadId, status])
+  @@index([registrationId, status])
+  @@index([transactionId])
+  @@index([userId])
+  @@map("olympiad_payments")
 }
 
 // ---------------------------------------------------------------

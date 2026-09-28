@@ -1,9 +1,3 @@
-/**
- * Centralized permission catalogue. Every permission the application
- * can check against is declared here — nothing elsewhere should embed
- * a raw permission string literal outside this file and the seed data
- * that mirrors it into the database.
- */
 export const PERMISSIONS = [
   // Users
   "user:view",
@@ -32,6 +26,10 @@ export const PERMISSIONS = [
   "question:update",
   "question:delete",
   "question:publish",
+
+  // Payments
+  "payment:view",
+  "payment:approve",
 
   // Certificates
   "certificate:view",
@@ -81,52 +79,88 @@ export const PERMISSIONS = [
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
-  "user:view": "View user accounts",
-  "user:create": "Create user accounts",
-  "user:update": "Update user accounts",
-  "user:delete": "Delete user accounts",
-  "role:assign": "Assign a role to a user",
-  "role:remove": "Remove a role from a user",
-  "participant:create": "Create a participant record",
-  "participant:view": "View participant records",
-  "participant:update": "Update participant records",
-  "participant:delete": "Delete participant records",
-  "participant:referrals:view": "View which participants an ambassador referred",
-  "olympiad:create": "Create an Olympiad",
-  "olympiad:update": "Update an Olympiad",
-  "olympiad:publish": "Publish an Olympiad",
-  "olympiad:schedule": "Schedule an Olympiad",
-  "olympiad:results:view": "View Olympiad results",
-  "question:create": "Create a question",
-  "question:update": "Update a question",
-  "question:delete": "Delete a question",
-  "question:publish": "Publish a question",
+  // Users
+  "user:view": "View organisation users",
+  "user:create": "Create organisation users",
+  "user:update": "Update organisation users",
+  "user:delete": "Delete organisation users",
+  "role:assign": "Assign roles to users",
+  "role:remove": "Remove roles from users",
+
+  // Participants
+  "participant:create": "Create participants",
+  "participant:view": "View participants",
+  "participant:update": "Update participants",
+  "participant:delete": "Delete participants",
+  "participant:referrals:view": "View participant referral information",
+
+  // Olympiads
+  "olympiad:create": "Create Olympiads",
+  "olympiad:update": "Update Olympiads",
+  "olympiad:publish": "Publish Olympiads",
+  "olympiad:schedule": "Schedule Olympiads",
+  "olympiad:results:view": "View Olympiad results and rankings",
+
+  // Questions
+  "question:create": "Create Olympiad questions",
+  "question:update": "Update Olympiad questions",
+  "question:delete": "Delete Olympiad questions",
+  "question:publish": "Publish Olympiad questions",
+
+  // Payments
+  "payment:view":
+    "View Olympiad payment submissions and payment approval records",
+  "payment:approve": "Approve or reject Olympiad payment submissions",
+
+  // Certificates
   "certificate:view": "View certificates",
-  "certificate:issue": "Issue a certificate",
-  "certificate:revoke": "Revoke a certificate",
-  "certificate:verify": "Verify a certificate",
+  "certificate:issue": "Issue certificates",
+  "certificate:revoke": "Revoke certificates",
+  "certificate:verify": "Verify certificates",
+
+  // Recommendation letters
   "recommendation_letter:view": "View recommendation letters",
-  "recommendation_letter:create": "Create a recommendation letter",
-  "recommendation_letter:publish": "Publish a recommendation letter",
-  "recommendation_letter:revoke": "Revoke a recommendation letter",
-  "content:create": "Create site content",
-  "content:update": "Update site content",
-  "content:publish": "Publish or unpublish site content",
-  "content:delete": "Archive site content",
-  "podcast:create": "Create a podcast episode",
-  "podcast:update": "Update a podcast episode",
-  "podcast:delete": "Delete a podcast episode",
+  "recommendation_letter:create": "Create recommendation letters",
+  "recommendation_letter:publish": "Publish recommendation letters",
+  "recommendation_letter:revoke": "Revoke recommendation letters",
+
+  // Content
+  "content:create": "Create content",
+  "content:update": "Update content",
+  "content:publish": "Publish content",
+  "content:delete": "Delete content",
+  "podcast:create": "Create podcasts",
+  "podcast:update": "Update podcasts",
+  "podcast:delete": "Delete podcasts",
+
+  // Popups
   "popup:manage": "Create, update, and toggle announcement popups",
-  "contact:view": "View contact submissions",
-  "contact:reply": "Reply to a contact submission",
-  "support:view": "View support messages",
-  "support:reply": "Reply to a support message",
+
+  // Contact / support
+  "contact:view": "View contact messages",
+  "contact:reply": "Reply to contact messages",
+  "support:view": "View support requests",
+  "support:reply": "Reply to support requests",
+
+  // Approvals
   "approval:view": "View approval requests",
-  "approval:approve": "Approve an approval request",
-  "approval:reject": "Reject an approval request",
+  "approval:approve": "Approve requests",
+  "approval:reject": "Reject requests",
+
+  // Notifications
   "notifications:view": "View notifications",
-  "notifications:manage": "Manage notification settings",
-  "career:create": "Create a career listing",
-  "career:update": "Update a career listing",
-  "career:delete": "Delete a career listing",
+  "notifications:manage": "Manage notifications",
+
+  // Careers
+  "career:create": "Create career postings",
+  "career:update": "Update career postings",
+  "career:delete": "Delete career postings",
 };
+
+/**
+ * Backwards-compatible alias.
+ *
+ * Some existing files use the camelCase name while the
+ * Role Controls page and database seed use the uppercase name.
+ */
+export const permissionDescriptions = PERMISSION_DESCRIPTIONS;

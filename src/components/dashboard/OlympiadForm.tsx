@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Upload, Loader2, X } from "lucide-react";
+import { Upload, Loader2, X, CreditCard } from "lucide-react";
 import { olympiadSchema } from "@/lib/olympiads/validation";
 import { FormField, fieldClasses } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
@@ -17,8 +17,12 @@ type Values = z.infer<typeof olympiadSchema>;
 
 function toLocalInputValue(date: Date | null): string {
   if (!date) return "";
+
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate(),
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 export function OlympiadForm({
@@ -45,6 +49,7 @@ export function OlympiadForm({
 }) {
   const router = useRouter();
   const { toast } = useToast();
+
   const [serverError, setServerError] = useState<string | null>(null);
   const [posterUrl, setPosterUrl] = useState<string>(
     defaultValues?.posterUrl ?? "",
@@ -55,6 +60,7 @@ export function OlympiadForm({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(olympiadSchema),
@@ -64,6 +70,10 @@ export function OlympiadForm({
       posterUrl: defaultValues?.posterUrl ?? "",
       subject: defaultValues?.subject ?? "",
       durationMinutes: defaultValues?.durationMinutes ?? 60,
+
+      registrationType: defaultValues?.registrationType ?? "free",
+      registrationFee: defaultValues?.registrationFee ?? undefined,
+
       registrationStartAt: toLocalInputValue(
         defaultValues?.registrationStartAt ?? null,
       ),
@@ -72,8 +82,10 @@ export function OlympiadForm({
       ),
       startAt: toLocalInputValue(defaultValues?.startAt ?? null),
       endAt: toLocalInputValue(defaultValues?.endAt ?? null),
+
       negativeMarkingEnabled: defaultValues?.negativeMarkingEnabled ?? false,
       negativeMarkingValue: defaultValues?.negativeMarkingValue ?? 0,
+
       eligibilityMode: defaultValues?.eligibilityMode ?? "open",
       eligibilityGradeLevel: defaultValues?.eligibilityGradeLevel ?? "",
       eligibilityInstitution: defaultValues?.eligibilityInstitution ?? "",
@@ -81,11 +93,15 @@ export function OlympiadForm({
     },
   });
 
+  const registrationType = watch("registrationType");
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
     setIsUploading(true);
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -94,7 +110,9 @@ export function OlympiadForm({
         method: "POST",
         body: formData,
       });
+
       const data = await res.json();
+
       if (res.ok && data.url) {
         setPosterUrl(data.url);
         setValue("posterUrl", data.url, { shouldValidate: true });
@@ -111,7 +129,13 @@ export function OlympiadForm({
 
   const submit = async (values: Values) => {
     setServerError(null);
-    const result = await onSubmit({ ...values, posterUrl });
+
+    const result = await onSubmit({
+      ...values,
+      posterUrl,
+      registrationFee:
+        values.registrationType === "paid" ? values.registrationFee : undefined,
+    });
 
     if (!result.ok) {
       setServerError(result.error);
@@ -119,10 +143,14 @@ export function OlympiadForm({
     }
 
     toast("success", "Saved");
+
     const id = "data" in result ? result.data?.id : undefined;
 
-    if (redirectPath) router.push(redirectPath.replace(":id", id ?? ""));
-    else router.refresh();
+    if (redirectPath) {
+      router.push(redirectPath.replace(":id", id ?? ""));
+    } else {
+      router.refresh();
+    }
   };
 
   return (
@@ -153,6 +181,7 @@ export function OlympiadForm({
         <label className="text-xs font-mono uppercase tracking-wider text-secondary">
           Olympiad Poster Banner
         </label>
+
         {posterUrl ? (
           <div className="relative aspect-[16/9] w-full max-w-md overflow-hidden rounded-lg border border-border bg-elevated-2">
             <Image
@@ -162,29 +191,34 @@ export function OlympiadForm({
               unoptimized
               className="object-cover"
             />
+
             <button
               type="button"
               onClick={() => {
                 setPosterUrl("");
-                setValue("posterUrl", "", { shouldValidate: true });
+                setValue("posterUrl", "", {
+                  shouldValidate: true,
+                });
               }}
-              className="absolute top-2 right-2 rounded-md bg-background/80 p-1.5 text-primary hover:bg-background transition-colors"
+              className="absolute top-2 right-2 rounded-md bg-background/80 p-1.5 text-primary transition-colors hover:bg-background"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         ) : (
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-elevated-2 p-6 text-xs text-secondary transition-colors hover:border-accent/50 hover:bg-elevated">
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashedborder-border bg-elevated-2 p-6 text-xs text-secondary transition-colors hover:border-accent/50 hover:bg-elevated">
             {isUploading ? (
               <Loader2 className="h-4 w-4 animate-spin text-accent" />
             ) : (
               <Upload className="h-4 w-4 text-accent" />
             )}
+
             <span>
               {isUploading
                 ? "Uploading..."
                 : "Upload poster image (16:9 recommended)"}
             </span>
+
             <input
               type="file"
               accept="image/*"
@@ -194,6 +228,7 @@ export function OlympiadForm({
             />
           </label>
         )}
+
         <input type="hidden" {...register("posterUrl")} value={posterUrl} />
       </div>
 
@@ -220,9 +255,77 @@ export function OlympiadForm({
             id="durationMinutes"
             type="number"
             className={fieldClasses}
-            {...register("durationMinutes", { valueAsNumber: true })}
+            {...register("durationMinutes", {
+              valueAsNumber: true,
+            })}
           />
         </FormField>
+      </div>
+
+      {/* --- REGISTRATION PAYMENT --- */}
+      <div className="flex flex-col gap-4 border-t border-border pt-5">
+        <div>
+          <p className="text-xs font-mono uppercase tracking-wider text-secondary">
+            Registration
+          </p>
+          <p className="mt-1 text-sm text-secondary">
+            Choose whether participants register for free or pay a registration
+            fee.
+          </p>
+        </div>
+
+        <FormField
+          label="Registration type"
+          htmlFor="registrationType"
+          error={errors.registrationType?.message}
+        >
+          <select
+            id="registrationType"
+            className={fieldClasses}
+            {...register("registrationType")}
+          >
+            <option value="free">Free</option>
+            <option value="paid">Paid</option>
+          </select>
+        </FormField>
+
+        {registrationType === "paid" ? (
+          <div className="rounded-lg border border-border bg-elevated-2 p-4">
+            <div className="mb-4 flex items-start gap-3">
+              <div className="rounded-md border border-border bg-background p-2">
+                <CreditCard className="h-4 w-4 text-accent" />
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-primary">
+                  Paid registration
+                </p>
+                <p className="mt-1 text-xs leading-5 text-secondary">
+                  Participants will pay through bKash and submit their
+                  transaction details for admin approval.
+                </p>
+              </div>
+            </div>
+
+            <FormField
+              label="Registration fee (BDT)"
+              htmlFor="registrationFee"
+              error={errors.registrationFee?.message}
+            >
+              <input
+                id="registrationFee"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 250"
+                className={fieldClasses}
+                {...register("registrationFee", {
+                  valueAsNumber: true,
+                })}
+              />
+            </FormField>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4 border-t border-border pt-5">
@@ -240,6 +343,7 @@ export function OlympiadForm({
             <option value="criteria">Match the criteria below</option>
           </select>
         </FormField>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <input
             aria-label="Eligible class or grade"
@@ -247,12 +351,14 @@ export function OlympiadForm({
             className={fieldClasses}
             {...register("eligibilityGradeLevel")}
           />
+
           <input
             aria-label="Eligible institution"
             placeholder="Institution"
             className={fieldClasses}
             {...register("eligibilityInstitution")}
           />
+
           <input
             aria-label="Eligible academic level"
             placeholder="Academic level"
@@ -338,7 +444,9 @@ export function OlympiadForm({
             type="number"
             step="0.25"
             className={fieldClasses}
-            {...register("negativeMarkingValue", { valueAsNumber: true })}
+            {...register("negativeMarkingValue", {
+              valueAsNumber: true,
+            })}
           />
         </FormField>
       </div>
@@ -351,7 +459,7 @@ export function OlympiadForm({
         disabled={isSubmitting}
         className="w-fit"
       >
-        {isSubmitting ? "Saving…" : submitLabel}
+        {isSubmitting ? "Saving..." : submitLabel}
       </Button>
     </form>
   );

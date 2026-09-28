@@ -63,16 +63,24 @@ export async function createOlympiadAction(
       posterUrl: v.posterUrl || null,
       subject: v.subject || null,
       durationMinutes: v.durationMinutes,
+
+      registrationType: v.registrationType,
+      registrationFee:
+        v.registrationType === "paid" ? (v.registrationFee ?? null) : null,
+
       registrationStartAt: new Date(v.registrationStartAt),
       registrationEndAt: new Date(v.registrationEndAt),
       startAt: v.startAt ? new Date(v.startAt) : null,
       endAt: v.endAt ? new Date(v.endAt) : null,
+
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
       negativeMarkingValue: v.negativeMarkingValue ?? 0,
+
       eligibilityMode: v.eligibilityMode ?? "open",
       eligibilityGradeLevel: v.eligibilityGradeLevel || null,
       eligibilityInstitution: v.eligibilityInstitution || null,
       eligibilityAcademicLevel: v.eligibilityAcademicLevel || null,
+
       createdBy: actor.id,
     },
   });
@@ -136,12 +144,19 @@ export async function updateOlympiadAction(
       posterUrl: v.posterUrl || null,
       subject: v.subject || null,
       durationMinutes: v.durationMinutes,
+
+      registrationType: v.registrationType,
+      registrationFee:
+        v.registrationType === "paid" ? (v.registrationFee ?? null) : null,
+
       registrationStartAt: new Date(v.registrationStartAt),
       registrationEndAt: new Date(v.registrationEndAt),
       startAt: v.startAt ? new Date(v.startAt) : null,
       endAt: v.endAt ? new Date(v.endAt) : null,
+
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
       negativeMarkingValue: v.negativeMarkingValue ?? 0,
+
       eligibilityMode: v.eligibilityMode ?? "open",
       eligibilityGradeLevel: v.eligibilityGradeLevel || null,
       eligibilityInstitution: v.eligibilityInstitution || null,
@@ -256,6 +271,7 @@ export async function setOlympiadRegistrationAction(
   enabled: boolean,
 ): Promise<ActionResult> {
   let actor;
+
   try {
     actor = await requirePermission("olympiad:schedule");
   } catch (err) {
@@ -264,12 +280,16 @@ export async function setOlympiadRegistrationAction(
   }
 
   const olympiad = await db.olympiad.findUnique({ where: { id } });
-  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  if (!olympiad) {
+    return { ok: false, error: "Olympiad not found." };
+  }
 
   await db.olympiad.update({
     where: { id },
     data: { registrationEnabled: enabled },
   });
+
   await recordAudit({
     actorId: actor.id,
     action: enabled
@@ -278,9 +298,11 @@ export async function setOlympiadRegistrationAction(
     targetType: "olympiad",
     targetId: id,
   });
+
   revalidatePath(`/dashboard/olympiads/${id}`);
   revalidatePath(`/olympiads/${id}`);
   revalidatePath("/olympiads");
+
   return { ok: true };
 }
 
@@ -315,6 +337,7 @@ export async function createQuestionAction(
   }
 
   const v = parsed.data;
+
   const order = await db.question.count({
     where: { olympiadId },
   });

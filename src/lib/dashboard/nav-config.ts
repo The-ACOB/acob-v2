@@ -19,6 +19,7 @@ import {
   Archive,
   Megaphone,
   ShieldCheck,
+  CreditCard,
 } from "lucide-react";
 import type { Permission } from "@/lib/authz/permissions";
 import type { RoleKey } from "@/lib/authz/roles";
@@ -110,6 +111,13 @@ const RESULTS: NavItem = {
   label: "Results & Rankings",
   icon: BarChart3,
   permissions: ["olympiad:results:view"],
+};
+
+const PAYMENT_APPROVALS: NavItem = {
+  href: "/dashboard/payment-approvals",
+  label: "Payment Approvals",
+  icon: CreditCard,
+  permissions: ["payment:view"],
 };
 
 const CERTIFICATES: NavItem = {
@@ -237,6 +245,11 @@ const OLYMPIADS_SECTION: NavSection = {
   items: [OLYMPIADS, QUESTION_ARCHIVE, RESULTS],
 };
 
+const FINANCE_SECTION: NavSection = {
+  label: "Finance",
+  items: [PAYMENT_APPROVALS],
+};
+
 const RECOGNITION_SECTION: NavSection = {
   label: "Recognition",
   items: [CERTIFICATES, RECOMMENDATION_LETTERS],
@@ -273,31 +286,37 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     PEOPLE_SECTION,
     EXECUTIVE_SECTION,
     OLYMPIADS_SECTION,
+    FINANCE_SECTION,
     RECOGNITION_SECTION,
     COMMUNICATIONS_SECTION,
     CONTENT_SECTION,
     CAREERS_SECTION,
   ],
+
   COO: [
     GENERAL_SECTION,
     PEOPLE_SECTION,
     EXECUTIVE_SECTION,
     OLYMPIADS_SECTION,
+    FINANCE_SECTION,
     RECOGNITION_SECTION,
     COMMUNICATIONS_SECTION,
     CONTENT_SECTION,
     CAREERS_SECTION,
   ],
+
   CTO: [
     GENERAL_SECTION,
     PEOPLE_SECTION,
     EXECUTIVE_SECTION,
     OLYMPIADS_SECTION,
+    FINANCE_SECTION,
     RECOGNITION_SECTION,
     COMMUNICATIONS_SECTION,
     CONTENT_SECTION,
     CAREERS_SECTION,
   ],
+
   HR_PR: [
     GENERAL_SECTION,
     {
@@ -310,6 +329,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     },
     CAREERS_SECTION,
   ],
+
   CONTENT_MEDIA: [
     GENERAL_SECTION,
     {
@@ -318,6 +338,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     },
     CONTENT_SECTION,
   ],
+
   SUPPORT: [
     GENERAL_SECTION,
     {
@@ -325,15 +346,18 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
       items: [CONTACT_MESSAGES, SUPPORT],
     },
   ],
+
   ACADEMIC: [
     GENERAL_SECTION,
     OLYMPIADS_SECTION,
+    FINANCE_SECTION,
     RECOGNITION_SECTION,
     {
       label: "Content",
       items: [RESOURCES],
     },
   ],
+
   AMBASSADOR: [
     GENERAL_SECTION,
     {
@@ -344,6 +368,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     RECOGNITION_SECTION,
     ACCOUNT_SECTION,
   ],
+
   PARTICIPANT: [
     GENERAL_SECTION,
     {
@@ -368,9 +393,7 @@ function hasAccess(
     return true;
   }
 
-  return item.permissions.some((permission) =>
-    permissions.has(permission),
-  );
+  return item.permissions.some((permission) => permissions.has(permission));
 }
 
 export function resolveNavSections(
@@ -418,8 +441,7 @@ export function primaryRoleLabel(roleKeys: string[]): string {
     "PARTICIPANT",
   ];
 
-  const key =
-    priority.find((role) => roleKeys.includes(role)) ?? "PARTICIPANT";
+  const key = priority.find((role) => roleKeys.includes(role)) ?? "PARTICIPANT";
 
   const labels: Record<RoleKey, string> = {
     CEO: "Chief Executive Officer",
