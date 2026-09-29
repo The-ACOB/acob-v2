@@ -51,8 +51,9 @@ export default async function OlympiadDetailPage({
 
   const questions: QuestionRow[] = await db.question.findMany({
     where: { olympiadId: id },
+    orderBy: { order: "asc" },
     include: {
-      options: true,
+      options: { orderBy: { order: "asc" } },
     },
   });
   const attempts: AttemptRow[] = await db.attempt.findMany({

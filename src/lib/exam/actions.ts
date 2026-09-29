@@ -661,11 +661,13 @@ export async function submitAttemptAction(
 export type SanitizedOption = {
   id: string;
   text: string;
+  textBn: string | null;
 };
 
 export type SanitizedQuestion = {
   id: string;
   text: string;
+  textBn: string | null;
   imageUrl: string | null;
   marks: number;
   order: number;
@@ -767,12 +769,14 @@ export async function getExamData(attemptId: string): Promise<
   const rawQuestions: {
     id: string;
     text: string;
+    textBn: string | null;
     imageUrl: string | null;
     marks: number;
     order: number;
     options: {
       id: string;
       text: string;
+      textBn: string | null;
       isCorrect: boolean;
     }[];
   }[] = await db.question.findMany({
@@ -785,12 +789,14 @@ export async function getExamData(attemptId: string): Promise<
     .map((q) => ({
       id: q.id,
       text: q.text,
+      textBn: q.textBn,
       imageUrl: q.imageUrl,
       marks: q.marks,
       order: q.order,
       options: q.options.map((o) => ({
         id: o.id,
         text: o.text,
+        textBn: o.textBn,
       })),
     }));
 

@@ -5,6 +5,13 @@ export const registerParticipantSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address."),
   institution: z.string().trim().max(200).optional().or(z.literal("")),
   gradeLevel: z.string().trim().max(50).optional().or(z.literal("")),
+  password: z.string().min(10, "Password must be at least 10 characters."),
+  confirmPassword: z.string().min(1, "Confirm the password."),
+  emailCredentials: z.boolean().default(false),
+}).superRefine((value, ctx) => {
+  if (value.password !== value.confirmPassword) {
+    ctx.addIssue({ code: "custom", path: ["confirmPassword"], message: "Passwords do not match." });
+  }
 });
 
 export const updateParticipantProfileSchema = z.object({

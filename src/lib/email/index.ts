@@ -171,6 +171,25 @@ export function verificationEmailHtml(link: string) {
   `;
 }
 
+export function credentialsEmailHtml(fullName: string, email: string, password: string) {
+  const logoUrl = `${getSiteUrl()}/assets/logo.png`;
+  return `
+    <!DOCTYPE html><html><body style="background:#050505;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:40px 0;color:#ededed;">
+      <table align="center" width="100%" style="max-width:600px;margin:auto;"><tr><td style="padding:20px;">
+        <img src="${logoUrl}" alt="ACOB" width="140" style="display:block;margin:0 auto 24px;" />
+        <div style="background:#0c0c0c;border:1px solid #222;border-radius:12px;padding:32px;">
+          <h1 style="color:#fff;font-size:22px;font-weight:500;">Your ACOB account is ready</h1>
+          <p style="color:#aaa;line-height:1.6;">Hi ${fullName}, your ACOB participant account has been created.</p>
+          <div style="background:#050505;border:1px solid #222;border-radius:8px;padding:18px;margin:24px 0;">
+            <p style="color:#888;margin:0 0 8px;font-size:12px;text-transform:uppercase;">Email</p><p style="color:#fff;margin:0 0 16px;">${email}</p>
+            <p style="color:#888;margin:0 0 8px;font-size:12px;text-transform:uppercase;">Password</p><p style="color:#fff;margin:0;font-family:monospace;">${password}</p>
+          </div>
+          <p style="color:#777;font-size:13px;line-height:1.5;">Keep these credentials private and change the password if necessary.</p>
+        </div>
+      </td></tr></table>
+    </body></html>`;
+}
+
 export function passwordResetEmailHtml(link: string) {
   const logoUrl = `${getSiteUrl()}/assets/logo.png`;
 

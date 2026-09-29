@@ -149,11 +149,13 @@ export const olympiadSchema = z
 
 export const optionSchema = z.object({
   text: z.string().trim().min(1, "Option text is required."),
+  textBn: z.string().trim().optional().or(z.literal("")),
   isCorrect: z.boolean(),
 });
 
 export const questionSchema = z.object({
   text: z.string().trim().min(3, "Question text is required."),
+  textBn: z.string().trim().optional().or(z.literal("")),
   imageUrl: z.string().trim().url().optional().or(z.literal("")),
   subject: z.string().trim().max(120).optional().or(z.literal("")),
   difficulty: z.enum(["easy", "medium", "hard"]),

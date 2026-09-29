@@ -19,7 +19,7 @@ export default async function RegisterParticipantPage() {
     <div>
       <DashboardPageHeader
         title="Register a Participant"
-        description="They'll receive an email to set their own password. This registration is linked to you as their referring ambassador."
+        description="Set the participant's password here, optionally email the credentials, and create the account immediately."
         breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Register Participant" }]}
       />
       <div className="max-w-xl">

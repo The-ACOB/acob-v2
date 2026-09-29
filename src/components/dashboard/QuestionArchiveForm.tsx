@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { createQuestionArchiveAction, updateQuestionArchiveAction } from "@/lib/question-archive/actions";
 import { translateQuestionArchiveAction } from "@/lib/question-archive/translation-actions";
-import katex from "katex";
-import "katex/dist/katex.min.css";
+import { MathText } from "@/components/questions/MathText";
 
 
 function LatexToolbar({
@@ -555,7 +554,7 @@ export function QuestionArchiveForm({
                 English
               </span>
               <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionEn || "Your question will appear here."}
+                <MathText text={questionEn || "Your question will appear here."} />
               </p>
             </div>
 
@@ -564,7 +563,7 @@ export function QuestionArchiveForm({
                 Bangla
               </span>
               <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionBn || <span className="text-muted-foreground">Not provided</span>}
+                <MathText text={questionBn || "Not provided"} />
               </p>
             </div>
 
@@ -576,7 +575,7 @@ export function QuestionArchiveForm({
                     className={`rounded-lg border p-3 text-sm ${option.isCorrect ? "border-primary/50 bg-primary/5" : ""}`}
                   >
                     <strong>{option.label}.</strong>{" "}
-                    {option.textEn || "Empty option"}
+                    <MathText text={option.textEn || "Empty option"} />
                   </div>
                 ))}
               </div>

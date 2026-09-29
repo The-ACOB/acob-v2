@@ -346,6 +346,7 @@ export async function createQuestionAction(
     data: {
       olympiadId,
       text: v.text,
+      textBn: v.textBn || null,
       imageUrl: v.imageUrl || null,
       subject: v.subject || null,
       difficulty: v.difficulty,
@@ -355,6 +356,7 @@ export async function createQuestionAction(
       options: {
         create: v.options.map((o, index) => ({
           text: o.text,
+          textBn: o.textBn || null,
           isCorrect: o.isCorrect,
           order: index,
         })),
@@ -411,6 +413,7 @@ export async function updateQuestionAction(
     where: { id: questionId },
     data: {
       text: v.text,
+      textBn: v.textBn || null,
       imageUrl: v.imageUrl || null,
       subject: v.subject || null,
       difficulty: v.difficulty,
@@ -420,6 +423,7 @@ export async function updateQuestionAction(
         deleteMany: {},
         create: v.options.map((o, index) => ({
           text: o.text,
+          textBn: o.textBn || null,
           isCorrect: o.isCorrect,
           order: index,
         })),
@@ -436,6 +440,72 @@ export async function updateQuestionAction(
 
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
 
+  return { ok: true };
+}
+
+export async function importArchiveQuestionAction(
+  olympiadId: string,
+  archiveQuestionId: string,
+): Promise<ActionResult> {
+  let actor;
+  try {
+    actor = await requirePermission("question:create");
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
+  const olympiad = await db.olympiad.findUnique({ where: { id: olympiadId } });
+  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  const archive = await db.questionArchive.findUnique({
+    where: { id: archiveQuestionId },
+    include: { subject: true, options: { orderBy: { order: "asc" } } },
+  });
+  if (!archive) return { ok: false, error: "Archive question not found." };
+  if (archive.type !== "mcq") return { ok: false, error: "Only MCQ archive questions can be added to a live Olympiad." };
+  if (archive.options.length < 2) return { ok: false, error: "This archive question has no usable options." };
+
+  const existing = await db.question.findFirst({
+    where: { olympiadId, archiveQuestionId },
+    select: { id: true },
+  });
+  if (existing) return { ok: false, error: "This archive question is already in the Olympiad." };
+
+  const order = await db.question.count({ where: { olympiadId } });
+  await db.question.create({
+    data: {
+      olympiadId,
+      archiveQuestionId: archive.id,
+      type: archive.type,
+      text: archive.questionEn,
+      textBn: archive.questionBn,
+      imageUrl: archive.imageUrl,
+      subject: archive.subject?.name ?? null,
+      difficulty: archive.difficulty,
+      marks: archive.marks,
+      order,
+      explanation: archive.explanationEn,
+      explanationBn: archive.explanationBn,
+      options: {
+        create: archive.options.map((o) => ({
+          text: o.textEn,
+          textBn: o.textBn,
+          isCorrect: o.isCorrect,
+          order: o.order,
+        })),
+      },
+    },
+  });
+
+  await recordAudit({
+    actorId: actor.id,
+    action: "question:imported_from_archive",
+    targetType: "olympiad",
+    targetId: olympiadId,
+    metadata: { archiveQuestionId: archive.id },
+  });
+  revalidatePath(`/dashboard/olympiads/${olympiadId}`);
   return { ok: true };
 }
 

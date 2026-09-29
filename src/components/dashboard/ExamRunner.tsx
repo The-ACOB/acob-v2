@@ -11,6 +11,7 @@ import {
   recordIntegrityViolationAction,
 } from "@/lib/exam/actions";
 import { cn } from "@/lib/utils";
+import { MathText } from "@/components/questions/MathText";
 import type { SanitizedQuestion } from "@/lib/exam/actions";
 
 const SAVE_INTERVAL_MS = 15_000;
@@ -244,6 +245,9 @@ export function ExamRunner({
           <p className="mt-2 font-display text-xl leading-relaxed text-primary">
             {question.text}
           </p>
+          {question.textBn ? (
+            <p className="mt-2 text-sm leading-7 text-secondary"><MathText text={question.textBn} /></p>
+          ) : null}
           {question.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -271,7 +275,7 @@ export function ExamRunner({
                   onChange={() => selectOption(question.id, opt.id)}
                   className="h-4 w-4 accent-[var(--color-accent)]"
                 />
-                {opt.text}
+                <span className="flex-1"><MathText text={opt.text} />{opt.textBn ? <span className="mt-1 block text-secondary"><MathText text={opt.textBn} /></span> : null}</span>
               </label>
             ))}
           </div>
