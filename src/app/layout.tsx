@@ -6,6 +6,7 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/env";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
+import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl = getSiteUrl();
 
