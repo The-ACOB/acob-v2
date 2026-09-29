@@ -54,30 +54,3 @@ export async function createInvitedUser(params: { email: string; fullName: strin
 
   return { ok: true, userId: user.id };
 }
-
-export async function createDirectUser(params: {
-  email: string;
-  fullName: string;
-  roleKey: string;
-  password: string;
-}): Promise<{ ok: true; userId: string } | { ok: false; error: string }> {
-  const existing = await db.user.findUnique({ where: { email: params.email } });
-  if (existing) return { ok: false, error: "An account with that email already exists." };
-
-  const passwordHash = await hashPassword(params.password);
-  const user = await db.user.create({
-    data: {
-      email: params.email,
-      passwordHash,
-      emailVerifiedAt: new Date(),
-      profile: { create: { fullName: params.fullName } },
-    },
-  });
-
-  const role = await db.role.findUnique({ where: { key: params.roleKey } });
-  if (role) {
-    await db.userRole.create({ data: { userId: user.id, roleId: role.id, assignedBy: null } });
-  }
-
-  return { ok: true, userId: user.id };
-}

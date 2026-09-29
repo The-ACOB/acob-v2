@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -34,7 +34,8 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { MathText } from "@/components/questions/MathText";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import { questionSchema } from "@/lib/olympiads/validation";
 import { FormField, fieldClasses } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
@@ -98,15 +99,14 @@ export function QuestionEditor({
     resolver: zodResolver(questionSchema),
     defaultValues: {
       text: defaultValues?.text ?? "",
-      textBn: defaultValues?.textBn ?? "",
       imageUrl: defaultValues?.imageUrl ?? "",
       subject: defaultValues?.subject ?? "",
       difficulty: defaultValues?.difficulty ?? "medium",
       marks: defaultValues?.marks ?? 1,
       explanation: defaultValues?.explanation ?? "",
       options: defaultValues?.options ?? [
-        { text: "", textBn: "", isCorrect: true },
-        { text: "", textBn: "", isCorrect: false },
+        { text: "", isCorrect: true },
+        { text: "", isCorrect: false },
       ],
     },
   });
@@ -117,11 +117,41 @@ export function QuestionEditor({
   });
   const options = useWatch({ control, name: "options" });
   const currentQuestionText = useWatch({ control, name: "text" });
-  const currentQuestionBn = useWatch({ control, name: "textBn" });
 
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const { ref: registerTextRef, ...textRest } = register("text");
+
+  // Render mixed text and KaTeX math blocks safely
+  useEffect(() => {
+    if (previewRef.current) {
+      previewRef.current.innerHTML = "";
+      const textToRender = currentQuestionText || "Preview will appear here...";
+      const parts = textToRender.split(/(\$.*?\$)/g);
+
+      parts.forEach((part) => {
+        if (!part) return;
+        if (part.startsWith("$") && part.endsWith("$")) {
+          const mathFormula = part.slice(1, -1);
+          const mathSpan = document.createElement("span");
+          try {
+            katex.render(mathFormula, mathSpan, {
+              throwOnError: false,
+              displayMode: false,
+            });
+          } catch {
+            mathSpan.textContent = part;
+          }
+          previewRef.current?.appendChild(mathSpan);
+        } else {
+          const textSpan = document.createElement("span");
+          textSpan.textContent = part;
+          previewRef.current?.appendChild(textSpan);
+        }
+      });
+    }
+  }, [currentQuestionText]);
 
   const insertAtCursor = (snippet: string) => {
     const el = textAreaRef.current;
@@ -407,20 +437,15 @@ export function QuestionEditor({
           }}
         />
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <div className="rounded-lg border border-border/60 bg-black/30 p-4">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">English preview</span>
-            <div className="mt-3 text-sm leading-7 text-primary"><MathText text={currentQuestionText || "Preview will appear here..."} /></div>
-          </div>
-          <div className="rounded-lg border border-border/60 bg-black/30 p-4">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">Bangla preview</span>
-            <div className="mt-3 text-sm leading-7 text-primary"><MathText text={currentQuestionBn || "বাংলা preview এখানে দেখা যাবে…"} /></div>
-          </div>
+        <div className="flex flex-col gap-1 rounded-lg bg-black/30 border border-border/60 p-3">
+          <span className="font-mono text-[10px] uppercase text-muted tracking-wider">
+            Live Math Render Preview:
+          </span>
+          <div
+            ref={previewRef}
+            className="text-sm text-primary min-h-[24px] flex items-center flex-wrap gap-1"
+          />
         </div>
-
-        <FormField label="Bangla question" htmlFor="textBn" error={errors.textBn?.message}>
-          <textarea id="textBn" rows={3} className={`${fieldClasses} resize-none`} placeholder="বাংলা প্রশ্ন লিখুন…" {...register("textBn")} />
-        </FormField>
 
         {errors.text?.message ? (
           <p className="text-xs text-error">{errors.text.message}</p>
@@ -692,18 +717,11 @@ export function QuestionEditor({
               }}
               className="h-4 w-4 accent-[var(--color-accent)] cursor-pointer"
             />
-            <div className="grid flex-1 grid-cols-1 gap-2 md:grid-cols-2">
-              <input
-                className={fieldClasses}
-                placeholder={`Option ${i + 1} (English)`}
-                {...register(`options.${i}.text`)}
-              />
-              <input
-                className={fieldClasses}
-                placeholder={`Option ${i + 1} (Bangla)`}
-                {...register(`options.${i}.textBn`)}
-              />
-            </div>
+            <input
+              className={`${fieldClasses} flex-1`}
+              placeholder={`Option ${i + 1}`}
+              {...register(`options.${i}.text`)}
+            />
             {fields.length > 2 ? (
               <button
                 type="button"
@@ -721,7 +739,7 @@ export function QuestionEditor({
         {fields.length < 8 ? (
           <button
             type="button"
-            onClick={() => append({ text: "", textBn: "", isCorrect: false })}
+            onClick={() => append({ text: "", isCorrect: false })}
             className="flex w-fit items-center gap-1.5 text-xs text-accent font-mono"
           >
             <Plus className="h-3.5 w-3.5" /> Add option
