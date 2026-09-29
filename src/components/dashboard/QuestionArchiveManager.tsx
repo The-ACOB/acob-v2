@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, Plus } from "lucide-react";
+
 import { QuestionArchiveSubjectIcon } from "./QuestionArchiveSubjectIcon";
+
 import {
   createQuestionArchiveSubjectAction,
   deleteQuestionArchiveSubjectAction,
@@ -83,39 +85,57 @@ export function QuestionArchiveManager() {
   }, []);
 
   async function handleCreateSubject() {
-    if (!subjectName.trim()) return;
+    const trimmedName = subjectName.trim();
+
+    if (!trimmedName) {
+      setMessage("Subject name is required.");
+      return;
+    }
 
     setSaving(true);
     setMessage("");
 
-    const result = await createQuestionArchiveSubjectAction(subjectName);
+    try {
+      const result = await createQuestionArchiveSubjectAction(trimmedName);
 
-    if (!result.success) {
-      setMessage(result.error ?? "Something went wrong.");
+      if (!result.success) {
+        setMessage(result.error ?? "Something went wrong.");
+        return;
+      }
+
+      setSubjectName("");
+      setShowAddSubject(false);
+
+      await loadSubjects();
+    } catch (error) {
+      console.error(error);
+      setMessage("Unable to create subject.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    setSubjectName("");
-    setShowAddSubject(false);
-    setSaving(false);
-
-    await loadSubjects();
   }
 
   async function handleDeleteSubject(id: string) {
-    const result = await deleteQuestionArchiveSubjectAction(id);
+    setMessage("");
 
-    if (!result.success) {
-      setMessage(result.error ?? "Something went wrong.");
-      return;
+    try {
+      const result = await deleteQuestionArchiveSubjectAction(id);
+
+      if (!result.success) {
+        setMessage(result.error ?? "Something went wrong.");
+        return;
+      }
+
+      await loadSubjects();
+    } catch (error) {
+      console.error(error);
+      setMessage("Unable to delete subject.");
     }
-
-    await loadSubjects();
   }
 
   return (
     <div className="space-y-8 p-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -123,13 +143,17 @@ export function QuestionArchiveManager() {
           </h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Browse questions like an academic file system: subjects, unlimited nested folders, and reusable question documents.
+            Browse questions like an academic file system: subjects, unlimited
+            nested folders, and reusable question documents.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() => setShowAddSubject(true)}
+          onClick={() => {
+            setMessage("");
+            setShowAddSubject(true);
+          }}
           className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
         >
           <Plus
@@ -141,20 +165,33 @@ export function QuestionArchiveManager() {
         </button>
       </div>
 
+      {/* Add Subject */}
       {showAddSubject && (
         <div className="rounded-xl border bg-card p-5">
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               autoFocus
               value={subjectName}
-              onChange={(event) => setSubjectName(event.target.value)}
+              onChange={(event) => {
+                setSubjectName(event.target.value);
+                if (message) {
+                  setMessage("");
+                }
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
+                  event.preventDefault();
                   void handleCreateSubject();
+                }
+
+                if (event.key === "Escape") {
+                  setShowAddSubject(false);
+                  setSubjectName("");
+                  setMessage("");
                 }
               }}
               placeholder="e.g. Physics"
-              className="flex-1 rounded-lg border bg-background px-3 py-2.5"
+              className="flex-1 rounded-lg border bg-background px-3 py-2.5 outline-none focus:border-primary"
             />
 
             <button
@@ -168,11 +205,13 @@ export function QuestionArchiveManager() {
 
             <button
               type="button"
+              disabled={saving}
               onClick={() => {
                 setShowAddSubject(false);
                 setSubjectName("");
+                setMessage("");
               }}
-              className="rounded-lg border px-4 py-2.5 text-sm font-medium"
+              className="rounded-lg border px-4 py-2.5 text-sm font-medium disabled:opacity-50"
             >
               Cancel
             </button>
@@ -184,6 +223,7 @@ export function QuestionArchiveManager() {
         </div>
       )}
 
+      {/* Content */}
       {loading ? (
         <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground">
           Loading subjects...
@@ -199,12 +239,17 @@ export function QuestionArchiveManager() {
           <h2 className="mt-4 text-lg font-semibold">No subjects yet</h2>
 
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Create a subject to start your archive. Inside each subject you can create folders inside folders and store question documents.
+            Create a subject to start your <em>archive</em>. Inside each subject
+            you can create folders inside folders and store question{" "}
+            <em>documents</em>.
           </p>
 
           <button
             type="button"
-            onClick={() => setShowAddSubject(true)}
+            onClick={() => {
+              setMessage("");
+              setShowAddSubject(true);
+            }}
             className="mt-5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
           >
             <Plus
@@ -259,6 +304,7 @@ export function QuestionArchiveManager() {
         </div>
       )}
 
+      {/* Global message */}
       {message && !showAddSubject && (
         <div className="rounded-lg border px-4 py-3 text-sm">{message}</div>
       )}
