@@ -1,7 +1,16 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Divide,
+  Infinity as InfinityIcon,
+  Radical,
+  Sigma,
+  Subscript,
+  Superscript,
+} from "lucide-react";
 import { createQuestionArchiveAction, updateQuestionArchiveAction } from "@/lib/question-archive/actions";
 import { translateQuestionArchiveAction } from "@/lib/question-archive/translation-actions";
 import katex from "katex";
@@ -14,35 +23,38 @@ function LatexToolbar({
   onInsert: (value: string) => void;
 }) {
   const buttons = [
-    ["x?", "^{2}"],
-    ["x?", "_{n}"],
-    ["?x", "\\sqrt{}"],
-    ["a?b", "\\frac{}{}"],
-    ["?", "\\int"],
-    ["?", "\\sum"],
-    ["?", "\\pi"],
-    ["?", "\\theta"],
-    ["?", "\\alpha"],
-    ["?", "\\beta"],
-    ["?", "\\leq"],
-    ["?", "\\geq"],
-    ["?", "\\neq"],
-    ["?", "\\times"],
-    ["?", "\\div"],
-    ["$ $", "$"],
+    { label: "Superscript", value: "x^{y}", icon: <Superscript className="h-3.5 w-3.5" /> },
+    { label: "Subscript", value: "x_{i}", icon: <Subscript className="h-3.5 w-3.5" /> },
+    { label: "Fraction", value: "\\frac{a}{b}", icon: <Divide className="h-3.5 w-3.5" /> },
+    { label: "Square root", value: "\\sqrt{x}", icon: <Radical className="h-3.5 w-3.5" /> },
+    { label: "Summation", value: "\\sum_{i=1}^{n}", icon: <Sigma className="h-3.5 w-3.5" /> },
+    { label: "Infinity", value: "\\infty", icon: <InfinityIcon className="h-3.5 w-3.5" /> },
+    { label: "Pi", value: "\\pi", text: "π" },
+    { label: "Theta", value: "\\theta", text: "θ" },
+    { label: "Alpha", value: "\\alpha", text: "α" },
+    { label: "Beta", value: "\\beta", text: "β" },
+    { label: "Less than or equal", value: "\\leq", text: "≤" },
+    { label: "Greater than or equal", value: "\\geq", text: "≥" },
+    { label: "Not equal", value: "\\neq", text: "≠" },
+    { label: "Times", value: "\\times", text: "×" },
+    { label: "Divide", value: "\\div", text: "÷" },
+    { label: "Inline math", value: "$", text: "$" },
   ] as const;
 
   return (
-    <div className="flex flex-wrap gap-1.5 rounded-lg border bg-muted/40 p-2">
-      {buttons.map(([label, value]) => (
+    <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border/80 bg-black/40 p-1">
+      {buttons.map((button) => (
         <button
-          key={value}
+          key={button.value}
           type="button"
-          onClick={() => onInsert(value)}
-          className="rounded-md border bg-background px-2.5 py-1.5 text-sm font-medium hover:bg-muted"
-          title={value}
+          title={button.label}
+          aria-label={button.label}
+          onClick={() => onInsert(button.value)}
+          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-secondary transition-colors hover:bg-white/5 hover:text-primary"
         >
-          {label}
+          {"icon" in button ? button.icon : (
+            <span className="text-sm font-semibold leading-none">{button.text}</span>
+          )}
         </button>
       ))}
     </div>
@@ -147,15 +159,21 @@ export function QuestionArchiveForm({
     let insertion = value;
 
     if (value === "$") {
-      insertion = selected ? "$" + selected + "$" : "$";
-    } else if (value === "\\sqrt{}") {
-      insertion = selected ? "\\sqrt{" + selected + "}" : "\\sqrt{}";
-    } else if (value === "\\frac{}{}") {
-      insertion = selected ? "\\frac{" + selected + "}{}" : "\\frac{}{}";
-    } else if (value === "^{2}") {
-      insertion = selected ? "^{" + selected + "}" : "^{2}";
-    } else if (value === "_{n}") {
-      insertion = selected ? "_{" + selected + "}" : "_{n}";
+      insertion = selected ? `$${selected}$` : "$$";
+    } else if (selected) {
+      if (value === "x^{y}") {
+        insertion = `$${selected}^{y}$`;
+      } else if (value === "x_{i}") {
+        insertion = `$${selected}_{i}$`;
+      } else if (value === "\\sqrt{x}") {
+        insertion = `$\\sqrt{${selected}}$`;
+      } else if (value === "\\frac{a}{b}") {
+        insertion = `$\\frac{${selected}}{}$`;
+      } else {
+        insertion = `$${value}$`;
+      }
+    } else {
+      insertion = `$${value}$`;
     }
 
     const next = current.slice(0, start) + insertion + current.slice(end);
@@ -304,7 +322,7 @@ export function QuestionArchiveForm({
           href={`/dashboard/question-archive/${subjectId}`}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ? {subjectName}
+          <ArrowLeft className="h-3.5 w-3.5" /> {subjectName}
         </Link>
 
         <div className="mt-2">
