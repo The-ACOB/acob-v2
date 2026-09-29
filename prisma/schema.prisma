@@ -460,6 +460,7 @@ enum AttemptStatus {
   in_progress
   submitted
   expired_auto_submitted
+  disqualified
 
   @@map("attempt_status")
 }
@@ -648,6 +649,7 @@ model Attempt {
   unansweredCount         Int?          @map("unanswered_count")
   timeSpentSeconds        Int?          @map("time_spent_seconds")
   rank                    Int?
+  legacyAnswers           Json?         @map("legacy_answers")
   scoreLocked             Boolean       @default(false) @map("score_locked")
   integrityViolationCount Int           @default(0) @map("integrity_violation_count")
   autoSubmissionReason    String?       @map("auto_submission_reason")
