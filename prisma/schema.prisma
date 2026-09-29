@@ -87,6 +87,7 @@ model User {
   messagesSent             Message[]                @relation("MessageSender")
   olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
   questionArchives         QuestionArchive[]        @relation("QuestionArchiveCreator")
+  questionArchiveFolders   QuestionArchiveFolder[] @relation("QuestionArchiveFolderCreator")
   attempts                 Attempt[]                @relation("AttemptUser")
   olympiadRegistrations    OlympiadRegistration[]
   paymentsMade             OlympiadPayment[]        @relation("PaymentPayer")
@@ -557,6 +558,7 @@ model QuestionArchiveSubject {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   questions QuestionArchive[] @relation("QuestionArchiveSubject")
+  folders   QuestionArchiveFolder[]
 
   @@map("question_archive_subjects")
 }
@@ -572,20 +574,43 @@ model QuestionArchive {
   explanationEn String?            @map("explanation_en")
   explanationBn String?            @map("explanation_bn")
   imageUrl      String?            @map("image_url")
+  folderId      String?            @map("folder_id")
   createdBy     String             @map("created_by")
   createdAt     DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime           @updatedAt @map("updated_at")
 
   creator   User                    @relation("QuestionArchiveCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   subject   QuestionArchiveSubject? @relation("QuestionArchiveSubject", fields: [subjectId], references: [id], onDelete: SetNull)
+  folder    QuestionArchiveFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
   options   QuestionArchiveOption[]
   questions Question[]
 
   @@index([type])
   @@index([subjectId])
+  @@index([folderId])
   @@index([difficulty])
   @@index([createdAt])
   @@map("question_archives")
+}
+
+model QuestionArchiveFolder {
+  id        String   @id @default(uuid())
+  subjectId String   @map("subject_id")
+  parentId  String?  @map("parent_id")
+  name      String
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  subject   QuestionArchiveSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  parent    QuestionArchiveFolder? @relation("QuestionArchiveFolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  QuestionArchiveFolder[] @relation("QuestionArchiveFolderTree")
+  questions QuestionArchive[]
+  creator   User @relation("QuestionArchiveFolderCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, parentId, name])
+  @@index([subjectId, parentId])
+  @@map("question_archive_folders")
 }
 
 model QuestionArchiveOption {

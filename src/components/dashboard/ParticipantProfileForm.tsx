@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateParticipantProfileAction } from "@/lib/participants/actions";
@@ -13,6 +13,14 @@ import Image from "next/image";
 import type { z } from "zod";
 
 type Values = z.infer<typeof updateParticipantProfileSchema>;
+
+function academicLevelForGrade(value: string | undefined) {
+  const grade = Number.parseInt(value?.trim() ?? "", 10);
+  if (grade >= 6 && grade <= 8) return "Junior Secondary";
+  if (grade >= 9 && grade <= 10) return "Secondary";
+  if (grade >= 11 && grade <= 12) return "Higher Secondary";
+  return "";
+}
 
 export function ParticipantProfileForm({
   userId,
@@ -56,25 +64,20 @@ export function ParticipantProfileForm({
 
   const gradeRegistration = register("gradeLevel");
 
+  useEffect(() => {
+    const derived = academicLevelForGrade(defaultValues.gradeLevel);
+    if (derived && defaultValues.academicLevel !== derived) {
+      setValue("academicLevel", derived, { shouldValidate: true });
+    }
+  }, [defaultValues.academicLevel, defaultValues.gradeLevel, setValue]);
+
   // Handle class/grade dropdown change and auto-calculate academic level
   const handleGradeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setValue("gradeLevel", val, { shouldValidate: true });
-
-    const gradeNum = parseInt(val.trim(), 10);
-    if (!isNaN(gradeNum)) {
-      if (gradeNum >= 6 && gradeNum <= 8) {
-        setValue("academicLevel", "Junior Secondary", { shouldValidate: true });
-      } else if (gradeNum >= 9) {
-        setValue("academicLevel", "Secondary Higher Secondary", {
-          shouldValidate: true,
-        });
-      } else {
-        setValue("academicLevel", "", { shouldValidate: true });
-      }
-    } else {
-      setValue("academicLevel", "", { shouldValidate: true });
-    }
+    setValue("academicLevel", academicLevelForGrade(val), {
+      shouldValidate: true,
+    });
   };
 
   const handleGenderChange = (option: string) => {

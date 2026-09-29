@@ -1,7 +1,16 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  Divide,
+  Infinity as InfinityIcon,
+  Radical,
+  Sigma,
+  Subscript,
+  Superscript,
+} from "lucide-react";
 import { createQuestionArchiveAction, updateQuestionArchiveAction } from "@/lib/question-archive/actions";
 import { translateQuestionArchiveAction } from "@/lib/question-archive/translation-actions";
 import katex from "katex";
@@ -14,38 +23,91 @@ function LatexToolbar({
   onInsert: (value: string) => void;
 }) {
   const buttons = [
-    ["x?", "^{2}"],
-    ["x?", "_{n}"],
-    ["?x", "\\sqrt{}"],
-    ["a?b", "\\frac{}{}"],
-    ["?", "\\int"],
-    ["?", "\\sum"],
-    ["?", "\\pi"],
-    ["?", "\\theta"],
-    ["?", "\\alpha"],
-    ["?", "\\beta"],
-    ["?", "\\leq"],
-    ["?", "\\geq"],
-    ["?", "\\neq"],
-    ["?", "\\times"],
-    ["?", "\\div"],
-    ["$ $", "$"],
+    { label: "Superscript", value: "x^{y}", icon: <Superscript className="h-4 w-4" /> },
+    { label: "Subscript", value: "x_{i}", icon: <Subscript className="h-4 w-4" /> },
+    { label: "Fraction", value: "\\frac{a}{b}", icon: <Divide className="h-4 w-4" /> },
+    { label: "Square root", value: "\\sqrt{x}", icon: <Radical className="h-4 w-4" /> },
+    { label: "Summation", value: "\\sum_{i=1}^{n}", icon: <Sigma className="h-4 w-4" /> },
+    { label: "Infinity", value: "\\infty", icon: <InfinityIcon className="h-4 w-4" /> },
+    { label: "Pi", value: "\\pi", text: "π" },
+    { label: "Theta", value: "\\theta", text: "θ" },
+    { label: "Alpha", value: "\\alpha", text: "α" },
+    { label: "Beta", value: "\\beta", text: "β" },
+    { label: "Less than or equal", value: "\\leq", text: "≤" },
+    { label: "Greater than or equal", value: "\\geq", text: "≥" },
+    { label: "Not equal", value: "\\neq", text: "≠" },
+    { label: "Times", value: "\\times", text: "×" },
+    { label: "Divide", value: "\\div", text: "÷" },
+    { label: "Inline math", value: "$", text: "$" },
   ] as const;
 
   return (
-    <div className="flex flex-wrap gap-1.5 rounded-lg border bg-muted/40 p-2">
-      {buttons.map(([label, value]) => (
+    <div className="flex flex-wrap items-center gap-1 rounded-lg border bg-muted/40 p-1">
+      {buttons.map((button) => (
         <button
-          key={value}
+          key={button.value}
           type="button"
-          onClick={() => onInsert(value)}
-          className="rounded-md border bg-background px-2.5 py-1.5 text-sm font-medium hover:bg-muted"
-          title={value}
+          onClick={() => onInsert(button.value)}
+          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors hover:bg-background"
+          title={button.label}
+          aria-label={button.label}
         >
-          {label}
+          {"icon" in button ? button.icon : button.text}
         </button>
       ))}
     </div>
+  );
+}
+
+function MixedLatexPreview({
+  text,
+  fallback,
+}: {
+  text: string;
+  fallback: string;
+}) {
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = previewRef.current;
+    if (!container) return;
+
+    container.innerHTML = "";
+    const value = text || fallback;
+    const parts = value.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]+\$)/g);
+
+    for (const part of parts) {
+      if (!part) continue;
+
+      const isDisplayMath = part.startsWith("$$") && part.endsWith("$$");
+      const isInlineMath = part.startsWith("$") && part.endsWith("$");
+
+      if (isDisplayMath || isInlineMath) {
+        const math = part.slice(isDisplayMath ? 2 : 1, isDisplayMath ? -2 : -1);
+        const mathNode = document.createElement("span");
+        try {
+          katex.render(math, mathNode, {
+            throwOnError: false,
+            displayMode: isDisplayMath,
+            strict: "ignore",
+          });
+        } catch {
+          mathNode.textContent = part;
+        }
+        container.appendChild(mathNode);
+      } else {
+        const textNode = document.createElement("span");
+        textNode.textContent = part;
+        container.appendChild(textNode);
+      }
+    }
+  }, [text, fallback]);
+
+  return (
+    <div
+      ref={previewRef}
+      className="mt-2 min-h-8 whitespace-pre-wrap leading-7"
+    />
   );
 }
 
@@ -59,12 +121,17 @@ type InitialQuestion = {
   explanationEn: string | null;
   explanationBn: string | null;
   imageUrl: string | null;
+  folderId: string | null;
   options: Option[];
 };
+
+type ArchiveFolder = { id: string; parentId: string | null; name: string };
 
 type Props = {
   subjectId: string;
   subjectName: string;
+  folderId?: string | null;
+  archiveFolders?: ArchiveFolder[];
   initialQuestion?: InitialQuestion;
 };
 
@@ -85,8 +152,11 @@ const makeOptions = (): Option[] => [
 export function QuestionArchiveForm({
   subjectId,
   subjectName,
+  folderId = null,
+  archiveFolders = [],
   initialQuestion,
 }: Props) {
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(initialQuestion?.folderId ?? folderId);
   const [type, setType] = useState<"mcq" | "short">(
     initialQuestion?.type ?? "mcq",
   );
@@ -133,29 +203,27 @@ export function QuestionArchiveForm({
     setter: (value: string) => void,
   ) {
     const element = ref.current;
+    if (!element) return;
 
-    if (!element) {
-      setter(value);
-      return;
-    }
-
-    const start = element.selectionStart;
-    const end = element.selectionEnd;
+    const start = element.selectionStart ?? element.value.length;
+    const end = element.selectionEnd ?? start;
     const current = element.value;
     const selected = current.slice(start, end);
 
-    let insertion = value;
+    let insertion: string;
 
     if (value === "$") {
-      insertion = selected ? "$" + selected + "$" : "$";
-    } else if (value === "\\sqrt{}") {
-      insertion = selected ? "\\sqrt{" + selected + "}" : "\\sqrt{}";
-    } else if (value === "\\frac{}{}") {
-      insertion = selected ? "\\frac{" + selected + "}{}" : "\\frac{}{}";
-    } else if (value === "^{2}") {
-      insertion = selected ? "^{" + selected + "}" : "^{2}";
-    } else if (value === "_{n}") {
-      insertion = selected ? "_{" + selected + "}" : "_{n}";
+      insertion = selected ? `$${selected}$` : `$$`;
+    } else if (value === "x^{y}") {
+      insertion = selected ? `$${selected}^{ }$` : `$x^{y}$`;
+    } else if (value === "x_{i}") {
+      insertion = selected ? `$${selected}_{ }$` : `$x_{i}$`;
+    } else if (value === "\\sqrt{x}") {
+      insertion = selected ? `$\\sqrt{${selected}}$` : `$\\sqrt{x}$`;
+    } else if (value === "\\frac{a}{b}") {
+      insertion = selected ? `$\\frac{${selected}}{b}$` : `$\\frac{a}{b}$`;
+    } else {
+      insertion = `$${value}$`;
     }
 
     const next = current.slice(0, start) + insertion + current.slice(end);
@@ -265,6 +333,7 @@ export function QuestionArchiveForm({
     const result = initialQuestion
       ? await updateQuestionArchiveAction(initialQuestion.id, {
           subjectId,
+          folderId: selectedFolderId,
           type,
           questionEn,
           questionBn,
@@ -280,6 +349,7 @@ export function QuestionArchiveForm({
       questionEn,
       questionBn,
       subjectId,
+      folderId: selectedFolderId,
       difficulty,
       marks: Number(marks),
       explanationEn,
@@ -294,7 +364,7 @@ export function QuestionArchiveForm({
       return;
     }
 
-    window.location.href = `/dashboard/question-archive/${subjectId}`;
+    window.location.href = `/dashboard/question-archive/${subjectId}${selectedFolderId ? `?folderId=${encodeURIComponent(selectedFolderId)}` : ""}`;
   }
 
   return (
@@ -304,7 +374,7 @@ export function QuestionArchiveForm({
           href={`/dashboard/question-archive/${subjectId}`}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ? {subjectName}
+          <ArrowLeft className="mr-1 inline-block h-3.5 w-3.5" /> {subjectName}
         </Link>
 
         <div className="mt-2">
@@ -322,6 +392,28 @@ export function QuestionArchiveForm({
         className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]"
       >
         <div className="space-y-6">
+          <section className="rounded-xl border bg-card p-6">
+            <label className="block text-xs uppercase tracking-[0.14em] text-muted">Archive location</label>
+            <select
+              value={selectedFolderId ?? ""}
+              onChange={(event) => setSelectedFolderId(event.target.value || null)}
+              className="mt-2 w-full rounded-lg border bg-background px-3 py-2.5 text-sm"
+            >
+              <option value="">{subjectName} (root)</option>
+              {archiveFolders.map((folder) => {
+                const chain: string[] = [];
+                let cursor: ArchiveFolder | undefined = folder;
+                const seen = new Set<string>();
+                while (cursor && !seen.has(cursor.id)) {
+                  seen.add(cursor.id);
+                  chain.unshift(cursor.name);
+                  cursor = archiveFolders.find((item) => item.id === cursor?.parentId);
+                }
+                return <option key={folder.id} value={folder.id}>{chain.join(" / ")}</option>;
+              })}
+            </select>
+          </section>
+
           <section className="rounded-xl border bg-card p-6">
             <div className="flex gap-2 rounded-lg bg-muted p-1">
               <button
@@ -554,18 +646,21 @@ export function QuestionArchiveForm({
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 English
               </span>
-              <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionEn || "Your question will appear here."}
-              </p>
+              <MixedLatexPreview
+                text={questionEn}
+                fallback="Your question will appear here."
+              />
             </div>
 
             <div>
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Bangla
               </span>
-              <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionBn || <span className="text-muted-foreground">Not provided</span>}
-              </p>
+              {questionBn ? (
+                <MixedLatexPreview text={questionBn} fallback="" />
+              ) : (
+                <p className="mt-2 text-muted-foreground">Not provided</p>
+              )}
             </div>
 
             {type === "mcq" && (
@@ -576,7 +671,11 @@ export function QuestionArchiveForm({
                     className={`rounded-lg border p-3 text-sm ${option.isCorrect ? "border-primary/50 bg-primary/5" : ""}`}
                   >
                     <strong>{option.label}.</strong>{" "}
-                    {option.textEn || "Empty option"}
+                    {option.textEn ? (
+                      <MixedLatexPreview text={option.textEn} fallback="" />
+                    ) : (
+                      "Empty option"
+                    )}
                   </div>
                 ))}
               </div>

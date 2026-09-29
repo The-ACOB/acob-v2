@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 const archiveOptionSchema = z.object({
   label: z.enum(["A", "B", "C", "D"]),
@@ -13,6 +13,7 @@ export const questionArchiveSchema = z
     questionEn: z.string().trim().min(3, "English question is required."),
     questionBn: z.string().trim().min(3, "Bangla question is required."),
     subjectId: z.string().uuid("A valid subject is required."),
+    folderId: z.string().uuid().nullable().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]),
     marks: z.number().min(0.25).max(100),
     explanationEn: z.string().trim().max(5000).optional().or(z.literal("")),

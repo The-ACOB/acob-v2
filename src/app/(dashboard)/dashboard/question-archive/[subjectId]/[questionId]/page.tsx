@@ -15,7 +15,7 @@ export default async function EditQuestionArchivePage({ params }: Props) {
 
   const { subjectId, questionId } = await params;
 
-  const [subject, question] = await Promise.all([
+  const [subject, question, folders] = await Promise.all([
     db.questionArchiveSubject.findUnique({
       where: { id: subjectId },
     }),
@@ -27,6 +27,7 @@ export default async function EditQuestionArchivePage({ params }: Props) {
         },
       },
     }),
+    db.questionArchiveFolder.findMany({ where: { subjectId }, orderBy: { name: "asc" } }),
   ]);
 
   if (!subject || !question || question.subjectId !== subjectId) {
@@ -43,6 +44,7 @@ export default async function EditQuestionArchivePage({ params }: Props) {
     explanationEn: question.explanationEn,
     explanationBn: question.explanationBn,
     imageUrl: question.imageUrl,
+    folderId: question.folderId,
     options: question.options.map((option) => ({
       label: option.label as "A" | "B" | "C" | "D",
       textEn: option.textEn,
@@ -55,6 +57,8 @@ export default async function EditQuestionArchivePage({ params }: Props) {
     <QuestionArchiveForm
       subjectId={subject.id}
       subjectName={subject.name}
+      folderId={question.folderId}
+      archiveFolders={folders.map((item) => ({ id: item.id, parentId: item.parentId, name: item.name }))}
       initialQuestion={initialQuestion}
     />
   );

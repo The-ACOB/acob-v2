@@ -19,6 +19,13 @@ export async function createQuestionArchiveAction(input: unknown) {
 
   const data = parsed.data;
 
+  if (data.folderId) {
+    const folder = await db.questionArchiveFolder.findUnique({ where: { id: data.folderId } });
+    if (!folder || folder.subjectId !== data.subjectId) {
+      return { success: false, error: "The selected archive folder is invalid." };
+    }
+  }
+
   try {
     const archiveQuestion = await db.questionArchive.create({
       data: {
@@ -26,6 +33,7 @@ export async function createQuestionArchiveAction(input: unknown) {
         questionEn: data.questionEn,
         questionBn: data.questionBn,
         subjectId: data.subjectId,
+        folderId: data.folderId || null,
         difficulty: data.difficulty,
         marks: data.marks,
         explanationEn: data.explanationEn || null,
@@ -101,6 +109,13 @@ export async function updateQuestionArchiveAction(id: string, input: unknown) {
 
   const data = parsed.data;
 
+  if (data.folderId) {
+    const folder = await db.questionArchiveFolder.findUnique({ where: { id: data.folderId } });
+    if (!folder || folder.subjectId !== data.subjectId) {
+      return { success: false, error: "The selected archive folder is invalid." };
+    }
+  }
+
   try {
     const existing = await db.questionArchive.findUnique({
       where: { id },
@@ -125,6 +140,7 @@ export async function updateQuestionArchiveAction(id: string, input: unknown) {
           questionEn: data.questionEn,
           questionBn: data.questionBn,
           subjectId: data.subjectId,
+          folderId: data.folderId || null,
           difficulty: data.difficulty,
           marks: data.marks,
           explanationEn: data.explanationEn || null,

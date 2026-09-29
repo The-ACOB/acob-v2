@@ -374,6 +374,86 @@ export async function createQuestionAction(
   return { ok: true };
 }
 
+export async function importArchivedQuestionsAction(
+  olympiadId: string,
+  archiveQuestionIds: string[],
+): Promise<ActionResult<{ imported: number; skipped: number }>> {
+  let actor;
+
+  try {
+    actor = await requirePermission("question:create");
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
+  const olympiad = await db.olympiad.findUnique({ where: { id: olympiadId } });
+  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  const ids = [...new Set(archiveQuestionIds.filter(Boolean))];
+  if (ids.length === 0) return { ok: false, error: "Select at least one archived question." };
+
+  const archived = await db.questionArchive.findMany({
+    where: { id: { in: ids } },
+    include: { options: { orderBy: { order: "asc" } } },
+  });
+
+  if (archived.length === 0) return { ok: false, error: "No archived questions were found." };
+
+  const existing = await db.question.findMany({
+    where: { olympiadId, archiveQuestionId: { in: ids } },
+    select: { archiveQuestionId: true },
+  });
+  const existingIds = new Set(existing.map((q) => q.archiveQuestionId).filter(Boolean) as string[]);
+  const toImport = archived.filter((q) => !existingIds.has(q.id));
+  const skipped = archived.length - toImport.length;
+
+  let nextOrder = await db.question.count({ where: { olympiadId } });
+
+  await db.$transaction(async (tx) => {
+    for (const archiveQuestion of toImport) {
+      await tx.question.create({
+        data: {
+          olympiadId,
+          archiveQuestionId: archiveQuestion.id,
+          type: archiveQuestion.type,
+          text: archiveQuestion.questionEn,
+          textBn: archiveQuestion.questionBn,
+          imageUrl: archiveQuestion.imageUrl,
+          subject: null,
+          difficulty: archiveQuestion.difficulty,
+          marks: archiveQuestion.marks,
+          order: nextOrder++,
+          explanation: archiveQuestion.explanationEn,
+          explanationBn: archiveQuestion.explanationBn,
+          options:
+            archiveQuestion.type === "mcq"
+              ? {
+                  create: archiveQuestion.options.map((option, index) => ({
+                    text: option.textEn,
+                    textBn: option.textBn,
+                    isCorrect: option.isCorrect,
+                    order: index,
+                  })),
+                }
+              : undefined,
+        },
+      });
+    }
+  });
+
+  await recordAudit({
+    actorId: actor.id,
+    action: "question:imported_from_archive",
+    targetType: "olympiad",
+    targetId: olympiadId,
+    metadata: { archiveQuestionIds: toImport.map((q) => q.id), imported: toImport.length, skipped },
+  });
+
+  revalidatePath(`/dashboard/olympiads/${olympiadId}`);
+  return { ok: true, data: { imported: toImport.length, skipped } };
+}
+
 export async function updateQuestionAction(
   olympiadId: string,
   questionId: string,
