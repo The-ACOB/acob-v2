@@ -55,7 +55,7 @@ export function Reveal({
   return (
     <MotionTag
       className={className}
-      initial="hidden"
+      initial={false}
       whileInView="visible"
       viewport={{ once: true, margin: "-10% 0% -10% 0%" }}
       variants={variants}

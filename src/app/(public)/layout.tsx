@@ -15,7 +15,7 @@ export default async function PublicLayout({
   ]);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="public-shell flex min-h-dvh flex-col">
       <PopupBanner popup={popup} />
       <Header
         user={

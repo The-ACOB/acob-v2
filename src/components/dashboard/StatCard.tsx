@@ -12,7 +12,7 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-elevated px-5 py-5">
+    <div className="relative border-t-2 border-accent bg-elevated px-5 py-5">
       <div className="flex items-center justify-between">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{label}</p>
         {Icon ? <Icon className="h-4 w-4 text-muted" strokeWidth={1.75} /> : null}

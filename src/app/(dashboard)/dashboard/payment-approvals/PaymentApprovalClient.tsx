@@ -87,7 +87,7 @@ export function PaymentApprovalClient({ payments }: { payments: Payment[] }) {
       )}
 
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-10 text-center shadow-sm">
+        <div className="border border-border bg-elevated p-10 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl text-emerald-700">
             ✓
           </div>
@@ -133,7 +133,7 @@ function PaymentCard({
 
   return (
     <div
-      className={`rounded-2xl border bg-white p-6 shadow-sm ${
+      className={`border bg-elevated p-6 ${
         isDuplicate ? "border-red-300" : "border-zinc-200"
       }`}
     >
@@ -197,7 +197,7 @@ function PaymentCard({
             type="button"
             disabled={disabled}
             onClick={() => onApprove(payment)}
-            className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-sm bg-accent px-5 py-3 text-sm font-semibold text-background transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
           >
             Approve Payment
           </button>
@@ -206,7 +206,7 @@ function PaymentCard({
             type="button"
             disabled={disabled}
             onClick={() => onReject(payment)}
-            className="rounded-xl border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-sm border border-error/40 bg-elevated px-5 py-3 text-sm font-semibold text-error transition hover:bg-error/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reject Payment
           </button>

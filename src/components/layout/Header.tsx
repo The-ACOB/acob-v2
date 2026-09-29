@@ -9,7 +9,6 @@ import { logoutAction } from "@/lib/auth/actions";
 import { AccountMenu } from "./AccountMenu";
 import { NAV_LINKS } from "./nav-links";
 import { cn } from "@/lib/utils";
-import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 
 type HeaderUser = {
   email: string;
@@ -72,13 +71,12 @@ export function Header({ user = null }: { user?: HeaderUser }) {
           ) : (
             <TextLink
               href="/login"
-              className="rounded-full border border-border-strong px-4 py-2 text-[13px] font-medium tracking-tight text-primary transition-colors after:hidden hover:border-accent"
+              className="rounded-sm border border-border-strong px-4 py-2 text-[13px] font-medium tracking-tight text-primary transition-colors after:hidden hover:border-accent"
             >
               Sign in
             </TextLink>
           )}
 
-          <ThemeSwitcher />
         </div>
 
         <button
@@ -136,11 +134,6 @@ export function Header({ user = null }: { user?: HeaderUser }) {
               ))}
 
               <div className="mt-4 flex flex-col gap-4 border-t border-border pt-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-secondary">Appearance</span>
-                  <ThemeSwitcher />
-                </div>
-
                 <TextLink
                   href="/verify"
                   onClick={() => setOpen(false)}

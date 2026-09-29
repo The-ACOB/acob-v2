@@ -16,7 +16,7 @@ export function AuthCard({
 }) {
   return (
     <div>
-      <MetadataLabel>{eyebrow}</MetadataLabel>
+      <MetadataLabel className="field-kicker">{eyebrow}</MetadataLabel>
       <h1 className="mt-3 font-display text-3xl tracking-tight text-primary">{title}</h1>
       {description ? <p className="mt-3 text-sm leading-relaxed text-secondary">{description}</p> : null}
       <div className="mt-8">{children}</div>

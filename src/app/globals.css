@@ -1,91 +1,28 @@
 @import "tailwindcss";
 
-@keyframes acob-navigation-progress {
-  0% {
-    transform: scaleX(0.08);
-  }
-  50% {
-    transform: scaleX(0.62);
-  }
-  100% {
-    transform: scaleX(0.94);
-  }
-}
-
-/* ============================================================
-   ACOB DESIGN TOKENS
-   Centralized CSS variables. Change values here to re-theme
-   the entire application — nothing below should hardcode color.
-   ============================================================ */
+/* ACOB Field System — paper, ink, datum and signal. */
 :root {
-  /* Surface */
-  --color-background: #08080a;
-  --color-elevated: #121214;
-  --color-elevated-2: #19191c;
-
-  /* Text */
-  --color-text-primary: #f7f7f5;
-  --color-text-secondary: #9a9a9d;
-  --color-text-muted: #616164;
-
-  /* Structure */
-  --color-border: #232326;
-  --color-border-strong: #333336;
-
-  /* Accent — monochrome: white carries every emphasis, glow, and highlight */
-  --color-accent: #ffffff;
-  --color-accent-soft: #ffffff14;
-  --color-accent-strong: #e4e4e2;
-  --color-glow: #ffffff1f;
-
-  /* Semantic — desaturated so status reads without breaking the monochrome palette */
-  --color-success: #9fb8a8;
-  --color-warning: #c9bd94;
-  --color-error: #bd9d97;
-
-  /* Motion */
-  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 180ms;
-  --duration-base: 420ms;
-  --duration-slow: 900ms;
-}
-
-:root[data-theme="light"] {
-  --color-background: #f5f3ee;
-  --color-elevated: #ffffff;
-  --color-elevated-2: #ebe8e1;
-  --color-text-primary: #171716;
-  --color-text-secondary: #5c5a55;
-  --color-text-muted: #89857d;
-  --color-border: #dedbd3;
-  --color-border-strong: #c5c1b8;
-  --color-accent: #171716;
-  --color-accent-soft: #17171614;
-  --color-accent-strong: #2b2a27;
-  --color-glow: #1717161f;
-  --color-success: #38634b;
-  --color-warning: #806b25;
-  --color-error: #8c4035;
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --color-background: #f5f3ee;
-    --color-elevated: #ffffff;
-    --color-elevated-2: #ebe8e1;
-    --color-text-primary: #171716;
-    --color-text-secondary: #5c5a55;
-    --color-text-muted: #89857d;
-    --color-border: #dedbd3;
-    --color-border-strong: #c5c1b8;
-    --color-accent: #171716;
-    --color-accent-soft: #17171614;
-    --color-accent-strong: #2b2a27;
-    --color-glow: #1717161f;
-    --color-success: #38634b;
-    --color-warning: #806b25;
-    --color-error: #8c4035;
-  }
+  color-scheme: light;
+  --color-background: #f2f0e9;
+  --color-elevated: #fbfaf6;
+  --color-elevated-2: #e8e6de;
+  --color-text-primary: #202a26;
+  --color-text-secondary: #57625c;
+  --color-text-muted: #778078;
+  --color-border: #d6d7ce;
+  --color-border-strong: #aeb5aa;
+  --color-accent: #1e5145;
+  --color-accent-soft: #1e51451a;
+  --color-accent-strong: #163c34;
+  --color-signal: #c84a31;
+  --color-success: #286a50;
+  --color-warning: #8b671e;
+  --color-error: #a13f32;
+  --field-rule: linear-gradient(90deg, var(--color-accent) 0 32px, var(--color-border) 32px 100%);
+  --ease-editorial: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 160ms;
+  --duration-base: 280ms;
+  --duration-slow: 650ms;
 }
 
 @theme inline {
@@ -105,138 +42,120 @@
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);
   --color-accent-strong: var(--color-accent-strong);
-  --color-glow: var(--color-glow);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
   --color-danger: var(--color-error);
-
-  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-sans: "Inter Variable", Inter, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
-* {
-  border-color: var(--color-border);
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
+* { border-color: var(--color-border); }
+html { scroll-behavior: smooth; }
 body {
-  background: var(--color-background);
   color: var(--color-text-primary);
+  background: var(--color-background);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  transition:
-    background-color var(--duration-fast) ease,
-    color var(--duration-fast) ease;
+  transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
 }
 
-body {
-  background-image:
-    radial-gradient(circle at 85% 0%, var(--color-glow), transparent 34rem),
-    linear-gradient(135deg, var(--color-background), var(--color-elevated));
-  background-attachment: fixed;
-}
+::selection { background: var(--color-accent); color: var(--color-background); }
+:focus-visible { outline: 2px solid var(--color-signal); outline-offset: 3px; border-radius: 2px; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--color-background); }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border: 2px solid var(--color-background); }
 
-[data-theme="light"] body {
-  background-image:
-    radial-gradient(circle at 82% 0%, #d8c8a833, transparent 34rem),
-    linear-gradient(135deg, #f5f3ee, #ebe8e1);
-}
+/* Recurring ACOB marks: registration tick, index label, field rule, signal. */
+.field-kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--color-accent); font: 500 10px/1.4 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
+.field-kicker::before { content: ""; width: 18px; height: 1px; background: var(--color-signal); }
+.field-rule { height: 1px; background: var(--field-rule); }
+.field-index { color: var(--color-text-muted); font: 11px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.field-signal { color: var(--color-signal); }
+.field-hero { background-color: var(--color-background); }
+.field-hero::before, .field-hero::after { content: ""; position: absolute; z-index: 0; width: 9px; height: 9px; border-color: var(--color-signal); }
+.field-hero::before { top: 22px; left: 22px; border-top: 1px solid; border-left: 1px solid; }
+.field-hero::after { right: 22px; bottom: 22px; border-right: 1px solid; border-bottom: 1px solid; }
+.method-plate { border-top: 1px solid var(--color-border-strong); border-bottom: 1px solid var(--color-border-strong); }
+.method-flow { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr); align-items: center; gap: 8px; }
+.method-stage { display: flex; min-width: 0; flex-direction: column; align-items: center; text-align: center; }
+.method-step-number { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; color: var(--color-accent); font: 11px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.method-step-title { margin-top: 12px; color: var(--color-text-primary); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.method-step-copy { margin-top: 4px; color: var(--color-text-muted); font-size: 13px; }
+.method-arrow { width: 20px; height: 20px; justify-self: center; color: var(--color-signal); }
 
-@keyframes acob-orbital-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate3d(-10px, 8px, 0) rotate(3deg);
-  }
+/* Surface language: squared edges, ruled panels, restrained elevation. */
+[class~="rounded-xl"], [class~="rounded-2xl"], [class~="rounded-3xl"] { border-radius: 2px !important; }
+[class~="rounded-lg"] { border-radius: 3px !important; }
+[class~="rounded-md"] { border-radius: 2px !important; }
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+  border-radius: 2px !important;
+  background-color: var(--color-elevated) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border-strong) !important;
 }
+input::placeholder, textarea::placeholder { color: var(--color-text-muted) !important; }
+input:focus, select:focus, textarea:focus { border-color: var(--color-accent) !important; box-shadow: 0 0 0 1px var(--color-accent); }
+table { border-collapse: collapse; }
+thead { background-color: var(--color-elevated-2); }
+tbody tr { transition: background-color var(--duration-fast) ease; }
+tbody tr:hover { background-color: color-mix(in srgb, var(--color-accent-soft) 55%, transparent); }
+button, a { -webkit-tap-highlight-color: transparent; }
 
-/* ============================================================
-   AMBIENT HERO BREATHING ANIMATIONS (Timeless, Non-Cringe)
-   ============================================================ */
-@keyframes pulse-glow {
-  0% {
-    transform: scale(1) translate(0px, 0px);
-    opacity: 0.25;
-  }
-  50% {
-    transform: scale(1.12) translate(35px, -25px);
-    opacity: 0.45;
-  }
-  100% {
-    transform: scale(1) translate(-25px, 20px);
-    opacity: 0.25;
-  }
-}
+/* Public shell and institution header. */
+.public-shell { background-color: var(--color-background); }
+.public-shell header { border-bottom-color: var(--color-border); }
+.public-shell header > div:first-child { height: 72px; }
+.public-shell header nav a { letter-spacing: .005em; }
+.public-shell footer img { filter: invert(1); }
+.public-shell main section { scroll-margin-top: 5rem; }
+.public-shell footer { background-color: var(--color-accent-strong); color: #f2f0e9; }
+.public-shell footer a { color: inherit; }
+.public-shell footer .text-muted, .public-shell footer [class*="text-muted"] { color: #bdc5bc !important; }
+.public-shell [class*="from-neutral-900"] { background: var(--color-elevated-2) !important; }
+.public-shell [class*="bg-black/40"] { background-color: color-mix(in srgb, var(--color-accent-strong) 32%, transparent); }
 
-@keyframes float-slow {
-  0% {
-    transform: translateY(0px);
-  }
-  100% {
-    transform: translateY(-18px);
-  }
-}
+/* Dashboard becomes an indexed workspace with a quiet green rail. */
+.dashboard-shell { background-color: var(--color-background); }
+.dashboard-shell aside { background-color: var(--color-accent-strong); color: #f2f0e9; border-color: #35584d; }
+.dashboard-shell aside p { color: #a9bdb0; }
+.dashboard-shell aside a { color: #e7ede7; border-color: transparent; border-radius: 2px !important; }
+.dashboard-shell aside a:hover { background: #ffffff10; color: white; }
+.dashboard-shell aside a[aria-current="page"], .dashboard-shell aside a.bg-elevated { background: #ffffff16; border-color: #ffffff28; color: white; }
+.dashboard-shell aside a[class*="bg-elevated"] { color: white; }
+.dashboard-shell aside a[class*="bg-elevated"] svg { color: #e47a5f; }
+.dashboard-shell header { background-color: color-mix(in srgb, var(--color-background) 94%, transparent); }
+.dashboard-shell main { min-width: 0; }
+.dashboard-shell main h1 { letter-spacing: -.035em; }
+.dashboard-shell main h2, .dashboard-shell main h3 { letter-spacing: -.025em; }
+.dashboard-shell [class*="bg-white"] { background-color: var(--color-elevated) !important; }
+.dashboard-shell [class*="bg-black/20"] { background-color: var(--color-elevated-2) !important; }
+.dashboard-shell [class*="bg-black/30"], .dashboard-shell [class*="bg-black/40"] { background-color: var(--color-elevated-2) !important; }
+.dashboard-shell [class*="bg-[#0"] { background-color: var(--color-elevated-2) !important; }
+.dashboard-shell [class*="text-zinc-950"], .dashboard-shell [class*="text-zinc-900"], .dashboard-shell [class*="text-slate-900"] { color: var(--color-text-primary) !important; }
+.dashboard-shell [class*="text-zinc-600"], .dashboard-shell [class*="text-zinc-500"], .dashboard-shell [class*="text-gray-400"] { color: var(--color-text-muted) !important; }
+.dashboard-shell [class*="border-zinc-200"] { border-color: var(--color-border) !important; }
+.dashboard-shell [class*="bg-zinc-50"] { background-color: var(--color-elevated-2) !important; }
 
-.animate-slow-pulse {
-  animation: pulse-glow 14s ease-in-out infinite alternate;
-}
-
-.animate-float-slow {
-  animation: float-slow 18s ease-in-out infinite alternate;
-}
-
+@keyframes acob-navigation-progress { 0% { transform: scaleX(.08); } 50% { transform: scaleX(.62); } 100% { transform: scaleX(.94); } }
+@keyframes acob-mark-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: no-preference) {
-  [data-theme="light"] .acob-light-lift {
-    animation: acob-orbital-drift 12s ease-in-out infinite;
-  }
+  .field-enter { animation: acob-mark-in 420ms var(--ease-editorial) both; }
 }
-
-::selection {
-  background: var(--color-accent);
-  color: var(--color-background);
+@media (max-width: 640px) {
+  .dashboard-shell main { padding: 1.25rem 1rem; }
+  .field-kicker { font-size: 9px; }
+  table { font-size: 12px; }
+  .method-flow { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .method-stage { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 14px; align-items: center; text-align: left; padding: 9px 0; }
+  .method-step-number { grid-row: 1 / span 2; }
+  .method-step-title { margin-top: 0; }
+  .method-step-copy { margin-top: 2px; }
+  .method-arrow { width: 17px; height: 17px; margin: 2px auto; transform: rotate(90deg); }
 }
-
-/* Visible, deliberate focus states everywhere */
-:focus-visible {
-  outline: 1.5px solid var(--color-accent);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
-
-/* Scrollbar — quiet, editorial */
-::-webkit-scrollbar {
-  width: 10px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-background);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
-  border-radius: 999px;
-  border: 2px solid var(--color-background);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
 }
-
-html,
-body {
-  overflow-x: clip;
-  max-width: 100%;
-}
+html, body { overflow-x: clip; max-width: 100%; }

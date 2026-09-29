@@ -63,15 +63,15 @@ export default async function PaymentApprovalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <p className="field-kicker">
           Finance
         </p>
 
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-950">
+        <h1 className="mt-2 font-display text-3xl tracking-tight text-primary sm:text-4xl">
           Payment Approvals
         </h1>
 
-        <p className="mt-2 text-sm text-zinc-600">
+        <p className="mt-2 text-sm text-secondary">
           Review bKash payments submitted for paid Olympiads.
         </p>
       </div>

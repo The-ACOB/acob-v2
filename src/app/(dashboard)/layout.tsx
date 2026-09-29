@@ -71,7 +71,7 @@ export default async function DashboardLayout({
 
   return (
     <ToastProvider>
-      <div className="flex min-h-dvh">
+      <div className="dashboard-shell flex min-h-dvh">
         <Sidebar
           roleKeys={session.roleKeys}
           permissions={permissions}

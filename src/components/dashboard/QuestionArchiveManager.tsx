@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Archive, Plus } from "lucide-react";
+import { QuestionArchiveSubjectIcon } from "./QuestionArchiveSubjectIcon";
 import {
   createQuestionArchiveSubjectAction,
   deleteQuestionArchiveSubjectAction,
@@ -95,7 +97,8 @@ export function QuestionArchiveManager() {
           onClick={() => setShowAddSubject(true)}
           className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
         >
-          + Add Subject
+          <Plus aria-hidden="true" className="mr-1.5 inline h-4 w-4" strokeWidth={1.75} />
+          Add Subject
         </button>
       </div>
 
@@ -148,7 +151,7 @@ export function QuestionArchiveManager() {
         </div>
       ) : subjects.length === 0 ? (
         <div className="rounded-xl border border-dashed p-12 text-center">
-          <div className="text-4xl">??</div>
+          <Archive aria-hidden="true" className="mx-auto h-6 w-6 text-accent" strokeWidth={1.65} />
           <h2 className="mt-4 text-lg font-semibold">
             No subjects yet
           </h2>
@@ -162,7 +165,8 @@ export function QuestionArchiveManager() {
             onClick={() => setShowAddSubject(true)}
             className="mt-5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
           >
-            + Add Your First Subject
+            <Plus aria-hidden="true" className="mr-1.5 inline h-4 w-4" strokeWidth={1.75} />
+            Add Your First Subject
           </button>
         </div>
       ) : (
@@ -180,14 +184,17 @@ export function QuestionArchiveManager() {
                 }}
                 className="block w-full text-left"
               >
-                <div className="text-4xl">??</div>
+                <div className="flex h-10 w-10 items-center justify-center border border-border bg-background text-accent">
+                  <QuestionArchiveSubjectIcon subject={subject.name} />
+                </div>
 
                 <h2 className="mt-4 font-semibold">
                   {subject.name}
                 </h2>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {subject._count?.questions ?? 0} questions
+                  {subject._count?.questions ?? 0} archived{" "}
+                  {(subject._count?.questions ?? 0) === 1 ? "question" : "questions"}
                 </p>
               </button>
 

@@ -8,14 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { MetadataLabel } from "@/components/ui/MetadataLabel";
 import { AnimatedSeparator } from "@/components/ui/Separator";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ParallaxOrbital } from "@/components/sections/ParallaxOrbital";
-import { ScrollCue } from "@/components/sections/ScrollCue";
-import { WordReveal } from "@/components/ui/WordReveal";
-import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TextLink } from "@/components/ui/TextLink";
 import { OrganizationJsonLd } from "@/components/sections/OrganizationJsonLd";
-import { HeroAmbientCanvas } from "@/components/sections/HeroAmbientCanvas";
 import { db } from "@/lib/db/client";
+import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -36,71 +32,66 @@ export default async function HomePage() {
       <OrganizationJsonLd />
 
       {/* ============ HERO ============ */}
-      <section className="relative overflow-hidden">
-        {/* --- INTERACTIVE MOVING AMBIENT BACKGROUND --- */}
-        <HeroAmbientCanvas />
-        {/* --------------------------------------------- */}
-
-        <div
-          aria-hidden
-          className="acob-light-lift pointer-events-none absolute right-[-10%] top-[-8%] z-0 h-[600px] w-[600px] opacity-70 sm:h-[760px] sm:w-[760px] lg:right-[-6%] lg:top-[-12%]"
-        >
-          <ParallaxOrbital className="h-full w-full" />
-        </div>
-
-        <Container className="relative z-10 pt-20 pb-16 sm:pt-28 sm:pb-20 lg:pt-36">
-          <Reveal weight="minor">
-            <div className="mb-8 flex items-center gap-3">
-              <MetadataLabel>
-                Applied Cognitio Olympiad Bangladesh
-              </MetadataLabel>
-            </div>
-          </Reveal>
-
-          <h1 className="max-w-4xl font-display text-[13vw] leading-[0.98] tracking-tight text-primary sm:text-6xl lg:text-[5.5rem]">
-            <WordReveal text="Curiosity" delay={0.1} />
-            <br />
-            <WordReveal text="over" delay={0.34} />{" "}
-            <WordReveal
-              text="memorisation."
-              delay={0.42}
-              className="text-accent italic"
-            />
-          </h1>
-
-          <Reveal weight="standard" order={1}>
-            <p className="mt-8 max-w-xl text-lg leading-relaxed text-secondary">
+      <section className="field-hero relative overflow-hidden border-b border-border">
+        <Container className="relative grid min-h-[610px] items-center gap-12 py-16 sm:py-20 lg:min-h-[680px] lg:grid-cols-[1.15fr_.85fr] lg:gap-16 lg:py-24">
+          <div className="field-enter">
+            <MetadataLabel className="field-kicker">Applied Cognitio Olympiad Bangladesh</MetadataLabel>
+            <h1 className="mt-8 max-w-3xl font-display text-[clamp(3.3rem,8.2vw,7.2rem)] leading-[.91] tracking-[-.055em] text-primary">
+              Curiosity<br />over <span className="field-signal italic">memorisation.</span>
+            </h1>
+            <p className="mt-8 max-w-xl text-base leading-7 text-secondary sm:text-lg sm:leading-8">
               We design academic Olympiads that don&apos;t reward how fast a
               student can recall an answer — they reward how well a student can
               reason their way to one.
             </p>
-          </Reveal>
-
-          <Reveal weight="standard" order={2}>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <MagneticButton>
-                <Button href="/olympiads" variant="primary">
-                  Explore Olympiads
-                </Button>
-              </MagneticButton>
-              <MagneticButton>
-                <Button href="/about" variant="secondary">
-                  Discover ACOB
-                </Button>
-              </MagneticButton>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button href="/olympiads" variant="primary">Explore Olympiads</Button>
+              <Button href="/about" variant="secondary">Discover ACOB</Button>
             </div>
-          </Reveal>
+          </div>
+
+          <div className="method-plate relative mx-auto w-full max-w-[520px] bg-elevated p-5 sm:p-7" role="group" aria-label="ACOB method: observe, reason, apply">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <span className="field-index">METHOD</span>
+              <span className="field-index">ACOB—BD</span>
+            </div>
+            <div className="method-flow py-10 sm:py-12" role="list" aria-label="Question-solving stages">
+              <div className="method-stage" role="listitem">
+                <span className="method-step-number">01</span>
+                <span className="method-step-title">Observe</span>
+                <span className="method-step-copy">Question</span>
+              </div>
+              <ArrowRight aria-hidden="true" className="method-arrow" strokeWidth={1.5} />
+              <div className="method-stage" role="listitem">
+                <span className="method-step-number">02</span>
+                <span className="method-step-title">Reason</span>
+                <span className="method-step-copy">Understand</span>
+              </div>
+              <ArrowRight aria-hidden="true" className="method-arrow" strokeWidth={1.5} />
+              <div className="method-stage" role="listitem">
+                <span className="method-step-number">03</span>
+                <span className="method-step-title">Apply</span>
+                <span className="method-step-copy">Solve</span>
+              </div>
+            </div>
+            <div className="border-t border-border pt-3 text-center">
+              <span className="field-index">FROM CURIOSITY TO UNDERSTANDING</span>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 hidden border-t border-border lg:block">
+            <Container className="flex items-center justify-between py-3">
+              <span className="field-index">EST. 2025 / BANGLADESH</span>
+              <span className="field-index">SCIENCE · THINKING · COMPETITION</span>
+              <span className="field-index">FIELD 001</span>
+            </Container>
+          </div>
         </Container>
-
-        <ScrollCue />
-
-        <Container className="relative pb-16 sm:pb-20">
-          <Reveal weight="minor" order={3}>
-            <div className="flex flex-wrap items-center gap-x-10 gap-y-3 border-t border-border pt-6">
-              <MetadataLabel muted>Founded 2025</MetadataLabel>
-              <MetadataLabel muted>Based in Bangladesh</MetadataLabel>
-            </div>
-          </Reveal>
+        <Container className="pb-5 lg:hidden">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-4">
+            <MetadataLabel muted>Founded 2025</MetadataLabel>
+            <MetadataLabel muted>Based in Bangladesh</MetadataLabel>
+          </div>
         </Container>
       </section>
 

@@ -49,7 +49,7 @@ export default async function OlympiadsPage() {
   return (
     <>
       <PageHero
-        eyebrow=""
+        eyebrow="ACOB / Competition series"
         title="Every problem is written to be reasoned through, not recalled."
         description="ACOB Olympiads run across subjects and grade bands, each built to test how a student thinks under a genuinely unfamiliar problem."
       />

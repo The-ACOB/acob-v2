@@ -3,10 +3,10 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "reac
 import { cn } from "@/lib/utils";
 
 const base =
-  "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-sans text-sm font-medium tracking-tight transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent focus-visible:outline-offset-4 disabled:pointer-events-none disabled:opacity-40";
+  "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm font-sans text-sm font-medium tracking-tight transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 disabled:pointer-events-none disabled:opacity-40";
 
 const variants = {
-  primary: "bg-primary text-background px-6 py-3 hover:bg-accent-strong",
+  primary: "bg-accent text-background px-6 py-3 hover:bg-accent-strong",
   secondary:
     "border border-border-strong text-primary px-6 py-3 hover:border-accent hover:text-accent",
   danger: "bg-error text-background px-6 py-3 hover:opacity-90",

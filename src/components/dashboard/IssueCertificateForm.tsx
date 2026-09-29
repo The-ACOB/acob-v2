@@ -107,13 +107,13 @@ export function IssueCertificateForm({
     <form
       onSubmit={handleSubmit(submit)}
       noValidate
-      className="flex max-w-4xl flex-col gap-5 rounded-xl border border-white/10 bg-[#121212] p-6 text-white shadow-xl"
+      className="flex max-w-4xl flex-col gap-5 border border-border bg-elevated p-6 text-primary"
     >
       <div>
-        <h2 className="mb-1 text-lg font-semibold text-white">
+        <h2 className="mb-1 text-lg font-semibold text-primary">
           Issue Certificate
         </h2>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-secondary">
           Generate and assign verified credentials to participants.
         </p>
       </div>

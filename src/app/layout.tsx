@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { AmbientBackground } from "@/components/effects/AmbientBackground";
 import "@fontsource-variable/fraunces";
 import "@fontsource-variable/inter";
 import "@fontsource/ibm-plex-mono/400.css";
@@ -7,7 +6,6 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/env";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
-import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const siteUrl = getSiteUrl();
 
@@ -96,7 +94,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#08080a",
+  themeColor: "#f2f0e9",
   width: "device-width",
   initialScale: 1,
 };
@@ -105,14 +103,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className="min-h-dvh bg-background font-sans text-primary antialiased"
-        suppressHydrationWarning
-      >
+    <html lang="en">
+      <body className="min-h-dvh bg-background font-sans text-primary antialiased">
         <NavigationProgress />
-        <AmbientBackground />
-        <ThemeProvider>{children}</ThemeProvider>
+        {children}
       </body>
     </html>
   );

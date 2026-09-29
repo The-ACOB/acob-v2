@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Archive, Plus } from "lucide-react";
+import { QuestionArchiveSubjectIcon } from "./QuestionArchiveSubjectIcon";
 
 type QuestionType = "mcq" | "short";
 type Difficulty = "easy" | "medium" | "hard";
@@ -70,8 +72,10 @@ export function SubjectQuestionsManager({
             ← Question Archive
           </Link>
 
-          <div className="mt-2 flex items-center gap-3">
-            <span className="text-4xl">📁</span>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-border bg-elevated text-accent">
+              <QuestionArchiveSubjectIcon subject={subject.name} />
+            </span>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">
                 {subject.name}
@@ -88,7 +92,8 @@ export function SubjectQuestionsManager({
           href={`/dashboard/question-archive/${subject.id}/new`}
           className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
         >
-          + Add Question
+          <Plus aria-hidden="true" className="mr-1.5 inline h-4 w-4" strokeWidth={1.75} />
+          Add Question
         </Link>
       </div>
 
@@ -128,7 +133,7 @@ export function SubjectQuestionsManager({
 
       {questions.length === 0 ? (
         <div className="rounded-xl border border-dashed p-12 text-center">
-          <div className="text-4xl">📝</div>
+          <Archive aria-hidden="true" className="mx-auto h-6 w-6 text-accent" strokeWidth={1.65} />
 
           <h2 className="mt-4 text-lg font-semibold">
             {initialQuestions.length === 0
@@ -147,7 +152,8 @@ export function SubjectQuestionsManager({
               href={`/dashboard/question-archive/${subject.id}/new`}
               className="mt-5 inline-block rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
             >
-              + Add First Question
+              <Plus aria-hidden="true" className="mr-1.5 inline h-4 w-4" strokeWidth={1.75} />
+              Add First Question
             </Link>
           )}
         </div>

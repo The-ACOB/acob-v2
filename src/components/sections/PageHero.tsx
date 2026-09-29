@@ -13,17 +13,14 @@ export function PageHero({
 }) {
   return (
     <section className="relative border-b border-border">
-      <Container className="pt-16 pb-14 sm:pt-24 sm:pb-16">
-        <Reveal weight="minor">
-          <MetadataLabel>{eyebrow}</MetadataLabel>
-        </Reveal>
+      <Container className="pt-14 pb-12 sm:pt-20 sm:pb-16">
         {eyebrow ? (
           <Reveal weight="minor">
-            <MetadataLabel>{eyebrow}</MetadataLabel>
+            <MetadataLabel className="field-kicker">{eyebrow}</MetadataLabel>
           </Reveal>
         ) : null}
         <Reveal weight="major" order={1}>
-          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] tracking-tight text-primary sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 max-w-4xl font-display text-4xl leading-[1.06] tracking-tight text-primary sm:text-5xl lg:text-6xl">
             {title}
           </h1>
         </Reveal>

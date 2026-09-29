@@ -26,7 +26,7 @@ export function DashboardHeader({
       <div className="flex items-center gap-3">
         <MobileSidebar roleKeys={roleKeys} roleLabel={roleLabel} />
 
-        <span className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+        <span className="rounded-sm border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
           {roleLabel}
         </span>
       </div>

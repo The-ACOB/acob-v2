@@ -564,7 +564,7 @@ export function QuestionArchiveForm({
                 Bangla
               </span>
               <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionBn || "????? ?????? ????? ???? ?????"}
+                {questionBn || <span className="text-muted-foreground">Not provided</span>}
               </p>
             </div>
 

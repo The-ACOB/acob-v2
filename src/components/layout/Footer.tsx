@@ -92,7 +92,7 @@ export function Footer() {
       <Container className="py-16 sm:py-20">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.3fr_1fr_1fr]">
           <div className="flex flex-col gap-5">
-            <Logo href="/" src="/assets/footer.png" />
+            <Logo href="/" src="/assets/logo(black).png" />
             <p className="max-w-sm text-sm leading-relaxed text-secondary">
               We exist to close the gap between knowing an answer and
               understanding it — cultivating students who ask better questions.
@@ -136,9 +136,7 @@ export function Footer() {
           <p>
             © 2025-{year} Applied Cognitio Olympiad Bangladesh. All rights
             reserved.
-            <br></br>Technology Partner <b>Glitched Tech</b>
-            <br />
-            Technology Partner <b>Glitched Tech</b>
+            <br />Technology Partner <b>Glitched Tech</b>
           </p>
           <p className="font-mono uppercase tracking-[0.14em]">
             Founded 2025 · Dhaka, Bangladesh

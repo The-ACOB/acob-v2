@@ -6,7 +6,7 @@ export function Logo({
   className,
   href = "/",
   priority = false,
-  src = "/assets/logo.png",
+  src = "/assets/logo(black).png",
 }: {
   className?: string;
   href?: string | null;

@@ -60,13 +60,8 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center bg-[#0a0a0a] px-4 py-12 text-zinc-100 selection:bg-white/20">
-      {/* Subtle background ambient glow matching your site hero sections */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-        <div className="h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-white/[0.03] to-transparent blur-3xl" />
-      </div>
-
-      <div className="relative z-10 w-full max-w-lg">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-12 text-primary">
+      <div className="w-full max-w-lg border border-border bg-elevated px-6 py-8 sm:px-10">
         <AuthCard
           eyebrow="WELCOME TO ACOB"
           title="Complete Your Profile"
@@ -74,14 +69,14 @@ export default function OnboardingPage() {
         >
           <form onSubmit={handleSubmit} className="space-y-6 pt-4">
             {error && (
-              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3.5 text-sm text-red-400 backdrop-blur-md">
+              <div className="border border-error/30 bg-error/10 p-3.5 text-sm text-error">
                 {error}
               </div>
             )}
 
             {/* Gender Selection Pills */}
             <div className="space-y-2.5">
-              <label className="block text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
+              <label className="field-kicker block">
                 Gender <span className="text-red-400">*</span>
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -94,8 +89,8 @@ export default function OnboardingPage() {
                       onClick={() => setGender(g)}
                       className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ${
                         selected
-                          ? "border-zinc-400 bg-zinc-800/80 text-white shadow-lg shadow-black/40 ring-1 ring-zinc-400/50"
-                          : "border-white/10 bg-black/40 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60 hover:text-zinc-200"
+                          ? "border-accent bg-accent-soft text-primary ring-1 ring-accent/40"
+                          : "border-border bg-background text-secondary hover:border-accent hover:text-primary"
                       }`}
                     >
                       {g}
@@ -107,7 +102,7 @@ export default function OnboardingPage() {
 
             {/* Institution Input */}
             <div className="space-y-2.5">
-              <label className="block text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
+              <label className="field-kicker block">
                 School or Institution <span className="text-red-400">*</span>
               </label>
               <input
@@ -116,13 +111,13 @@ export default function OnboardingPage() {
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
                 placeholder="e.g. K C Model School & College"
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-zinc-600 transition-all focus:border-zinc-400 focus:bg-black/60 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                className="w-full rounded-sm border border-border-strong bg-background px-4 py-3 text-sm text-primary placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
 
             {/* Class / Grade Pill Selection Grid (Class 6 to 12) */}
             <div className="space-y-2.5">
-              <label className="block text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
+              <label className="field-kicker block">
                 Class or Grade <span className="text-red-400">*</span>
               </label>
               <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
@@ -135,8 +130,8 @@ export default function OnboardingPage() {
                       onClick={() => setGradeLevel(grade)}
                       className={`rounded-xl border px-3 py-2.5 text-xs font-medium transition-all duration-200 ${
                         selected
-                          ? "border-zinc-400 bg-zinc-800/80 text-white shadow-lg shadow-black/40 ring-1 ring-zinc-400/50"
-                          : "border-white/10 bg-black/40 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60 hover:text-zinc-200"
+                          ? "border-accent bg-accent-soft text-primary ring-1 ring-accent/40"
+                          : "border-border bg-background text-secondary hover:border-accent hover:text-primary"
                       }`}
                     >
                       {grade}
@@ -150,7 +145,7 @@ export default function OnboardingPage() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full rounded-xl bg-white py-3 text-black font-medium transition-all hover:bg-zinc-200 active:scale-[0.99]"
+                className="w-full rounded-sm bg-accent py-3 font-medium text-background transition-colors hover:bg-accent-strong"
               >
                 {isPending
                   ? "Saving Profile..."
