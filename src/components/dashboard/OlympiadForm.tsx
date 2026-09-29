@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,53 @@ import type { z } from "zod";
 import type { ActionResult } from "@/lib/auth/actions";
 
 type Values = z.infer<typeof olympiadSchema>;
+
+const GRADE_OPTIONS = ["6", "7", "8", "9", "10", "11", "12"] as const;
+
+function parseGradeSelection(value?: string | null): string[] {
+  if (!value) return [];
+
+  const values = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .flatMap((item) => {
+      const range = item.match(/(?:class\s*)?(\d+)\s*(?:to|[-–])\s*(\d+)/i);
+      if (!range) return [item.replace(/[^0-9]/g, "")];
+
+      const start = Number(range[1]);
+      const end = Number(range[2]);
+      if (!Number.isInteger(start) || !Number.isInteger(end)) return [];
+
+      const result: string[] = [];
+      for (let grade = Math.min(start, end); grade <= Math.max(start, end); grade += 1) {
+        result.push(String(grade));
+      }
+      return result;
+    });
+
+  return Array.from(new Set(values.filter((grade) => GRADE_OPTIONS.includes(grade as (typeof GRADE_OPTIONS)[number]))))
+    .sort((a, b) => Number(a) - Number(b));
+}
+
+function academicLevelForGrades(grades: string[]): string {
+  const numbers = grades.map(Number).filter((grade) => Number.isInteger(grade));
+  if (numbers.length === 0) return "";
+
+  const hasJunior = numbers.some((grade) => grade >= 6 && grade <= 8);
+  const hasSecondary = numbers.some((grade) => grade >= 9 && grade <= 10);
+  const hasHigherSecondary = numbers.some((grade) => grade >= 11 && grade <= 12);
+
+  return [
+    hasJunior ? "Junior Secondary" : "",
+    hasSecondary ? "Secondary" : "",
+    hasHigherSecondary ? "Higher Secondary" : "",
+  ].filter(Boolean).join(", ");
+}
+
+function formatGradeLabel(grade: string) {
+  return `Class ${grade}`;
+}
 
 function toLocalInputValue(date: Date | null): string {
   if (!date) return "";
@@ -55,6 +102,10 @@ export function OlympiadForm({
     defaultValues?.posterUrl ?? "",
   );
   const [isUploading, setIsUploading] = useState(false);
+  const [gradeMenuOpen, setGradeMenuOpen] = useState(false);
+  const [selectedGrades, setSelectedGrades] = useState<string[]>(() =>
+    parseGradeSelection(defaultValues?.eligibilityGradeLevel),
+  );
 
   const {
     register,
@@ -94,6 +145,39 @@ export function OlympiadForm({
   });
 
   const registrationType = watch("registrationType");
+  const eligibilityMode = watch("eligibilityMode");
+  const academicLevel = watch("eligibilityAcademicLevel");
+
+  useEffect(() => {
+    if (eligibilityMode === "open") {
+      setValue("eligibilityGradeLevel", "", { shouldValidate: true });
+      setValue("eligibilityAcademicLevel", "", { shouldValidate: true });
+      setSelectedGrades([]);
+      return;
+    }
+
+    const serializedGrades = selectedGrades.join(",");
+    const derivedAcademicLevel = academicLevelForGrades(selectedGrades);
+
+    setValue("eligibilityGradeLevel", serializedGrades, { shouldValidate: true });
+    setValue("eligibilityAcademicLevel", derivedAcademicLevel, {
+      shouldValidate: true,
+    });
+  }, [eligibilityMode, selectedGrades, setValue]);
+
+  const gradeSummary = useMemo(() => {
+    if (selectedGrades.length === 0) return "Select classes";
+    if (selectedGrades.length === GRADE_OPTIONS.length) return "All classes";
+    return selectedGrades.map(formatGradeLabel).join(", ");
+  }, [selectedGrades]);
+
+  const toggleGrade = (grade: string) => {
+    setSelectedGrades((current) =>
+      current.includes(grade)
+        ? current.filter((item) => item !== grade)
+        : [...current, grade].sort((a, b) => Number(a) - Number(b)),
+    );
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -344,28 +428,82 @@ export function OlympiadForm({
           </select>
         </FormField>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <input
-            aria-label="Eligible class or grade"
-            placeholder="Class / grade"
-            className={fieldClasses}
-            {...register("eligibilityGradeLevel")}
-          />
+        {eligibilityMode === "criteria" ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="relative">
+              <label className="sr-only" htmlFor="eligibilityGradeLevel">
+                Eligible classes
+              </label>
+              <button
+                id="eligibilityGradeLevel"
+                type="button"
+                onClick={() => setGradeMenuOpen((open) => !open)}
+                className={`${fieldClasses} flex w-full items-center justify-between text-left`}
+                aria-haspopup="listbox"
+                aria-expanded={gradeMenuOpen}
+              >
+                <span className={selectedGrades.length ? "text-primary" : "text-muted"}>
+                  {gradeSummary}
+                </span>
+                <span className="ml-2 text-muted">▾</span>
+              </button>
 
-          <input
-            aria-label="Eligible institution"
-            placeholder="Institution"
-            className={fieldClasses}
-            {...register("eligibilityInstitution")}
-          />
+              {gradeMenuOpen ? (
+                <div
+                  className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-lg border border-border bg-elevated shadow-xl"
+                  role="listbox"
+                  aria-label="Eligible classes"
+                  aria-multiselectable="true"
+                >
+                  <div className="max-h-64 overflow-y-auto p-1">
+                    {GRADE_OPTIONS.map((grade) => {
+                      const checked = selectedGrades.includes(grade);
+                      return (
+                        <button
+                          key={grade}
+                          type="button"
+                          role="option"
+                          aria-selected={checked}
+                          onClick={() => toggleGrade(grade)}
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-primary hover:bg-white/5"
+                        >
+                          <span
+                            className={`flex h-4 w-4 items-center justify-center rounded border ${
+                              checked
+                                ? "border-accent bg-accent text-background"
+                                : "border-border"
+                            }`}
+                          >
+                            {checked ? "✓" : ""}
+                          </span>
+                          {formatGradeLabel(grade)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
 
-          <input
-            aria-label="Eligible academic level"
-            placeholder="Academic level"
-            className={fieldClasses}
-            {...register("eligibilityAcademicLevel")}
-          />
-        </div>
+            <input
+              aria-label="Eligible institution"
+              placeholder="Institution (optional)"
+              className={fieldClasses}
+              {...register("eligibilityInstitution")}
+            />
+
+            <input
+              aria-label="Eligible academic level"
+              placeholder="Academic level"
+              readOnly
+              className={`${fieldClasses} cursor-not-allowed bg-black/20 text-secondary`}
+              value={academicLevel || "Auto-selected from classes"}
+              onChange={() => undefined}
+            />
+            <input type="hidden" {...register("eligibilityGradeLevel")} />
+            <input type="hidden" {...register("eligibilityAcademicLevel")} />
+          </div>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-6 border-t border-border pt-5 sm:grid-cols-2">
