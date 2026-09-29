@@ -554,6 +554,7 @@ export async function ambassadorRegisterParticipantAction(
 }
 
 /** Bulk update user roles. */
+/** Bulk update user roles. */
 export async function bulkUpdateUserRolesAction(
   userIds: string[],
   roleKey: string,
@@ -563,7 +564,13 @@ export async function bulkUpdateUserRolesAction(
   try {
     actor = await requirePermission("participant:update");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
@@ -576,7 +583,9 @@ export async function bulkUpdateUserRolesAction(
 
   try {
     const targetRole = await db.role.findUnique({
-      where: { key: roleKey },
+      where: {
+        key: roleKey,
+      },
     });
 
     if (!targetRole) {
@@ -586,21 +595,47 @@ export async function bulkUpdateUserRolesAction(
       };
     }
 
-    await db.$transaction(async (tx) => {
-      for (const userId of userIds) {
+    /*
+     * Bulk role replacement.
+     *
+     * The previous implementation performed one delete + one
+     * insert for every selected user inside a transaction.
+     *
+     * For 49 users that meant 98 sequential database queries,
+     * which could exceed Prisma's default 5-second transaction
+     * timeout.
+     *
+     * We instead perform only two database operations:
+     *
+     * 1. Remove existing roles from all selected users.
+     * 2. Insert the new role for all selected users.
+     *
+     * The transaction timeout is also increased slightly as a
+     * safety margin for larger selections.
+     */
+    await db.$transaction(
+      async (tx) => {
         await tx.userRole.deleteMany({
-          where: { userId },
+          where: {
+            userId: {
+              in: userIds,
+            },
+          },
         });
 
-        await tx.userRole.create({
-          data: {
+        await tx.userRole.createMany({
+          data: userIds.map((userId) => ({
             userId,
             roleId: targetRole.id,
             assignedBy: actor.id,
-          },
+          })),
         });
-      }
-    });
+      },
+      {
+        maxWait: 10000,
+        timeout: 15000,
+      },
+    );
 
     await recordAudit({
       actorId: actor.id,
@@ -614,7 +649,9 @@ export async function bulkUpdateUserRolesAction(
 
     revalidatePath("/dashboard/participants");
 
-    return { ok: true };
+    return {
+      ok: true,
+    };
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Failed to update roles.";
