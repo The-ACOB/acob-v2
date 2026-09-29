@@ -6,14 +6,6 @@ import { ParticipantProfileForm } from "@/components/dashboard/ParticipantProfil
 
 export const metadata: Metadata = { title: "My Profile" };
 
-function academicLevelForGrade(value: string | null | undefined) {
-  const grade = Number.parseInt(value?.trim() ?? "", 10);
-  if (grade >= 6 && grade <= 8) return "Junior Secondary";
-  if (grade >= 9 && grade <= 10) return "Secondary";
-  if (grade >= 11 && grade <= 12) return "Higher Secondary";
-  return "";
-}
-
 export default async function ProfilePage() {
   const session = await requireAuth();
   let [profile, participant] = await Promise.all([
@@ -56,10 +48,7 @@ export default async function ProfilePage() {
           gender: participant?.gender ?? "",
           institution: participant?.institution ?? "",
           gradeLevel: participant?.gradeLevel ?? "",
-          academicLevel:
-            academicLevelForGrade(participant?.gradeLevel) ||
-            participant?.academicLevel ||
-            "",
+          academicLevel: participant?.academicLevel ?? "",
           district: participant?.district ?? "",
           address: participant?.address ?? "",
           city: participant?.city ?? "",

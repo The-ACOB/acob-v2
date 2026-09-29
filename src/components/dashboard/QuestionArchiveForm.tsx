@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   ArrowLeft,
   Divide,
@@ -23,12 +23,12 @@ function LatexToolbar({
   onInsert: (value: string) => void;
 }) {
   const buttons = [
-    { label: "Superscript", value: "x^{y}", icon: <Superscript className="h-3.5 w-3.5" /> },
-    { label: "Subscript", value: "x_{i}", icon: <Subscript className="h-3.5 w-3.5" /> },
-    { label: "Fraction", value: "\\frac{a}{b}", icon: <Divide className="h-3.5 w-3.5" /> },
-    { label: "Square root", value: "\\sqrt{x}", icon: <Radical className="h-3.5 w-3.5" /> },
-    { label: "Summation", value: "\\sum_{i=1}^{n}", icon: <Sigma className="h-3.5 w-3.5" /> },
-    { label: "Infinity", value: "\\infty", icon: <InfinityIcon className="h-3.5 w-3.5" /> },
+    { label: "Superscript", value: "x^{y}", icon: <Superscript className="h-4 w-4" /> },
+    { label: "Subscript", value: "x_{i}", icon: <Subscript className="h-4 w-4" /> },
+    { label: "Fraction", value: "\\frac{a}{b}", icon: <Divide className="h-4 w-4" /> },
+    { label: "Square root", value: "\\sqrt{x}", icon: <Radical className="h-4 w-4" /> },
+    { label: "Summation", value: "\\sum_{i=1}^{n}", icon: <Sigma className="h-4 w-4" /> },
+    { label: "Infinity", value: "\\infty", icon: <InfinityIcon className="h-4 w-4" /> },
     { label: "Pi", value: "\\pi", text: "π" },
     { label: "Theta", value: "\\theta", text: "θ" },
     { label: "Alpha", value: "\\alpha", text: "α" },
@@ -42,22 +42,72 @@ function LatexToolbar({
   ] as const;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border/80 bg-black/40 p-1">
+    <div className="flex flex-wrap items-center gap-1 rounded-lg border bg-muted/40 p-1">
       {buttons.map((button) => (
         <button
           key={button.value}
           type="button"
+          onClick={() => onInsert(button.value)}
+          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors hover:bg-background"
           title={button.label}
           aria-label={button.label}
-          onClick={() => onInsert(button.value)}
-          className="inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-secondary transition-colors hover:bg-white/5 hover:text-primary"
         >
-          {"icon" in button ? button.icon : (
-            <span className="text-sm font-semibold leading-none">{button.text}</span>
-          )}
+          {"icon" in button ? button.icon : button.text}
         </button>
       ))}
     </div>
+  );
+}
+
+function MixedLatexPreview({
+  text,
+  fallback,
+}: {
+  text: string;
+  fallback: string;
+}) {
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = previewRef.current;
+    if (!container) return;
+
+    container.innerHTML = "";
+    const value = text || fallback;
+    const parts = value.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]+\$)/g);
+
+    for (const part of parts) {
+      if (!part) continue;
+
+      const isDisplayMath = part.startsWith("$$") && part.endsWith("$$");
+      const isInlineMath = part.startsWith("$") && part.endsWith("$");
+
+      if (isDisplayMath || isInlineMath) {
+        const math = part.slice(isDisplayMath ? 2 : 1, isDisplayMath ? -2 : -1);
+        const mathNode = document.createElement("span");
+        try {
+          katex.render(math, mathNode, {
+            throwOnError: false,
+            displayMode: isDisplayMath,
+            strict: "ignore",
+          });
+        } catch {
+          mathNode.textContent = part;
+        }
+        container.appendChild(mathNode);
+      } else {
+        const textNode = document.createElement("span");
+        textNode.textContent = part;
+        container.appendChild(textNode);
+      }
+    }
+  }, [text, fallback]);
+
+  return (
+    <div
+      ref={previewRef}
+      className="mt-2 min-h-8 whitespace-pre-wrap leading-7"
+    />
   );
 }
 
@@ -145,33 +195,25 @@ export function QuestionArchiveForm({
     setter: (value: string) => void,
   ) {
     const element = ref.current;
+    if (!element) return;
 
-    if (!element) {
-      setter(value);
-      return;
-    }
-
-    const start = element.selectionStart;
-    const end = element.selectionEnd;
+    const start = element.selectionStart ?? element.value.length;
+    const end = element.selectionEnd ?? start;
     const current = element.value;
     const selected = current.slice(start, end);
 
-    let insertion = value;
+    let insertion: string;
 
     if (value === "$") {
-      insertion = selected ? `$${selected}$` : "$$";
-    } else if (selected) {
-      if (value === "x^{y}") {
-        insertion = `$${selected}^{y}$`;
-      } else if (value === "x_{i}") {
-        insertion = `$${selected}_{i}$`;
-      } else if (value === "\\sqrt{x}") {
-        insertion = `$\\sqrt{${selected}}$`;
-      } else if (value === "\\frac{a}{b}") {
-        insertion = `$\\frac{${selected}}{}$`;
-      } else {
-        insertion = `$${value}$`;
-      }
+      insertion = selected ? `$${selected}$` : `$$`;
+    } else if (value === "x^{y}") {
+      insertion = selected ? `$${selected}^{ }$` : `$x^{y}$`;
+    } else if (value === "x_{i}") {
+      insertion = selected ? `$${selected}_{ }$` : `$x_{i}$`;
+    } else if (value === "\\sqrt{x}") {
+      insertion = selected ? `$\\sqrt{${selected}}$` : `$\\sqrt{x}$`;
+    } else if (value === "\\frac{a}{b}") {
+      insertion = selected ? `$\\frac{${selected}}{b}$` : `$\\frac{a}{b}$`;
     } else {
       insertion = `$${value}$`;
     }
@@ -322,7 +364,7 @@ export function QuestionArchiveForm({
           href={`/dashboard/question-archive/${subjectId}`}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> {subjectName}
+          <ArrowLeft className="mr-1 inline-block h-3.5 w-3.5" /> {subjectName}
         </Link>
 
         <div className="mt-2">
@@ -572,18 +614,21 @@ export function QuestionArchiveForm({
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 English
               </span>
-              <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionEn || "Your question will appear here."}
-              </p>
+              <MixedLatexPreview
+                text={questionEn}
+                fallback="Your question will appear here."
+              />
             </div>
 
             <div>
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Bangla
               </span>
-              <p className="mt-2 whitespace-pre-wrap leading-7">
-                {questionBn || <span className="text-muted-foreground">Not provided</span>}
-              </p>
+              {questionBn ? (
+                <MixedLatexPreview text={questionBn} fallback="" />
+              ) : (
+                <p className="mt-2 text-muted-foreground">Not provided</p>
+              )}
             </div>
 
             {type === "mcq" && (
@@ -594,7 +639,11 @@ export function QuestionArchiveForm({
                     className={`rounded-lg border p-3 text-sm ${option.isCorrect ? "border-primary/50 bg-primary/5" : ""}`}
                   >
                     <strong>{option.label}.</strong>{" "}
-                    {option.textEn || "Empty option"}
+                    {option.textEn ? (
+                      <MixedLatexPreview text={option.textEn} fallback="" />
+                    ) : (
+                      "Empty option"
+                    )}
                   </div>
                 ))}
               </div>

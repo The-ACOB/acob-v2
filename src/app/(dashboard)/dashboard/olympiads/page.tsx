@@ -8,7 +8,6 @@ import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { isEligibleForOlympiad } from "@/lib/exam/eligibility";
 
 export const metadata: Metadata = { title: "Olympiads" };
 
@@ -110,7 +109,16 @@ export default async function OlympiadsPage() {
   }
 
   // Participant / Ambassador view
-  const published = await db.olympiad.findMany({
+  const published: {
+    id: string;
+    title: string;
+    description: string | null;
+    posterUrl: string | null;
+    subject: string | null;
+    durationMinutes: number;
+    startAt: Date | null;
+    endAt: Date | null;
+  }[] = await db.olympiad.findMany({
     where: { status: "published" },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -123,23 +131,8 @@ export default async function OlympiadsPage() {
       durationMinutes: true,
       startAt: true,
       endAt: true,
-      eligibilityMode: true,
-      eligibilityGradeLevel: true,
-      eligibilityInstitution: true,
-      eligibilityAcademicLevel: true,
     },
   });
-
-  const eligiblePublished = (
-    await Promise.all(
-      published.map(async (olympiad) => ({
-        olympiad,
-        eligible: await isEligibleForOlympiad(olympiad, session.id),
-      })),
-    )
-  )
-    .filter((item) => item.eligible)
-    .map((item) => item.olympiad);
 
   const [myAttempts, myRegistrations] = await Promise.all([
     db.attempt.findMany({
@@ -178,14 +171,14 @@ export default async function OlympiadsPage() {
         ]}
       />
 
-      {eligiblePublished.length === 0 ? (
+      {published.length === 0 ? (
         <EmptyState
           title="No Olympiads open right now"
           description="Check back soon — new Olympiads will appear here once published."
         />
       ) : (
         <div className="flex flex-col gap-4">
-          {eligiblePublished.map((o) => {
+          {published.map((o) => {
             const attemptStatus = attemptByOlympiad.get(o.id);
             const isRegistered = registeredOlympiads.has(o.id);
 
