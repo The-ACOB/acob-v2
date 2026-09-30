@@ -80,8 +80,9 @@ import { NAV_LINKS } from "./nav-links";
 
 const SOCIALS = [
   { label: "Facebook", href: "https://www.facebook.com/appliedcognitiobd" },
-  { label: "LinkedIn", href: "http://linkedin.com/company/appliedcognitiobd" },
+  { label: "Instagram", href: "https://www.instagram.com/the.acobd" },
   { label: "YouTube", href: "https://www.youtube.com/@appliedcognitiobd" },
+  { label: "LinkedIn", href: "http://linkedin.com/company/appliedcognitiobd" },
 ];
 
 export function Footer() {
@@ -136,7 +137,8 @@ export function Footer() {
           <p>
             © 2025-{year} Applied Cognitio Olympiad Bangladesh. All rights
             reserved.
-            <br />Technology Partner <b>Glitched Tech</b>
+            <br />
+            Technology Partner <b>Glitched Tech</b>
           </p>
           <p className="font-mono uppercase tracking-[0.14em]">
             Founded 2025 · Dhaka, Bangladesh
