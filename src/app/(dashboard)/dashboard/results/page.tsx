@@ -3,7 +3,11 @@ import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/authz/guards";
 import { db } from "@/lib/db/client";
-import { finalizeOlympiadResults, isOlympiadFinished } from "@/lib/olympiads/results";
+import {
+  awardForRank,
+  finalizeOlympiadResults,
+  isOlympiadFinished,
+} from "@/lib/olympiads/results";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { DataTable, type Column } from "@/components/dashboard/DataTable";
 import { Badge } from "@/components/ui/Badge";
@@ -118,7 +122,10 @@ async function StaffResultsIndex() {
       <DashboardPageHeader
         title="Results & Rankings"
         description="Every completed Olympiad has its own independent ranking and recognition list."
-        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Results & Rankings" }]}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Results & Rankings" },
+        ]}
       />
 
       <DataTable
@@ -166,21 +173,31 @@ async function PersonalResults() {
       <DashboardPageHeader
         title="My Results"
         description="Your published Olympiad results and recognition. Only your own results are shown here."
-        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "My Results" }]}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "My Results" },
+        ]}
       />
 
       {refreshedAttempts.length === 0 ? (
         <div className="border border-dashed border-border-strong bg-elevated/40 px-6 py-10 sm:px-10">
-          <h2 className="font-display text-xl text-primary">No published results yet</h2>
+          <h2 className="font-display text-xl text-primary">
+            No published results yet
+          </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-secondary">
-            Results will appear here after an Olympiad you completed has been finalised and published by ACOB. Registrations without an exam attempt and disqualified attempts receive no result or recognition.
+            Results will appear here after an Olympiad you completed has been
+            finalised and published by ACOB. Registrations without an exam
+            attempt and disqualified attempts receive no result or recognition.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {refreshedAttempts.map((attempt) => {
             const award = awardForRank(attempt.rank);
-            const awardTone = attempt.rank !== null && attempt.rank <= 3 ? "success" : "neutral";
+            const awardTone =
+              attempt.rank !== null && attempt.rank <= 3
+                ? "success"
+                : "neutral";
 
             return (
               <article
@@ -207,22 +224,36 @@ async function PersonalResults() {
 
                 <div className="mt-5 grid grid-cols-2 border-l border-t border-border sm:grid-cols-4">
                   <div className="border-b border-r border-border px-4 py-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">Position</p>
-                    <p className="mt-1 font-display text-2xl text-primary">#{attempt.rank}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                      Position
+                    </p>
+                    <p className="mt-1 font-display text-2xl text-primary">
+                      #{attempt.rank}
+                    </p>
                   </div>
                   <div className="border-b border-r border-border px-4 py-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">Score</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                      Score
+                    </p>
                     <p className="mt-1 font-mono text-lg tabular-nums text-primary">
                       {attempt.score ?? "—"} / {attempt.totalMarks ?? "—"}
                     </p>
                   </div>
                   <div className="border-b border-r border-border px-4 py-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">Correct</p>
-                    <p className="mt-1 font-mono text-lg tabular-nums text-primary">{attempt.correctCount ?? "—"}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                      Correct
+                    </p>
+                    <p className="mt-1 font-mono text-lg tabular-nums text-primary">
+                      {attempt.correctCount ?? "—"}
+                    </p>
                   </div>
                   <div className="border-b border-r border-border px-4 py-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">Incorrect</p>
-                    <p className="mt-1 font-mono text-lg tabular-nums text-primary">{attempt.incorrectCount ?? "—"}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                      Incorrect
+                    </p>
+                    <p className="mt-1 font-mono text-lg tabular-nums text-primary">
+                      {attempt.incorrectCount ?? "—"}
+                    </p>
                   </div>
                 </div>
               </article>
