@@ -7,7 +7,6 @@ import { recordAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
 import { olympiadSchema, questionSchema } from "./validation";
-import { finalizeOlympiadResults, isOlympiadFinished } from "./results";
 import type { ActionResult } from "@/lib/auth/actions";
 
 function slugify(title: string): string {
@@ -95,7 +94,10 @@ export async function createOlympiadAction(
 
   revalidatePath("/dashboard/olympiads");
 
-  return { ok: true, data: { id: olympiad.id } };
+  return {
+    ok: true,
+    data: { id: olympiad.id },
+  };
 }
 
 export async function updateOlympiadAction(
@@ -107,7 +109,13 @@ export async function updateOlympiadAction(
   try {
     actor = await requirePermission("olympiad:update");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
@@ -116,7 +124,10 @@ export async function updateOlympiadAction(
   });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
   }
 
   if (olympiad.status === "published") {
@@ -152,15 +163,21 @@ export async function updateOlympiadAction(
 
       registrationStartAt: new Date(v.registrationStartAt),
       registrationEndAt: new Date(v.registrationEndAt),
+
       startAt: v.startAt ? new Date(v.startAt) : null,
+
       endAt: v.endAt ? new Date(v.endAt) : null,
 
       negativeMarkingEnabled: v.negativeMarkingEnabled ?? false,
+
       negativeMarkingValue: v.negativeMarkingValue ?? 0,
 
       eligibilityMode: v.eligibilityMode ?? "open",
+
       eligibilityGradeLevel: v.eligibilityGradeLevel || null,
+
       eligibilityInstitution: v.eligibilityInstitution || null,
+
       eligibilityAcademicLevel: v.eligibilityAcademicLevel || null,
     },
   });
@@ -174,7 +191,9 @@ export async function updateOlympiadAction(
 
   revalidatePath(`/dashboard/olympiads/${id}`);
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
 
 export async function publishOlympiadAction(
@@ -186,7 +205,13 @@ export async function publishOlympiadAction(
   try {
     actor = await requirePermission("olympiad:publish");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
@@ -195,17 +220,27 @@ export async function publishOlympiadAction(
   });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
   }
 
   const scheduled = publishAt ? new Date(publishAt) : null;
+
   const isFuture = scheduled && scheduled.getTime() > Date.now();
 
   await db.olympiad.update({
     where: { id },
     data: isFuture
-      ? { status: "draft", publishAt: scheduled }
-      : { status: "published", publishAt: new Date() },
+      ? {
+          status: "draft",
+          publishAt: scheduled,
+        }
+      : {
+          status: "published",
+          publishAt: new Date(),
+        },
   });
 
   await recordAudit({
@@ -225,16 +260,21 @@ export async function publishOlympiadAction(
           type: "olympiad:published",
           title: "Olympiad published",
           body: olympiad.title,
-          metadata: { olympiadId: id },
+          metadata: {
+            olympiadId: id,
+          },
         }),
       ),
     );
   }
 
   revalidatePath(`/dashboard/olympiads/${id}`);
+
   revalidatePath("/dashboard/olympiads");
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
 
 export async function unpublishOlympiadAction(
@@ -245,13 +285,21 @@ export async function unpublishOlympiadAction(
   try {
     actor = await requirePermission("olympiad:publish");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
   await db.olympiad.update({
     where: { id },
-    data: { status: "unpublished" },
+    data: {
+      status: "unpublished",
+    },
   });
 
   await recordAudit({
@@ -262,9 +310,12 @@ export async function unpublishOlympiadAction(
   });
 
   revalidatePath(`/dashboard/olympiads/${id}`);
+
   revalidatePath("/dashboard/olympiads");
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
 
 export async function setOlympiadRegistrationAction(
@@ -276,19 +327,32 @@ export async function setOlympiadRegistrationAction(
   try {
     actor = await requirePermission("olympiad:schedule");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
-  const olympiad = await db.olympiad.findUnique({ where: { id } });
+  const olympiad = await db.olympiad.findUnique({
+    where: { id },
+  });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
   }
 
   await db.olympiad.update({
     where: { id },
-    data: { registrationEnabled: enabled },
+    data: {
+      registrationEnabled: enabled,
+    },
   });
 
   await recordAudit({
@@ -301,10 +365,14 @@ export async function setOlympiadRegistrationAction(
   });
 
   revalidatePath(`/dashboard/olympiads/${id}`);
+
   revalidatePath(`/olympiads/${id}`);
+
   revalidatePath("/olympiads");
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
 
 export async function createQuestionAction(
@@ -316,7 +384,13 @@ export async function createQuestionAction(
   try {
     actor = await requirePermission("question:create");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
@@ -325,7 +399,10 @@ export async function createQuestionAction(
   });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
   }
 
   const parsed = questionSchema.safeParse(input);
@@ -353,6 +430,7 @@ export async function createQuestionAction(
       marks: v.marks,
       order,
       explanation: v.explanation || null,
+
       options: {
         create: v.options.map((o, index) => ({
           text: o.text,
@@ -372,44 +450,100 @@ export async function createQuestionAction(
 
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
 
 export async function importArchivedQuestionsAction(
   olympiadId: string,
   archiveQuestionIds: string[],
-): Promise<ActionResult<{ imported: number; skipped: number }>> {
+): Promise<
+  ActionResult<{
+    imported: number;
+    skipped: number;
+  }>
+> {
   let actor;
 
   try {
     actor = await requirePermission("question:create");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
-  const olympiad = await db.olympiad.findUnique({ where: { id: olympiadId } });
-  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+  const olympiad = await db.olympiad.findUnique({
+    where: { id: olympiadId },
+  });
+
+  if (!olympiad) {
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
+  }
 
   const ids = [...new Set(archiveQuestionIds.filter(Boolean))];
-  if (ids.length === 0) return { ok: false, error: "Select at least one archived question." };
+
+  if (ids.length === 0) {
+    return {
+      ok: false,
+      error: "Select at least one archived question.",
+    };
+  }
 
   const archived = await db.questionArchive.findMany({
-    where: { id: { in: ids } },
-    include: { options: { orderBy: { order: "asc" } } },
+    where: {
+      id: {
+        in: ids,
+      },
+    },
+    include: {
+      options: {
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
   });
 
-  if (archived.length === 0) return { ok: false, error: "No archived questions were found." };
+  if (archived.length === 0) {
+    return {
+      ok: false,
+      error: "No archived questions were found.",
+    };
+  }
 
   const existing = await db.question.findMany({
-    where: { olympiadId, archiveQuestionId: { in: ids } },
-    select: { archiveQuestionId: true },
+    where: {
+      olympiadId,
+      archiveQuestionId: {
+        in: ids,
+      },
+    },
+    select: {
+      archiveQuestionId: true,
+    },
   });
-  const existingIds = new Set(existing.map((q) => q.archiveQuestionId).filter(Boolean) as string[]);
+
+  const existingIds = new Set(
+    existing.map((q) => q.archiveQuestionId).filter(Boolean) as string[],
+  );
+
   const toImport = archived.filter((q) => !existingIds.has(q.id));
+
   const skipped = archived.length - toImport.length;
 
-  let nextOrder = await db.question.count({ where: { olympiadId } });
+  let nextOrder = await db.question.count({
+    where: { olympiadId },
+  });
 
   await db.$transaction(async (tx) => {
     for (const archiveQuestion of toImport) {
@@ -417,16 +551,27 @@ export async function importArchivedQuestionsAction(
         data: {
           olympiadId,
           archiveQuestionId: archiveQuestion.id,
+
           type: archiveQuestion.type,
+
           text: archiveQuestion.questionEn,
+
           textBn: archiveQuestion.questionBn,
+
           imageUrl: archiveQuestion.imageUrl,
+
           subject: null,
+
           difficulty: archiveQuestion.difficulty,
+
           marks: archiveQuestion.marks,
+
           order: nextOrder++,
+
           explanation: archiveQuestion.explanationEn,
+
           explanationBn: archiveQuestion.explanationBn,
+
           options:
             archiveQuestion.type === "mcq"
               ? {
@@ -448,11 +593,22 @@ export async function importArchivedQuestionsAction(
     action: "question:imported_from_archive",
     targetType: "olympiad",
     targetId: olympiadId,
-    metadata: { archiveQuestionIds: toImport.map((q) => q.id), imported: toImport.length, skipped },
+    metadata: {
+      archiveQuestionIds: toImport.map((q) => q.id),
+      imported: toImport.length,
+      skipped,
+    },
   });
 
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
-  return { ok: true, data: { imported: toImport.length, skipped } };
+
+  return {
+    ok: true,
+    data: {
+      imported: toImport.length,
+      skipped,
+    },
+  };
 }
 
 export async function updateQuestionAction(
@@ -465,7 +621,13 @@ export async function updateQuestionAction(
   try {
     actor = await requirePermission("question:update");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
@@ -474,7 +636,10 @@ export async function updateQuestionAction(
   });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
   }
 
   const parsed = questionSchema.safeParse(input);
@@ -489,7 +654,10 @@ export async function updateQuestionAction(
   const v = parsed.data;
 
   await db.question.update({
-    where: { id: questionId },
+    where: {
+      id: questionId,
+    },
+
     data: {
       text: v.text,
       imageUrl: v.imageUrl || null,
@@ -497,8 +665,10 @@ export async function updateQuestionAction(
       difficulty: v.difficulty,
       marks: v.marks,
       explanation: v.explanation || null,
+
       options: {
         deleteMany: {},
+
         create: v.options.map((o, index) => ({
           text: o.text,
           isCorrect: o.isCorrect,
@@ -517,7 +687,9 @@ export async function updateQuestionAction(
 
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
 
 export async function deleteQuestionAction(
@@ -529,7 +701,13 @@ export async function deleteQuestionAction(
   try {
     actor = await requirePermission("question:delete");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
@@ -538,11 +716,16 @@ export async function deleteQuestionAction(
   });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
   }
 
   await db.question.delete({
-    where: { id: questionId },
+    where: {
+      id: questionId,
+    },
   });
 
   await recordAudit({
@@ -554,8 +737,243 @@ export async function deleteQuestionAction(
 
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }
+
+/* =========================================================
+   MANUAL RESULT RANKING
+   ========================================================= */
+
+export async function saveManualRankingAction(
+  olympiadId: string,
+  orderedAttemptIds: string[],
+): Promise<ActionResult> {
+  let actor;
+
+  try {
+    actor = await requirePermission("olympiad:results:view");
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
+    throw err;
+  }
+
+  const olympiad = await db.olympiad.findUnique({
+    where: {
+      id: olympiadId,
+    },
+  });
+
+  if (!olympiad) {
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
+  }
+
+  const attempts = await db.attempt.findMany({
+    where: {
+      olympiadId,
+
+      status: {
+        in: ["submitted", "expired_auto_submitted"],
+      },
+    },
+
+    select: {
+      id: true,
+      score: true,
+    },
+  });
+
+  const eligibleIds = new Set(attempts.map((attempt) => attempt.id));
+
+  /*
+   * Every eligible submitted attempt must
+   * appear exactly once in the final order.
+   */
+  if (orderedAttemptIds.length !== attempts.length) {
+    return {
+      ok: false,
+      error: "The ranking list is out of date. Refresh and try again.",
+    };
+  }
+
+  if (
+    new Set(orderedAttemptIds).size !== orderedAttemptIds.length ||
+    orderedAttemptIds.some((id) => !eligibleIds.has(id))
+  ) {
+    return {
+      ok: false,
+      error: "Invalid ranking order.",
+    };
+  }
+
+  /*
+   * manualRank = the administrator's chosen
+   * position.
+   *
+   * rank = the actual final/published position.
+   *
+   * This means the published results immediately
+   * reflect the manual change, even if results
+   * were already published.
+   */
+  await db.$transaction(
+    orderedAttemptIds.map((attemptId, index) =>
+      db.attempt.update({
+        where: {
+          id: attemptId,
+        },
+
+        data: {
+          manualRank: index + 1,
+
+          rank: index + 1,
+        },
+      }),
+    ),
+  );
+
+  await recordAudit({
+    actorId: actor.id,
+
+    action: "olympiad:results_ranking_overridden",
+
+    targetType: "olympiad",
+
+    targetId: olympiadId,
+
+    metadata: {
+      published: Boolean(olympiad.resultsPublishedAt),
+
+      attemptCount: orderedAttemptIds.length,
+
+      orderedAttemptIds,
+    },
+  });
+
+  /*
+   * IMPORTANT:
+   * Revalidate BOTH the management page
+   * and the actual results page.
+   */
+  revalidatePath(`/dashboard/olympiads/${olympiadId}`);
+
+  revalidatePath(`/dashboard/results/${olympiadId}`);
+
+  revalidatePath("/dashboard/results");
+
+  return {
+    ok: true,
+  };
+}
+
+export async function resetManualRankingAction(
+  olympiadId: string,
+): Promise<ActionResult> {
+  let actor;
+
+  try {
+    actor = await requirePermission("olympiad:results:view");
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
+    throw err;
+  }
+
+  const olympiad = await db.olympiad.findUnique({
+    where: {
+      id: olympiadId,
+    },
+  });
+
+  if (!olympiad) {
+    return {
+      ok: false,
+      error: "Olympiad not found.",
+    };
+  }
+
+  /*
+   * Restore pure automatic ranking:
+   * highest score first.
+   */
+  const attempts = await db.attempt.findMany({
+    where: {
+      olympiadId,
+
+      status: {
+        in: ["submitted", "expired_auto_submitted"],
+      },
+    },
+
+    select: {
+      id: true,
+      score: true,
+    },
+
+    orderBy: {
+      score: "desc",
+    },
+  });
+
+  await db.$transaction(
+    attempts.map((attempt, index) =>
+      db.attempt.update({
+        where: {
+          id: attempt.id,
+        },
+
+        data: {
+          rank: index + 1,
+
+          manualRank: null,
+        },
+      }),
+    ),
+  );
+
+  await recordAudit({
+    actorId: actor.id,
+
+    action: "olympiad:results_ranking_reset",
+
+    targetType: "olympiad",
+
+    targetId: olympiadId,
+
+    metadata: {
+      attemptCount: attempts.length,
+    },
+  });
+
+  revalidatePath(`/dashboard/olympiads/${olympiadId}`);
+
+  revalidatePath(`/dashboard/results/${olympiadId}`);
+
+  revalidatePath("/dashboard/results");
+
+  return {
+    ok: true,
+  };
+}
+
+/* =========================================================
+   PUBLISH RESULTS
+   ========================================================= */
 
 export async function publishResultsAction(
   olympiadId: string,
@@ -565,75 +983,156 @@ export async function publishResultsAction(
   try {
     actor = await requirePermission("olympiad:results:view");
   } catch (err) {
-    if (err instanceof AuthError) return { ok: false, error: err.message };
+    if (err instanceof AuthError) {
+      return {
+        ok: false,
+        error: err.message,
+      };
+    }
+
     throw err;
   }
 
   const olympiad = await db.olympiad.findUnique({
-    where: { id: olympiadId },
+    where: {
+      id: olympiadId,
+    },
   });
 
   if (!olympiad) {
-    return { ok: false, error: "Olympiad not found." };
-  }
-
-  if (olympiad.resultsPublishedAt) {
-    return { ok: false, error: "Results are already published." };
-  }
-
-  if (!isOlympiadFinished(olympiad.endAt)) {
     return {
       ok: false,
-      error: "Results can only be published after the Olympiad has finished.",
+      error: "Olympiad not found.",
     };
   }
 
-  const finalized = await finalizeOlympiadResults(olympiadId);
-
-  if (!finalized.finalized) {
-    return { ok: false, error: "The Olympiad is not ready for final results." };
-  }
-
-  const published = await db.olympiad.updateMany({
-    where: { id: olympiadId, resultsPublishedAt: null },
-    data: { resultsPublishedAt: new Date() },
-  });
-
-  if (published.count !== 1) {
-    return { ok: false, error: "Results could not be published because the publication state changed." };
-  }
-
-  const ranked = await db.attempt.findMany({
+  /*
+   * Get every eligible attempt.
+   *
+   * We intentionally include both normal submitted
+   * and expired auto-submitted attempts.
+   */
+  const attempts = await db.attempt.findMany({
     where: {
       olympiadId,
-      rank: { not: null },
+
+      status: {
+        in: ["submitted", "expired_auto_submitted"],
+      },
     },
-    select: { userId: true },
+
+    select: {
+      id: true,
+      userId: true,
+      score: true,
+      manualRank: true,
+    },
   });
 
-  await recordAudit({
-    actorId: actor.id,
-    action: "olympiad:results_published",
-    targetType: "olympiad",
-    targetId: olympiadId,
-    metadata: { attemptCount: ranked.length },
-  });
+  /*
+   * Automatic ranking.
+   */
+  const automaticOrder = [...attempts].sort(
+    (a, b) => (b.score ?? 0) - (a.score ?? 0),
+  );
 
-  await Promise.all(
-    ranked.map((r) =>
-      notify({
-        userId: r.userId,
-        type: "olympiad:results_published",
-        title: "Results published",
-        body: olympiad.title,
-        metadata: { olympiadId },
+  /*
+   * Determine whether an administrator has
+   * manually ranked EVERY eligible attempt.
+   */
+  const hasCompleteManualRanking =
+    attempts.length > 0 &&
+    attempts.every((attempt) => attempt.manualRank !== null);
+
+  /*
+   * If manual ranking is complete, it becomes
+   * authoritative.
+   *
+   * Otherwise use automatic score ranking.
+   */
+  const ranked = hasCompleteManualRanking
+    ? [...automaticOrder].sort(
+        (a, b) => (a.manualRank ?? 0) - (b.manualRank ?? 0),
+      )
+    : automaticOrder;
+
+  /*
+   * Persist the FINAL ranking.
+   */
+  await db.$transaction(
+    ranked.map((attempt, index) =>
+      db.attempt.update({
+        where: {
+          id: attempt.id,
+        },
+
+        data: {
+          rank: index + 1,
+
+          scoreLocked: true,
+        },
       }),
     ),
   );
 
+  await db.olympiad.update({
+    where: {
+      id: olympiadId,
+    },
+
+    data: {
+      resultsPublishedAt: new Date(),
+    },
+  });
+
+  await recordAudit({
+    actorId: actor.id,
+
+    action: "olympiad:results_published",
+
+    targetType: "olympiad",
+
+    targetId: olympiadId,
+
+    metadata: {
+      attemptCount: ranked.length,
+
+      usedManualRanking: hasCompleteManualRanking,
+    },
+  });
+
+  /*
+   * Notify participants.
+   */
+  await Promise.all(
+    ranked.map((attempt) =>
+      notify({
+        userId: attempt.userId,
+
+        type: "olympiad:results_published",
+
+        title: "Results published",
+
+        body: olympiad.title,
+
+        metadata: {
+          olympiadId,
+        },
+      }),
+    ),
+  );
+
+  /*
+   * IMPORTANT:
+   * Invalidate every results surface.
+   */
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
+
   revalidatePath(`/dashboard/results/${olympiadId}`);
+
   revalidatePath("/dashboard/results");
 
-  return { ok: true };
+  return {
+    ok: true,
+  };
 }

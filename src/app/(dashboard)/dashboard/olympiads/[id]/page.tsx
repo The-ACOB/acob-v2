@@ -12,9 +12,14 @@ import { OlympiadPublishControls } from "@/components/dashboard/OlympiadPublishC
 import { type Column } from "@/components/dashboard/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
-import { awardForRank, finalizeOlympiadResults, isOlympiadFinished } from "@/lib/olympiads/results";
+import {
+  ManualRankingEditor,
+  type ManualRankingRow,
+} from "@/components/dashboard/ManualRankingEditor";
 
-export const metadata: Metadata = { title: "Manage Olympiad" };
+export const metadata: Metadata = {
+  title: "Manage Olympiad",
+};
 
 type AttemptRow = {
   id: string;
@@ -23,7 +28,13 @@ type AttemptRow = {
   score: number | null;
   totalMarks: number | null;
   rank: number | null;
-  user: { email: string; profile: { fullName: string } | null } | null;
+  manualRank: number | null;
+  user: {
+    email: string;
+    profile: {
+      fullName: string;
+    } | null;
+  } | null;
 };
 
 type RegistrationRow = AttemptRow & {
@@ -39,35 +50,51 @@ export default async function OlympiadDetailPage({
   try {
     await requirePermission("olympiad:update");
   } catch (err) {
-    if (err instanceof AuthError) redirect("/dashboard/olympiads");
+    if (err instanceof AuthError) {
+      redirect("/dashboard/olympiads");
+    }
+
     throw err;
   }
 
   const { id } = await params;
-  let olympiad = await db.olympiad.findUnique({
-    where: { id },
-    include: { _count: { select: { registrations: true } } },
-  });
-  if (!olympiad) notFound();
 
-  if (isOlympiadFinished(olympiad.endAt)) {
-    await finalizeOlympiadResults(id);
-    olympiad = await db.olympiad.findUnique({
-      where: { id },
-      include: { _count: { select: { registrations: true } } },
-    });
-    if (!olympiad) notFound();
+  const olympiad = await db.olympiad.findUnique({
+    where: { id },
+    include: {
+      _count: {
+        select: {
+          registrations: true,
+        },
+      },
+    },
+  });
+
+  if (!olympiad) {
+    notFound();
   }
 
   const questions: QuestionRow[] = await db.question.findMany({
-    where: { olympiadId: id },
+    where: {
+      olympiadId: id,
+    },
     include: {
       options: true,
     },
   });
+
   const attempts: AttemptRow[] = await db.attempt.findMany({
-    where: { olympiadId: id },
-    orderBy: { score: "desc" },
+    where: {
+      olympiadId: id,
+    },
+    orderBy: [
+      {
+        rank: "asc",
+      },
+      {
+        score: "desc",
+      },
+    ],
     include: {
       user: {
         include: {
@@ -76,30 +103,72 @@ export default async function OlympiadDetailPage({
       },
     },
   });
+
   const registrations = await db.olympiadRegistration.findMany({
-    where: { olympiadId: id },
-    orderBy: { registeredAt: "asc" },
-    include: { user: { include: { profile: true } } },
+    where: {
+      olympiadId: id,
+    },
+    orderBy: {
+      registeredAt: "asc",
+    },
+    include: {
+      user: {
+        include: {
+          profile: true,
+        },
+      },
+    },
   });
-  const resultRows: RegistrationRow[] = registrations.map((registration) => {
-    const attempt = attempts.find(
-      (candidate) => candidate.userId === registration.userId,
-    );
-    return {
-      id: attempt?.id ?? registration.id,
-      userId: registration.userId,
-      attemptId: attempt?.id ?? null,
-      registeredAt: registration.registeredAt,
-      status: attempt?.status ?? "registered",
-      score: attempt?.score ?? null,
-      totalMarks: attempt?.totalMarks ?? null,
-      rank: attempt?.rank ?? null,
-      user: registration.user,
-    };
-  });
+
+  const resultRows: RegistrationRow[] = registrations
+    .map((registration) => {
+      const attempt = attempts.find(
+        (candidate) => candidate.userId === registration.userId,
+      );
+
+      return {
+        id: attempt?.id ?? registration.id,
+        userId: registration.userId,
+        attemptId: attempt?.id ?? null,
+        registeredAt: registration.registeredAt,
+        status: attempt?.status ?? "registered",
+        score: attempt?.score ?? null,
+        totalMarks: attempt?.totalMarks ?? null,
+        rank: attempt?.rank ?? null,
+        manualRank: attempt?.manualRank ?? null,
+        user: registration.user,
+      };
+    })
+    .sort((a, b) => {
+      /*
+       * Ranked participants first.
+       * The actual rank is authoritative.
+       * Score is only used as a fallback for participants
+       * who do not yet have a rank.
+       */
+      if (a.rank !== null && b.rank !== null) {
+        return a.rank - b.rank;
+      }
+
+      if (a.rank !== null) {
+        return -1;
+      }
+
+      if (b.rank !== null) {
+        return 1;
+      }
+
+      if (a.score !== null && b.score !== null) {
+        return b.score - a.score;
+      }
+
+      return 0;
+    });
+
   const attemptedCount = resultRows.filter(
     (row) => row.attemptId !== null,
   ).length;
+
   const submittedCount = resultRows.filter(
     (row) =>
       row.status === "submitted" || row.status === "expired_auto_submitted",
@@ -107,6 +176,35 @@ export default async function OlympiadDetailPage({
 
   const resultsPublished = Boolean(olympiad.resultsPublishedAt);
   const phase = getOlympiadPhase(olympiad);
+
+  /*
+   * This is the list used by the manual ranking editor.
+   *
+   * IMPORTANT:
+   * If a manual ranking already exists, rank is used first.
+   * Otherwise we fall back to score.
+   */
+  const provisionalRankedRows = resultRows
+    .filter(
+      (row) =>
+        row.attemptId !== null &&
+        (row.status === "submitted" || row.status === "expired_auto_submitted"),
+    )
+    .sort((a, b) => {
+      if (a.rank !== null && b.rank !== null) {
+        return a.rank - b.rank;
+      }
+
+      if (a.rank !== null) {
+        return -1;
+      }
+
+      if (b.rank !== null) {
+        return 1;
+      }
+
+      return (b.score ?? 0) - (a.score ?? 0);
+    });
 
   const columns: Column<RegistrationRow>[] = [
     {
@@ -139,10 +237,13 @@ export default async function OlympiadDetailPage({
     },
     {
       header: "Score",
-      cell: (r) => (r.score !== null ? `${r.score} / ${r.totalMarks}` : "—"),
+      cell: (r) =>
+        r.score !== null ? `${r.score} / ${r.totalMarks ?? "—"}` : "—",
     },
-    { header: "Position", cell: (r) => r.rank ?? "—" },
-    { header: "Recognition", cell: (r) => awardForRank(r.rank) ?? "—" },
+    {
+      header: "Rank",
+      cell: (r) => r.rank ?? "—",
+    },
   ];
 
   return (
@@ -150,9 +251,17 @@ export default async function OlympiadDetailPage({
       <DashboardPageHeader
         title={olympiad.title}
         breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Olympiads", href: "/dashboard/olympiads" },
-          { label: olympiad.title },
+          {
+            label: "Dashboard",
+            href: "/dashboard",
+          },
+          {
+            label: "Olympiads",
+            href: "/dashboard/olympiads",
+          },
+          {
+            label: olympiad.title,
+          },
         ]}
         actions={
           <div className="flex items-center gap-3">
@@ -161,6 +270,7 @@ export default async function OlympiadDetailPage({
             >
               {olympiad.status}
             </Badge>
+
             <Link
               href={`/dashboard/olympiads/${id}/edit`}
               className="text-xs text-accent underline underline-offset-4"
@@ -172,40 +282,47 @@ export default async function OlympiadDetailPage({
       />
 
       <div className="flex flex-col gap-12">
+        {/* PUBLICATION */}
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg text-primary">Publication</h2>
           </div>
+
           <OlympiadPublishControls
             olympiadId={id}
             status={olympiad.status}
             resultsPublished={resultsPublished}
             hasAttempts={attempts.length > 0}
             registrationEnabled={olympiad.registrationEnabled}
-            finished={isOlympiadFinished(olympiad.endAt)}
+            finished={phase === "closed"}
           />
+
           <p className="mt-3 text-sm text-secondary">
             Current phase:{" "}
             <span className="font-medium text-primary">
               {phase.replace(/_/g, " ")}
             </span>
           </p>
+
           <div className="mt-3 text-sm text-secondary">
             <p>
               Registration:{" "}
               {olympiad.registrationStartAt?.toLocaleString() ?? "Now"} to{" "}
               {olympiad.registrationEndAt?.toLocaleString() ?? "Exam start"}
             </p>
+
             <p>
               Exam: {olympiad.startAt?.toLocaleString() ?? "Now"} to{" "}
               {olympiad.endAt?.toLocaleString() ?? "No closing time"}
             </p>
           </div>
+
           {olympiad.publishAt && olympiad.status === "draft" ? (
             <p className="mt-3 text-xs text-muted">
               Scheduled to publish {olympiad.publishAt.toLocaleString()}.
             </p>
           ) : null}
+
           {questions.length === 0 ? (
             <p className="mt-3 text-sm text-warning">
               This Olympiad has no questions yet. Students will not be able to
@@ -214,18 +331,45 @@ export default async function OlympiadDetailPage({
           ) : null}
         </section>
 
+        {/* MANUAL RANKING */}
+        <ManualRankingEditor
+          olympiadId={id}
+          published={resultsPublished}
+          rows={provisionalRankedRows.map(
+            (row, index): ManualRankingRow => ({
+              id: row.attemptId!,
+              name: row.user?.profile?.fullName ?? row.user?.email ?? "Unknown",
+              email: row.user?.email ?? "",
+              score: row.score,
+              totalMarks: row.totalMarks,
+
+              /*
+               * Use the database rank when available.
+               * Before ranking exists, use the provisional index.
+               */
+              rank: row.rank ?? index + 1,
+
+              manualRank: row.manualRank,
+            }),
+          )}
+        />
+
+        {/* QUESTIONS */}
         <section>
           <h2 className="mb-4 font-display text-lg text-primary">
             Questions{" "}
             <span className="text-sm text-muted">({questions.length})</span>
           </h2>
+
           <QuestionsManager olympiadId={id} questions={questions} editable />
         </section>
 
+        {/* PARTICIPANTS + RESULTS */}
         <section>
           <h2 className="mb-4 font-display text-lg text-primary">
             Participants & Results
           </h2>
+
           <p className="mb-4 text-sm text-secondary">
             {registrations.length} registered, {attemptedCount} attempted,{" "}
             {submittedCount} submitted
@@ -236,6 +380,7 @@ export default async function OlympiadDetailPage({
               <h3 className="font-display text-base text-primary">
                 No attempts yet
               </h3>
+
               <p className="mt-1 text-sm text-secondary">
                 Once participants start this Olympiad, their attempts will
                 appear here.
@@ -243,25 +388,26 @@ export default async function OlympiadDetailPage({
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-border bg-elevated">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="border-b border-border bg-black/20 text-xs font-mono uppercase tracking-wider text-muted">
-                    {columns.map((col, idx) => (
-                      <th key={idx} className="p-4">
-                        {col.header}
+                    {columns.map((column, index) => (
+                      <th key={index} className="p-4">
+                        {column.header}
                       </th>
                     ))}
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-border/40 text-sm">
-                  {resultRows.map((r) => (
+                  {resultRows.map((row) => (
                     <tr
-                      key={r.id}
+                      key={row.id}
                       className="transition-colors hover:bg-white/[0.02]"
                     >
-                      {columns.map((col, idx) => (
-                        <td key={idx} className="p-4">
-                          {col.cell(r)}
+                      {columns.map((column, index) => (
+                        <td key={index} className="p-4">
+                          {column.cell(row)}
                         </td>
                       ))}
                     </tr>

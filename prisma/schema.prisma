@@ -649,6 +649,7 @@ model Attempt {
   unansweredCount         Int?          @map("unanswered_count")
   timeSpentSeconds        Int?          @map("time_spent_seconds")
   rank                    Int?
+  manualRank              Int?          @map("manual_rank")
   legacyAnswers           Json?         @map("legacy_answers")
   scoreLocked             Boolean       @default(false) @map("score_locked")
   integrityViolationCount Int           @default(0) @map("integrity_violation_count")
@@ -662,6 +663,7 @@ model Attempt {
   answers  AttemptAnswer[]
 
   @@unique([olympiadId, userId])
+  @@index([olympiadId, manualRank])
   @@map("attempts")
 }
 
