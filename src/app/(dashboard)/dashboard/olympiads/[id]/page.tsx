@@ -74,14 +74,21 @@ export default async function OlympiadDetailPage({
     notFound();
   }
 
-  const questions: QuestionRow[] = await db.question.findMany({
-    where: {
-      olympiadId: id,
-    },
-    include: {
-      options: true,
-    },
-  });
+  const [questions, archiveSubjects, archiveFolders] = await Promise.all([
+    db.question.findMany({
+      where: { olympiadId: id },
+      include: { options: true },
+      orderBy: { order: "asc" },
+    }),
+    db.questionArchiveSubject.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    db.questionArchiveFolder.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, subjectId: true, parentId: true, name: true },
+    }),
+  ]);
 
   const attempts: AttemptRow[] = await db.attempt.findMany({
     where: {
@@ -361,7 +368,14 @@ export default async function OlympiadDetailPage({
             <span className="text-sm text-muted">({questions.length})</span>
           </h2>
 
-          <QuestionsManager olympiadId={id} questions={questions} editable />
+          <QuestionsManager
+            olympiadId={id}
+            olympiadSubject={olympiad.subject}
+            questions={questions}
+            archiveSubjects={archiveSubjects}
+            archiveFolders={archiveFolders}
+            editable
+          />
         </section>
 
         {/* PARTICIPANTS + RESULTS */}

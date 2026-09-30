@@ -7,6 +7,7 @@ import { recordAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
 import { olympiadSchema, questionSchema } from "./validation";
+import { translateEnglishToBangla } from "@/lib/question-archive/translation";
 import type { ActionResult } from "@/lib/auth/actions";
 
 function slugify(title: string): string {
@@ -453,6 +454,229 @@ export async function createQuestionAction(
   return {
     ok: true,
   };
+}
+
+
+export async function archiveOlympiadQuestionsAction(
+  olympiadId: string,
+  questionIds: string[],
+  subjectId: string,
+  folderId: string | null,
+): Promise<ActionResult<{ archived: number }>> {
+  let actor;
+
+  try {
+    actor = await requirePermission("question:create");
+    await requirePermission("question:update");
+  } catch (err) {
+    if (err instanceof AuthError) return { ok: false, error: err.message };
+    throw err;
+  }
+
+  const ids = [...new Set(questionIds.filter(Boolean))];
+  if (!ids.length) return { ok: false, error: "Select at least one standalone question." };
+
+  const olympiad = await db.olympiad.findUnique({
+    where: { id: olympiadId },
+    select: { id: true, subject: true },
+  });
+  if (!olympiad) return { ok: false, error: "Olympiad not found." };
+
+  const subject = await db.questionArchiveSubject.findUnique({
+    where: { id: subjectId },
+    select: { id: true, name: true },
+  });
+  if (!subject) return { ok: false, error: "Archive subject not found." };
+
+  if (folderId) {
+    const folder = await db.questionArchiveFolder.findUnique({
+      where: { id: folderId },
+      select: { id: true, subjectId: true },
+    });
+    if (!folder || folder.subjectId !== subjectId) {
+      return { ok: false, error: "The selected archive folder is invalid." };
+    }
+  }
+
+  const questions = await db.question.findMany({
+    where: { id: { in: ids }, olympiadId },
+    include: { options: { orderBy: { order: "asc" } } },
+  });
+
+  if (questions.length !== ids.length) {
+    return { ok: false, error: "One or more questions could not be found in this Olympiad." };
+  }
+
+  const alreadyArchived = questions.filter((question) => question.archiveQuestionId);
+  if (alreadyArchived.length) {
+    return { ok: false, error: "One or more selected questions are already linked to the Question Archive. Select standalone questions only." };
+  }
+
+  // The archive stores bilingual content, but older standalone Olympiad questions
+  // may not have Bangla text/options yet. Fill only the missing Bangla fields
+  // automatically instead of blocking the entire bulk archive operation.
+  const translationCache = new Map<string, string>();
+
+  async function resolveBangla(value: string | null | undefined): Promise<string> {
+    const text = value?.trim() ?? "";
+    if (!text) return "";
+    if (/[\u0980-\u09FF]/.test(text)) return text;
+
+    const cached = translationCache.get(text);
+    if (cached) return cached;
+
+    const translated = (await translateEnglishToBangla(text)).trim();
+    if (translated) translationCache.set(text, translated);
+    return translated;
+  }
+
+  type ArchiveQuestionContent = {
+    questionBn: string;
+    explanationBn: string;
+    optionsBn: string[];
+  };
+
+  const resolvedContent = new Map<string, ArchiveQuestionContent>();
+
+  try {
+    // Keep the external translation work bounded so a large selection does not
+    // fire dozens of translation requests at once.
+    const batchSize = 3;
+    for (let start = 0; start < questions.length; start += batchSize) {
+      const batch = questions.slice(start, start + batchSize);
+
+      const resolved = await Promise.all(
+        batch.map(async (question) => {
+          if (!question.text.trim()) {
+            throw new Error(`"${question.id}" has no English question text.`);
+          }
+
+          if (question.type === "mcq" && question.options.length !== 4) {
+            throw new Error(
+              `"${question.text.slice(0, 80)}" must have exactly 4 MCQ options before it can be archived.`,
+            );
+          }
+
+          const questionBn = await resolveBangla(question.textBn?.trim() || question.text);
+          if (!questionBn) {
+            throw new Error(
+              `Could not generate Bangla text for "${question.text.slice(0, 80)}".`,
+            );
+          }
+
+          const optionsBn =
+            question.type === "mcq"
+              ? await Promise.all(
+                  question.options.map(async (option) => {
+                    if (!option.text.trim()) {
+                      throw new Error(
+                        `"${question.text.slice(0, 80)}" contains an MCQ option with no English text.`,
+                      );
+                    }
+
+                    const textBn = await resolveBangla(option.textBn?.trim() || option.text);
+                    if (!textBn) {
+                      throw new Error(
+                        `Could not generate Bangla text for an option in "${question.text.slice(0, 80)}".`,
+                      );
+                    }
+                    return textBn;
+                  }),
+                )
+              : [];
+
+          const explanationBn = question.explanationBn?.trim()
+            ? question.explanationBn.trim()
+            : question.explanation
+              ? await resolveBangla(question.explanation)
+              : "";
+
+          return {
+            id: question.id,
+            content: { questionBn, explanationBn, optionsBn },
+          };
+        }),
+      );
+
+      for (const item of resolved) {
+        resolvedContent.set(item.id, item.content);
+      }
+    }
+
+    await db.$transaction(async (tx) => {
+      for (const question of questions) {
+        const content = resolvedContent.get(question.id);
+        if (!content) {
+          throw new Error(`Missing resolved archive content for ${question.id}.`);
+        }
+
+        // Create the archive question first, then insert its options explicitly.
+        // This avoids a Prisma/driver-adapter issue where nested `create` for
+        // QuestionArchiveOption can be attempted before the generated parent id
+        // is visible to the foreign-key check.
+        const archiveQuestion = await tx.questionArchive.create({
+          data: {
+            type: question.type,
+            questionEn: question.text,
+            questionBn: content.questionBn,
+            subjectId,
+            folderId,
+            difficulty: question.difficulty,
+            marks: question.marks,
+            explanationEn: question.explanation || null,
+            explanationBn: content.explanationBn || null,
+            imageUrl: question.imageUrl || null,
+            createdBy: actor.id,
+          },
+        });
+
+        if (question.type === "mcq") {
+          await tx.questionArchiveOption.createMany({
+            data: question.options.map((option, index) => ({
+              archiveQuestionId: archiveQuestion.id,
+              label: String.fromCharCode(65 + index),
+              textEn: option.text,
+              textBn: content.optionsBn[index] ?? option.text,
+              isCorrect: option.isCorrect,
+              order: index,
+            })),
+          });
+        }
+
+        await tx.question.update({
+          where: { id: question.id },
+          data: { archiveQuestionId: archiveQuestion.id },
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Failed to archive Olympiad questions:", error);
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to add the selected questions to the archive.",
+    };
+  }
+
+  await recordAudit({
+    actorId: actor.id,
+    action: "question:archived_from_olympiad",
+    targetType: "olympiad",
+    targetId: olympiadId,
+    metadata: {
+      questionIds: ids,
+      subjectId,
+      folderId,
+    },
+  });
+
+  revalidatePath(`/dashboard/olympiads/${olympiadId}`);
+  revalidatePath(`/dashboard/question-archive/${subjectId}`);
+  revalidatePath("/dashboard/question-archive");
+
+  return { ok: true, data: { archived: ids.length } };
 }
 
 export async function importArchivedQuestionsAction(

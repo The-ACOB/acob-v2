@@ -195,8 +195,78 @@ export async function updateQuestionArchiveAction(id: string, input: unknown) {
   }
 }
 
+
+export async function deleteQuestionArchiveQuestionsAction(questionIds: string[]) {
+  const user = await requirePermission("question:delete");
+
+  const ids = Array.from(new Set(questionIds.filter(Boolean)));
+  if (ids.length === 0) {
+    return {
+      success: false,
+      error: "Select at least one question.",
+    };
+  }
+
+  try {
+    const questions = await db.questionArchive.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, subjectId: true },
+    });
+
+    if (questions.length !== ids.length) {
+      return {
+        success: false,
+        error: "One or more questions could not be found.",
+      };
+    }
+
+    const subjectIds = new Set(questions.map((question) => question.subjectId).filter(Boolean));
+    if (subjectIds.size !== 1) {
+      return {
+        success: false,
+        error: "Selected questions must belong to the same subject.",
+      };
+    }
+
+    const subjectId = questions[0]?.subjectId ?? null;
+
+    await db.questionArchive.deleteMany({
+      where: { id: { in: ids } },
+    });
+
+    await recordAudit({
+      actorId: user.id,
+      action: "question_archive.bulk_delete",
+      targetType: "QuestionArchive",
+      targetId: ids[0],
+      metadata: {
+        questionIds: ids,
+        count: ids.length,
+        subjectId,
+      },
+    });
+
+    revalidatePath("/dashboard/question-archive");
+    if (subjectId) {
+      revalidatePath(`/dashboard/question-archive/${subjectId}`);
+    }
+
+    return {
+      success: true,
+      count: ids.length,
+    };
+  } catch (error) {
+    console.error("Failed to bulk delete archived questions:", error);
+
+    return {
+      success: false,
+      error: "Failed to delete the selected questions.",
+    };
+  }
+}
+
 export async function deleteQuestionArchiveAction(id: string) {
-  await requirePermission("question:delete");
+  const user = await requirePermission("question:delete");
 
   if (!id) {
     return {
@@ -211,7 +281,7 @@ export async function deleteQuestionArchiveAction(id: string) {
     });
 
     await recordAudit({
-      actorId: null,
+      actorId: user.id,
       action: "question_archive.delete",
       targetType: "QuestionArchive",
       targetId: id,

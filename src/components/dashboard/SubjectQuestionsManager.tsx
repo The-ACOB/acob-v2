@@ -24,6 +24,7 @@ import {
   renameQuestionArchiveFolderAction,
   moveQuestionArchiveQuestionsAction,
 } from "@/lib/question-archive/folder-actions";
+import { deleteQuestionArchiveQuestionsAction } from "@/lib/question-archive/actions";
 
 type QuestionType = "mcq" | "short";
 type Difficulty = "easy" | "medium" | "hard";
@@ -81,6 +82,8 @@ export function SubjectQuestionsManager({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [moveDestination, setMoveDestination] = useState<string>("__root__");
   const [moving, setMoving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const childFolders = useMemo(
     () => initialFolders.filter((folder) => folder.parentId === currentFolderId),
@@ -143,6 +146,27 @@ export function SubjectQuestionsManager({
     }
     clearSelection();
     setMoving(false);
+    router.refresh();
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0) return;
+
+    setDeleting(true);
+    setMessage("");
+
+    const result = await deleteQuestionArchiveQuestionsAction(Array.from(selectedIds));
+
+    if (!result.success) {
+      setMessage(result.error ?? "Could not delete the selected questions.");
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      return;
+    }
+
+    clearSelection();
+    setDeleting(false);
+    setShowDeleteConfirm(false);
     router.refresh();
   }
 
@@ -291,6 +315,14 @@ export function SubjectQuestionsManager({
             <button type="button" disabled={moving} onClick={() => void moveSelected()} className="inline-flex items-center justify-center gap-1.5 bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50">
               <MoveRight className="h-3.5 w-3.5" /> {moving ? "Moving..." : "Move selected"}
             </button>
+            <button
+              type="button"
+              disabled={moving || deleting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="inline-flex items-center justify-center gap-1.5 border border-error/30 bg-error/5 px-4 py-2 text-xs font-medium text-error hover:bg-error/10 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete selected
+            </button>
           </div>
         </div>
       ) : null}
@@ -358,6 +390,53 @@ export function SubjectQuestionsManager({
           </div>
         ) : null}
       </div>
+
+      {showDeleteConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-delete-title"
+            className="w-full max-w-md border border-border bg-elevated p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-error/30 bg-error/5 text-error">
+                <Trash2 className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 id="bulk-delete-title" className="text-base font-semibold text-primary">
+                  Delete {selectedIds.size} {selectedIds.size === 1 ? "question" : "questions"}?
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted">
+                  This will permanently remove the selected archive documents. Any
+                  Olympiad questions that were created from them will keep their
+                  copied content.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setShowDeleteConfirm(false)}
+                className="border border-border px-4 py-2 text-xs font-medium text-secondary hover:border-accent hover:text-primary disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void deleteSelected()}
+                className="inline-flex items-center gap-1.5 bg-error px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {deleting ? "Deleting..." : "Delete permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
