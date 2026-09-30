@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import { requirePermission, AuthError } from "@/lib/authz/guards";
 import { recordAudit } from "@/lib/audit";
@@ -603,19 +604,24 @@ export async function archiveOlympiadQuestionsAction(
       }
     }
 
-    await db.$transaction(async (tx) => {
-      for (const question of questions) {
-        const content = resolvedContent.get(question.id);
-        if (!content) {
-          throw new Error(`Missing resolved archive content for ${question.id}.`);
-        }
+    await db.$transaction(
+      async (tx) => {
+        // Generate archive IDs up front so the entire selection can be inserted
+        // with bulk operations instead of 30+ individual parent inserts. This
+        // keeps large archive moves comfortably inside the database transaction
+        // timeout while remaining fully atomic.
+        const archiveIds = new Map<string, string>();
+        const archiveRows = questions.map((question) => {
+          const content = resolvedContent.get(question.id);
+          if (!content) {
+            throw new Error(`Missing resolved archive content for ${question.id}.`);
+          }
 
-        // Create the archive question first, then insert its options explicitly.
-        // This avoids a Prisma/driver-adapter issue where nested `create` for
-        // QuestionArchiveOption can be attempted before the generated parent id
-        // is visible to the foreign-key check.
-        const archiveQuestion = await tx.questionArchive.create({
-          data: {
+          const archiveId = randomUUID();
+          archiveIds.set(question.id, archiveId);
+
+          return {
+            id: archiveId,
             type: question.type,
             questionEn: question.text,
             questionBn: content.questionBn,
@@ -627,28 +633,51 @@ export async function archiveOlympiadQuestionsAction(
             explanationBn: content.explanationBn || null,
             imageUrl: question.imageUrl || null,
             createdBy: actor.id,
-          },
+          };
         });
 
-        if (question.type === "mcq") {
-          await tx.questionArchiveOption.createMany({
-            data: question.options.map((option, index) => ({
-              archiveQuestionId: archiveQuestion.id,
-              label: String.fromCharCode(65 + index),
-              textEn: option.text,
-              textBn: content.optionsBn[index] ?? option.text,
-              isCorrect: option.isCorrect,
-              order: index,
-            })),
-          });
+        await tx.questionArchive.createMany({ data: archiveRows });
+
+        const optionRows = questions.flatMap((question) => {
+          if (question.type !== "mcq") return [];
+
+          const archiveQuestionId = archiveIds.get(question.id);
+          const content = resolvedContent.get(question.id);
+          if (!archiveQuestionId || !content) {
+            throw new Error(`Missing archive mapping for ${question.id}.`);
+          }
+
+          return question.options.map((option, index) => ({
+            archiveQuestionId,
+            label: String.fromCharCode(65 + index),
+            textEn: option.text,
+            textBn: content.optionsBn[index] ?? option.text,
+            isCorrect: option.isCorrect,
+            order: index,
+          }));
+        });
+
+        if (optionRows.length) {
+          await tx.questionArchiveOption.createMany({ data: optionRows });
         }
 
-        await tx.question.update({
-          where: { id: question.id },
-          data: { archiveQuestionId: archiveQuestion.id },
-        });
-      }
-    });
+        // The archive rows are bulk-created above; the original Olympiad
+        // questions still need their individual archiveQuestionId references.
+        // These are small updates and remain inside the same atomic transaction.
+        for (const question of questions) {
+          const archiveQuestionId = archiveIds.get(question.id);
+          if (!archiveQuestionId) {
+            throw new Error(`Missing archive mapping for ${question.id}.`);
+          }
+
+          await tx.question.update({
+            where: { id: question.id },
+            data: { archiveQuestionId },
+          });
+        }
+      },
+      { maxWait: 10_000, timeout: 30_000 },
+    );
   } catch (error) {
     console.error("Failed to archive Olympiad questions:", error);
     return {
