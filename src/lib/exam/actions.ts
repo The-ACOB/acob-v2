@@ -161,11 +161,28 @@ export async function recordIntegrityViolationAction(
   const count = current?.integrityViolationCount ?? 0;
 
   if (count >= 3) {
-    const result = await submitAttemptAction(attemptId, "integrity_violation");
-
-    if (!result.ok) {
-      return { ok: false, error: result.error };
-    }
+    // Three integrity violations disqualify the participant. A disqualified
+    // attempt is intentionally never scored or ranked, so it can never earn
+    // Prime, Elite, Merit, Honourable Mention, or Participation recognition.
+    await db.attempt.update({
+      where: { id: attemptId },
+      data: {
+        status: "disqualified",
+        submittedAt: new Date(),
+        score: null,
+        totalMarks: null,
+        correctCount: null,
+        incorrectCount: null,
+        unansweredCount: null,
+        timeSpentSeconds: Math.round(
+          (Date.now() - attempt.startedAt.getTime()) / 1000,
+        ),
+        autoSubmissionReason: "integrity_violation",
+        autoSubmittedAt: new Date(),
+        rank: null,
+        scoreLocked: true,
+      },
+    });
 
     return {
       ok: true,

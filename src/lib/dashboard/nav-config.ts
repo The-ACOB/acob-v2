@@ -113,6 +113,12 @@ const RESULTS: NavItem = {
   permissions: ["olympiad:results:view"],
 };
 
+const MY_RESULTS: NavItem = {
+  href: "/dashboard/results",
+  label: "My Results",
+  icon: BarChart3,
+};
+
 const PAYMENT_APPROVALS: NavItem = {
   href: "/dashboard/payment-approvals",
   label: "Payment Approvals",
@@ -362,7 +368,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     GENERAL_SECTION,
     {
       label: "Olympiads",
-      items: [OLYMPIADS, RESULTS],
+      items: [OLYMPIADS, MY_RESULTS],
     },
     REFERRALS_SECTION,
     RECOGNITION_SECTION,
@@ -373,7 +379,7 @@ const NAV_BY_ROLE: Record<RoleKey, NavSection[]> = {
     GENERAL_SECTION,
     {
       label: "Olympiads",
-      items: [OLYMPIADS, RESULTS],
+      items: [OLYMPIADS, MY_RESULTS],
     },
     RECOGNITION_SECTION,
     ACCOUNT_SECTION,

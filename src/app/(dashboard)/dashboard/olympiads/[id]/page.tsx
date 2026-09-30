@@ -12,6 +12,7 @@ import { OlympiadPublishControls } from "@/components/dashboard/OlympiadPublishC
 import { type Column } from "@/components/dashboard/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { getOlympiadPhase } from "@/lib/olympiads/lifecycle";
+import { awardForRank, finalizeOlympiadResults, isOlympiadFinished } from "@/lib/olympiads/results";
 
 export const metadata: Metadata = { title: "Manage Olympiad" };
 
@@ -43,11 +44,20 @@ export default async function OlympiadDetailPage({
   }
 
   const { id } = await params;
-  const olympiad = await db.olympiad.findUnique({
+  let olympiad = await db.olympiad.findUnique({
     where: { id },
     include: { _count: { select: { registrations: true } } },
   });
   if (!olympiad) notFound();
+
+  if (isOlympiadFinished(olympiad.endAt)) {
+    await finalizeOlympiadResults(id);
+    olympiad = await db.olympiad.findUnique({
+      where: { id },
+      include: { _count: { select: { registrations: true } } },
+    });
+    if (!olympiad) notFound();
+  }
 
   const questions: QuestionRow[] = await db.question.findMany({
     where: { olympiadId: id },
@@ -131,7 +141,8 @@ export default async function OlympiadDetailPage({
       header: "Score",
       cell: (r) => (r.score !== null ? `${r.score} / ${r.totalMarks}` : "—"),
     },
-    { header: "Rank", cell: (r) => r.rank ?? "—" },
+    { header: "Position", cell: (r) => r.rank ?? "—" },
+    { header: "Recognition", cell: (r) => awardForRank(r.rank) ?? "—" },
   ];
 
   return (
@@ -171,6 +182,7 @@ export default async function OlympiadDetailPage({
             resultsPublished={resultsPublished}
             hasAttempts={attempts.length > 0}
             registrationEnabled={olympiad.registrationEnabled}
+            finished={isOlympiadFinished(olympiad.endAt)}
           />
           <p className="mt-3 text-sm text-secondary">
             Current phase:{" "}

@@ -7,6 +7,7 @@ import { recordAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
 import { olympiadSchema, questionSchema } from "./validation";
+import { finalizeOlympiadResults, isOlympiadFinished } from "./results";
 import type { ActionResult } from "@/lib/auth/actions";
 
 function slugify(title: string): string {
@@ -576,41 +577,38 @@ export async function publishResultsAction(
     return { ok: false, error: "Olympiad not found." };
   }
 
-  const submitted: {
-    id: string;
-    userId: string;
-    score: number | null;
-  }[] = await db.attempt.findMany({
-    where: { olympiadId, status: "submitted" },
-    orderBy: { score: "desc" },
-  });
-
-  const autoSubmitted: {
-    id: string;
-    userId: string;
-    score: number | null;
-  }[] = await db.attempt.findMany({
-    where: { olympiadId, status: "expired_auto_submitted" },
-    orderBy: { score: "desc" },
-  });
-
-  const ranked = [...submitted, ...autoSubmitted].sort(
-    (a, b) => (b.score ?? 0) - (a.score ?? 0),
-  );
-
-  for (let i = 0; i < ranked.length; i++) {
-    await db.attempt.update({
-      where: { id: ranked[i].id },
-      data: {
-        rank: i + 1,
-        scoreLocked: true,
-      },
-    });
+  if (olympiad.resultsPublishedAt) {
+    return { ok: false, error: "Results are already published." };
   }
 
-  await db.olympiad.update({
-    where: { id: olympiadId },
+  if (!isOlympiadFinished(olympiad.endAt)) {
+    return {
+      ok: false,
+      error: "Results can only be published after the Olympiad has finished.",
+    };
+  }
+
+  const finalized = await finalizeOlympiadResults(olympiadId);
+
+  if (!finalized.finalized) {
+    return { ok: false, error: "The Olympiad is not ready for final results." };
+  }
+
+  const published = await db.olympiad.updateMany({
+    where: { id: olympiadId, resultsPublishedAt: null },
     data: { resultsPublishedAt: new Date() },
+  });
+
+  if (published.count !== 1) {
+    return { ok: false, error: "Results could not be published because the publication state changed." };
+  }
+
+  const ranked = await db.attempt.findMany({
+    where: {
+      olympiadId,
+      rank: { not: null },
+    },
+    select: { userId: true },
   });
 
   await recordAudit({
@@ -634,6 +632,7 @@ export async function publishResultsAction(
   );
 
   revalidatePath(`/dashboard/olympiads/${olympiadId}`);
+  revalidatePath(`/dashboard/results/${olympiadId}`);
   revalidatePath("/dashboard/results");
 
   return { ok: true };

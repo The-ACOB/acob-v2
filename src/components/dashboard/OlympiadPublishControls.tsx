@@ -18,12 +18,14 @@ export function OlympiadPublishControls({
   resultsPublished,
   hasAttempts,
   registrationEnabled,
+  finished,
 }: {
   olympiadId: string;
   status: "draft" | "published" | "unpublished";
   resultsPublished: boolean;
   hasAttempts: boolean;
   registrationEnabled: boolean;
+  finished: boolean;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -92,7 +94,7 @@ export function OlympiadPublishControls({
         </Button>
       )}
 
-      {hasAttempts && !resultsPublished ? (
+      {hasAttempts && finished && !resultsPublished ? (
         <Button
           variant="secondary"
           className="text-xs"
@@ -135,7 +137,7 @@ export function OlympiadPublishControls({
         open={confirming === "results"}
         onOpenChange={(o) => !o && setConfirming(null)}
         title="Publish results to participants?"
-        description="Ranks will be computed and every participant's score will be locked and made visible on their dashboard."
+        description="The final ranking is already calculated. Publishing will make each eligible participant's own score, position, and recognition visible in their dashboard. Participants will never see the full ranking table."
         confirmLabel="Publish results"
         onConfirm={handlePublishResults}
       />
