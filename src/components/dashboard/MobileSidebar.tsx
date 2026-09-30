@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
 import { resolveNavSections } from "@/lib/dashboard/nav-config";
 import { cn } from "@/lib/utils";
 
@@ -71,8 +70,14 @@ export function MobileSidebar({
             >
               {/* Header */}
               <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6">
-                <Logo href="/" className="h-6" />
+                {/* ACOB mobile logo */}
+                <img
+                  src="/assets/logo.png"
+                  alt="ACOB"
+                  className="h-7 w-auto object-contain"
+                />
 
+                {/* Close button */}
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
@@ -87,10 +92,12 @@ export function MobileSidebar({
               <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
                 {sections.map((section) => (
                   <div key={section.label} className="mb-7">
+                    {/* Section label */}
                     <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
                       {section.label}
                     </p>
 
+                    {/* Section items */}
                     <ul className="flex flex-col gap-1">
                       {section.items.map((item) => {
                         const active =
