@@ -11,21 +11,20 @@ import { cn } from "@/lib/utils";
 
 export function MobileSidebar({
   roleKeys,
+  permissions,
   roleLabel,
 }: {
   roleKeys: string[];
+  permissions: string[];
   roleLabel: string;
 }) {
-  const sections = resolveNavSections(roleKeys);
+  const sections = resolveNavSections(roleKeys, permissions);
+
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = open ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
@@ -60,26 +59,19 @@ export function MobileSidebar({
             />
 
             {/* Mobile navigation */}
-            <motion.div
-              initial={{ opacity: 0, x: -18 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -18 }}
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
               transition={{
-                duration: 0.24,
-                ease: [0.2, 0.7, 0.2, 1],
+                duration: 0.25,
+                ease: [0.22, 1, 0.36, 1],
               }}
-              className="fixed inset-0 z-[9999] flex min-h-dvh flex-col overflow-hidden"
-              style={{
-                backgroundColor: "var(--color-background)",
-              }}
+              className="fixed inset-0 z-[9999] flex min-h-dvh flex-col bg-background"
             >
-              {/* Mobile menu header */}
+              {/* Header */}
               <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6">
-                <Logo
-                  href="/"
-                  className="h-6"
-                  src="/assets/logo.png"
-                />
+                <Logo href="/" className="h-6" />
 
                 <button
                   type="button"
@@ -93,11 +85,8 @@ export function MobileSidebar({
 
               {/* Navigation */}
               <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
-                {sections.map((section, index) => (
-                  <div
-                    key={`${section.label}-${index}`}
-                    className="mb-7"
-                  >
+                {sections.map((section) => (
+                  <div key={section.label} className="mb-7">
                     <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
                       {section.label}
                     </p>
@@ -107,7 +96,7 @@ export function MobileSidebar({
                         const active =
                           pathname === item.href ||
                           (item.href !== "/dashboard" &&
-                            pathname.startsWith(item.href + "/"));
+                            pathname.startsWith(`${item.href}/`));
 
                         const Icon = item.icon;
 
@@ -117,7 +106,7 @@ export function MobileSidebar({
                               href={item.href}
                               onClick={() => setOpen(false)}
                               className={cn(
-                                "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-colors",
+                                "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-all",
                                 active
                                   ? "border border-border/80 bg-elevated font-medium text-primary shadow-sm"
                                   : "text-secondary hover:bg-elevated/60 hover:text-primary",
@@ -126,9 +115,7 @@ export function MobileSidebar({
                               <Icon
                                 className={cn(
                                   "h-[18px] w-[18px] shrink-0",
-                                  active
-                                    ? "text-accent"
-                                    : "text-muted",
+                                  active ? "text-accent" : "text-muted",
                                 )}
                                 strokeWidth={1.75}
                               />
@@ -142,11 +129,12 @@ export function MobileSidebar({
                   </div>
                 ))}
 
+                {/* Current role */}
                 <p className="mt-4 pb-6 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
                   {roleLabel}
                 </p>
               </nav>
-            </motion.div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
