@@ -5,13 +5,11 @@ import { MobileSidebar } from "./MobileSidebar";
 
 export function DashboardHeader({
   roleKeys,
-  permissions,
   roleLabel,
   user,
   notifications,
 }: {
   roleKeys: string[];
-  permissions: string[];
   roleLabel: string;
   user: {
     email: string;
@@ -26,11 +24,7 @@ export function DashboardHeader({
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-8 lg:px-10">
       <div className="flex items-center gap-3">
-        <MobileSidebar
-          roleKeys={roleKeys}
-          permissions={permissions}
-          roleLabel={roleLabel}
-        />
+        <MobileSidebar roleKeys={roleKeys} roleLabel={roleLabel} />
 
         <span className="rounded-sm border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
           {roleLabel}
@@ -62,8 +56,9 @@ export function DashboardHeader({
             <span className="text-xs font-medium text-primary">
               {user.fullName ?? "User"}
             </span>
-
-            <span className="text-[11px] text-secondary">{user.email}</span>
+            <span className="text-[11px] text-secondary">
+              {user.email}
+            </span>
           </div>
         </div>
       </div>

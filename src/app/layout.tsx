@@ -7,7 +7,6 @@ import "./globals.css";
 import { getSiteUrl } from "@/lib/env";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const siteUrl = getSiteUrl();
 

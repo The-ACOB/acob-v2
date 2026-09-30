@@ -10,10 +10,7 @@ import { ToastProvider } from "@/components/dashboard/Toast";
 import type { NotificationItem } from "@/components/dashboard/NotificationsMenu";
 
 export const metadata: Metadata = {
-  robots: {
-    index: false,
-    follow: false,
-  },
+  robots: { index: false, follow: false },
 };
 
 export default async function DashboardLayout({
@@ -28,9 +25,7 @@ export default async function DashboardLayout({
   }
 
   const participant = await db.participant.findUnique({
-    where: {
-      userId: session.id,
-    },
+    where: { userId: session.id },
     select: {
       gender: true,
       institution: true,
@@ -48,16 +43,13 @@ export default async function DashboardLayout({
   }
 
   const roleLabel = primaryRoleLabel(session.roleKeys);
-
-  const permissions = Array.from(await resolvePermissions(session.roleKeys));
+  const permissions = Array.from(
+    await resolvePermissions(session.roleKeys),
+  );
 
   const rawNotifications = await db.notification.findMany({
-    where: {
-      userId: session.id,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+    where: { userId: session.id },
+    orderBy: { createdAt: "desc" },
     take: 8,
   });
 
@@ -80,7 +72,6 @@ export default async function DashboardLayout({
   return (
     <ToastProvider>
       <div className="dashboard-shell flex min-h-dvh">
-        {/* Desktop sidebar */}
         <Sidebar
           roleKeys={session.roleKeys}
           permissions={permissions}
@@ -88,10 +79,8 @@ export default async function DashboardLayout({
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Header + mobile navigation */}
           <DashboardHeader
             roleKeys={session.roleKeys}
-            permissions={permissions}
             roleLabel={roleLabel}
             user={{
               email: session.email,
@@ -101,7 +90,9 @@ export default async function DashboardLayout({
             notifications={notifications}
           />
 
-          <main className="flex-1 px-6 py-8 sm:px-8 lg:px-10">{children}</main>
+          <main className="flex-1 px-6 py-8 sm:px-8 lg:px-10">
+            {children}
+          </main>
         </div>
       </div>
     </ToastProvider>
