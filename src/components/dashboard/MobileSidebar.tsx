@@ -21,7 +21,11 @@ export function MobileSidebar({
   const pathname = usePathname();
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
 
     return () => {
       document.body.style.overflow = "";
@@ -30,87 +34,120 @@ export function MobileSidebar({
 
   return (
     <div className="lg:hidden">
+      {/* Hamburger */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open navigation"
+        aria-expanded={open}
         className="flex h-9 w-9 items-center justify-center text-primary"
       >
-        {" "}
-        <Menu className="h-5 w-5" strokeWidth={1.75} />{" "}
+        <Menu className="h-5 w-5" strokeWidth={1.75} />
       </button>
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-background"
-          >
-            <div className="flex h-16 items-center justify-between border-b border-border px-6">
-              <Logo href="/" className="h-6" />
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[9998] bg-black/20"
+              aria-hidden="true"
+            />
 
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close navigation"
-                className="flex h-9 w-9 items-center justify-center text-primary"
-              >
-                <X className="h-5 w-5" strokeWidth={1.75} />
-              </button>
-            </div>
+            {/* Mobile navigation */}
+            <motion.div
+              initial={{ opacity: 0, x: -18 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -18 }}
+              transition={{
+                duration: 0.24,
+                ease: [0.2, 0.7, 0.2, 1],
+              }}
+              className="fixed inset-0 z-[9999] flex min-h-dvh flex-col overflow-hidden"
+              style={{
+                backgroundColor: "var(--color-background)",
+              }}
+            >
+              {/* Mobile menu header */}
+              <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6">
+                <Logo
+                  href="/"
+                  className="h-6"
+                  src="/assets/logo.png"
+                />
 
-            <nav className="h-[calc(100dvh-4rem)] overflow-y-auto px-6 py-6">
-              {sections.map((section) => (
-                <div key={section.label} className="mb-7">
-                  <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-                    {section.label}
-                  </p>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close navigation"
+                  className="flex h-9 w-9 items-center justify-center text-primary"
+                >
+                  <X className="h-5 w-5" strokeWidth={1.75} />
+                </button>
+              </div>
 
-                  <ul className="flex flex-col gap-1">
-                    {section.items.map((item) => {
-                      const active =
-                        pathname === item.href ||
-                        (item.href !== "/dashboard" &&
-                          pathname.startsWith(item.href + "/"));
+              {/* Navigation */}
+              <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
+                {sections.map((section, index) => (
+                  <div
+                    key={`${section.label}-${index}`}
+                    className="mb-7"
+                  >
+                    <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+                      {section.label}
+                    </p>
 
-                      const Icon = item.icon;
+                    <ul className="flex flex-col gap-1">
+                      {section.items.map((item) => {
+                        const active =
+                          pathname === item.href ||
+                          (item.href !== "/dashboard" &&
+                            pathname.startsWith(item.href + "/"));
 
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            onClick={() => setOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-all",
-                              active
-                                ? "border border-border/80 bg-elevated font-medium text-primary shadow-sm"
-                                : "text-secondary hover:bg-elevated/60 hover:text-primary",
-                            )}
-                          >
-                            <Icon
+                        const Icon = item.icon;
+
+                        return (
+                          <li key={item.href}>
+                            <Link
+                              href={item.href}
+                              onClick={() => setOpen(false)}
                               className={cn(
-                                "h-[18px] w-[18px] shrink-0",
-                                active ? "text-accent" : "text-muted",
+                                "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-colors",
+                                active
+                                  ? "border border-border/80 bg-elevated font-medium text-primary shadow-sm"
+                                  : "text-secondary hover:bg-elevated/60 hover:text-primary",
                               )}
-                              strokeWidth={1.75}
-                            />
-                            {item.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+                            >
+                              <Icon
+                                className={cn(
+                                  "h-[18px] w-[18px] shrink-0",
+                                  active
+                                    ? "text-accent"
+                                    : "text-muted",
+                                )}
+                                strokeWidth={1.75}
+                              />
 
-              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-                {roleLabel}
-              </p>
-            </nav>
-          </motion.div>
+                              <span>{item.label}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+
+                <p className="mt-4 pb-6 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+                  {roleLabel}
+                </p>
+              </nav>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
