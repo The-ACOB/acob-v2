@@ -10,6 +10,7 @@ import {
 } from "@/lib/olympiads/results";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
+import { PublishResultsButton } from "@/components/dashboard/PublishResultsButton";
 
 export const metadata: Metadata = { title: "Olympiad Rankings" };
 
@@ -124,9 +125,17 @@ export default async function OlympiadResultsPage({
           { label: freshOlympiad.title },
         ]}
         actions={
-          <Badge tone={freshOlympiad.resultsPublishedAt ? "success" : "warning"}>
-            {freshOlympiad.resultsPublishedAt ? "Results published" : "Results ready to publish"}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge tone={freshOlympiad.resultsPublishedAt ? "success" : "warning"}>
+              {freshOlympiad.resultsPublishedAt ? "Results published" : "Results ready to publish"}
+            </Badge>
+            {!freshOlympiad.resultsPublishedAt ? (
+              <PublishResultsButton
+                olympiadId={id}
+                hasAttempts={attempts.length > 0}
+              />
+            ) : null}
+          </div>
         }
       />
 
