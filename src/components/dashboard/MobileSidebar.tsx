@@ -5,18 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
 import { resolveNavSections } from "@/lib/dashboard/nav-config";
 import { cn } from "@/lib/utils";
 
 export function MobileSidebar({
   roleKeys,
+  permissions,
   roleLabel,
 }: {
   roleKeys: string[];
+  permissions: string[];
   roleLabel: string;
 }) {
-  const sections = resolveNavSections(roleKeys);
+  const sections = resolveNavSections(roleKeys, permissions);
+
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -30,87 +32,117 @@ export function MobileSidebar({
 
   return (
     <div className="lg:hidden">
+      {/* Hamburger */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open navigation"
+        aria-expanded={open}
         className="flex h-9 w-9 items-center justify-center text-primary"
       >
-        {" "}
-        <Menu className="h-5 w-5" strokeWidth={1.75} />{" "}
+        <Menu className="h-5 w-5" strokeWidth={1.75} />
       </button>
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-background"
-          >
-            <div className="flex h-16 items-center justify-between border-b border-border px-6">
-              <Logo href="/" className="h-6" />
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[9998] bg-black/20"
+              aria-hidden="true"
+            />
 
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close navigation"
-                className="flex h-9 w-9 items-center justify-center text-primary"
-              >
-                <X className="h-5 w-5" strokeWidth={1.75} />
-              </button>
-            </div>
+            {/* Mobile navigation */}
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{
+                duration: 0.25,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="fixed inset-0 z-[9999] flex min-h-dvh flex-col bg-background"
+            >
+              {/* Header */}
+              <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6">
+                {/* ACOB mobile logo */}
+                <img
+                  src="/assets/logo.png"
+                  alt="ACOB"
+                  className="h-7 w-auto object-contain"
+                />
 
-            <nav className="h-[calc(100dvh-4rem)] overflow-y-auto px-6 py-6">
-              {sections.map((section) => (
-                <div key={section.label} className="mb-7">
-                  <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-                    {section.label}
-                  </p>
+                {/* Close button */}
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close navigation"
+                  className="flex h-9 w-9 items-center justify-center text-primary"
+                >
+                  <X className="h-5 w-5" strokeWidth={1.75} />
+                </button>
+              </div>
 
-                  <ul className="flex flex-col gap-1">
-                    {section.items.map((item) => {
-                      const active =
-                        pathname === item.href ||
-                        (item.href !== "/dashboard" &&
-                          pathname.startsWith(item.href + "/"));
+              {/* Navigation */}
+              <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
+                {sections.map((section) => (
+                  <div key={section.label} className="mb-7">
+                    {/* Section label */}
+                    <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+                      {section.label}
+                    </p>
 
-                      const Icon = item.icon;
+                    {/* Section items */}
+                    <ul className="flex flex-col gap-1">
+                      {section.items.map((item) => {
+                        const active =
+                          pathname === item.href ||
+                          (item.href !== "/dashboard" &&
+                            pathname.startsWith(`${item.href}/`));
 
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            onClick={() => setOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-all",
-                              active
-                                ? "border border-border/80 bg-elevated font-medium text-primary shadow-sm"
-                                : "text-secondary hover:bg-elevated/60 hover:text-primary",
-                            )}
-                          >
-                            <Icon
+                        const Icon = item.icon;
+
+                        return (
+                          <li key={item.href}>
+                            <Link
+                              href={item.href}
+                              onClick={() => setOpen(false)}
                               className={cn(
-                                "h-[18px] w-[18px] shrink-0",
-                                active ? "text-accent" : "text-muted",
+                                "flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm transition-all",
+                                active
+                                  ? "border border-border/80 bg-elevated font-medium text-primary shadow-sm"
+                                  : "text-secondary hover:bg-elevated/60 hover:text-primary",
                               )}
-                              strokeWidth={1.75}
-                            />
-                            {item.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+                            >
+                              <Icon
+                                className={cn(
+                                  "h-[18px] w-[18px] shrink-0",
+                                  active ? "text-accent" : "text-muted",
+                                )}
+                                strokeWidth={1.75}
+                              />
 
-              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-                {roleLabel}
-              </p>
-            </nav>
-          </motion.div>
+                              <span>{item.label}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+
+                {/* Current role */}
+                <p className="mt-4 pb-6 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+                  {roleLabel}
+                </p>
+              </nav>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </div>
