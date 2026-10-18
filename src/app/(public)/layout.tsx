@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { WhatsAppSupport } from "@/components/layout/WhatsAppSupport";
 import { PopupBanner } from "@/components/effects/PopupBanner";
 import { getCurrentSession } from "@/lib/auth/session";
 import { getActivePopup } from "@/lib/popups/query";
@@ -30,6 +31,7 @@ export default async function PublicLayout({
       />
       <main className="flex-1">{children}</main>
       <Footer />
+      <WhatsAppSupport />
     </div>
   );
 }

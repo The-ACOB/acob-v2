@@ -13,10 +13,6 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
-  other: {
-    "facebook-domain-verification": "a9srb2nmq3xli9xn72nyfhyzap7dv3",
-  },
-
   title: {
     default: "ACOB — Applied Cognitio Olympiad Bangladesh",
     template: "%s — ACOB",
