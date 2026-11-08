@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { requireAuth, requirePermission, requireOwnership, AuthError } from "@/lib/authz/guards";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
-import { notify } from "@/lib/notifications";
+import { notify, notifyMany } from "@/lib/notifications";
 import { supportResponseEmail } from "@/lib/email/templates";
 import { recordAudit } from "@/lib/audit";
 import type { ActionResult } from "@/lib/auth/actions";
@@ -33,17 +33,13 @@ export async function sendMyMessageAction(body: string): Promise<ActionResult> {
   }
 
   const staff = await getUsersWithPermission("support:reply");
-  await Promise.all(
-    staff.map((s) =>
-      notify({
-        userId: s.userId,
-        type: "support:new_message",
-        title: "New message from a participant",
-        body: body.slice(0, 120),
-        metadata: { conversationId: conversation!.id },
-      })
-    )
-  );
+  await notifyMany({
+    userIds: staff.map((s) => s.userId),
+    type: "support:new_message",
+    title: "New message from a participant",
+    body: body.slice(0, 120),
+    metadata: { conversationId: conversation!.id },
+  });
 
   revalidatePath("/dashboard/messages");
   return { ok: true };

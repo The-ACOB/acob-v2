@@ -25,6 +25,9 @@ export type ContentRow = {
   thumbnailUrl?: string | null;
   fileUrl?: string | null; // <--- Added
   coverImageUrl?: string | null; // <--- Added
+  isPaid?: boolean;
+  price?: string | null;
+  paymentQrCodeUrl?: string | null;
   status: "draft" | "published" | "unpublished" | "archived";
   publishedAt: string | null;
 };
@@ -124,6 +127,7 @@ export function ContentManager({
   if (mode === "create") {
     return (
       <ContentForm
+        kind={kind}
         onSubmit={(values) => createContentAction(kind, values)}
         onDone={() => setMode("none")}
       />
@@ -134,13 +138,17 @@ export function ContentManager({
   if (editing) {
     return (
       <ContentForm
+        kind={kind}
         defaultValues={{
           title: editing.title,
           description: editing.description ?? "",
           body: editing.body ?? "",
           externalUrl: editing.externalUrl ?? "",
           fileUrl: editing.fileUrl ?? "", // <--- Passed to form
-          coverImageUrl: editing.coverImageUrl ?? "", // <--- Passed to form
+          coverImageUrl: editing.coverImageUrl ?? "",
+          isPaid: editing.isPaid ?? false,
+          price: editing.price ?? "",
+          paymentQrCodeUrl: editing.paymentQrCodeUrl ?? "", // <--- Passed to form
         }}
         onSubmit={(values) => updateContentAction(editing.id, kind, values)}
         onDone={() => setMode("none")}
@@ -194,6 +202,7 @@ export function ContentManager({
                         {item.description}
                       </p>
                     ) : null}
+                    {kind === "resource" && item.isPaid ? <p className="pt-1 text-[10px] font-semibold uppercase tracking-wider text-accent">Paid · ৳{item.price ?? ""}</p> : null}
 
                     {/* Inline Quick Action Links */}
                     <div className="flex items-center gap-3 pt-2">

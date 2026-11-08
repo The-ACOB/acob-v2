@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/authz/guards";
 import { db } from "@/lib/db/client";
 import { PaymentApprovalClient } from "./PaymentApprovalClient";
+import { ResourcePurchaseApprovalClient } from "@/components/dashboard/ResourcePurchaseApprovalClient";
 
 export default async function PaymentApprovalsPage() {
   await requirePermission("payment:view");
@@ -60,8 +61,11 @@ export default async function PaymentApprovalsPage() {
     duplicateCount: duplicateCounts.get(payment.transactionId) ?? 1,
   }));
 
+  const resourcePurchases = await db.resourcePurchase.findMany({ where: { status: "pending" }, include: { content: true, payer: true }, orderBy: { createdAt: "asc" } });
+  const serializedResourcePurchases = resourcePurchases.map(p => ({ id: p.id, resourceTitle: p.content.title, participantEmail: p.payer.email, amount: p.amount.toString(), method: p.method, senderNumber: p.senderNumber, transactionId: p.transactionId, createdAt: p.createdAt.toISOString() }));
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <div>
         <p className="field-kicker">
           Finance
@@ -77,6 +81,7 @@ export default async function PaymentApprovalsPage() {
       </div>
 
       <PaymentApprovalClient payments={serializedPayments} />
+      <ResourcePurchaseApprovalClient purchases={serializedResourcePurchases} />
     </div>
   );
 }

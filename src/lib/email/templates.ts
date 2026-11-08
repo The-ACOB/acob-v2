@@ -71,3 +71,24 @@ export function securityNotificationEmail(params: { message: string }) {
     html: wrap(`<p>${escapeHtml(params.message)}</p><p>If this wasn't you, please reset your password immediately.</p>`),
   };
 }
+
+/**
+ * Generic email mirror of an in-app notification. Used by notify() whenever
+ * a caller doesn't supply a more specific template.
+ */
+export function notificationEmail(params: { title: string; body?: string | null; link?: string }) {
+  const safeTitle = params.title.replace(/[\r\n]/g, " ");
+  return {
+    subject: safeTitle,
+    html: wrap(`
+      <p style="font-size: 18px; font-weight: 600; margin: 0 0 12px 0;">${escapeHtml(params.title)}</p>
+      ${params.body ? `<p style="margin: 0 0 16px 0; line-height: 1.6;">${escapeHtml(params.body)}</p>` : ""}
+      ${
+        params.link
+          ? `<p style="margin: 24px 0;"><a href="${escapeHtml(params.link)}" target="_blank" style="background-color: #16161a; color: #ffffff; padding: 10px 22px; border-radius: 6px; font-size: 14px; text-decoration: none; display: inline-block;">Open in dashboard</a></p>`
+          : ""
+      }
+      <p style="font-size: 12px; color: #9a9a9a;">You can turn off email notifications any time from the Notifications page in your dashboard.</p>
+    `),
+  };
+}

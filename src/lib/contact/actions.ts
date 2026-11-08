@@ -7,7 +7,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { requirePermission, AuthError } from "@/lib/authz/guards";
 import { contactSubmitSchema } from "./validation";
 import { rateLimit } from "@/lib/rate-limit";
-import { notify } from "@/lib/notifications";
+import { notify, notifyMany } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
 import { recordAudit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
@@ -45,17 +45,13 @@ export async function submitContactAction(input: unknown): Promise<ActionResult>
   });
 
   const staff = await getUsersWithPermission("contact:view");
-  await Promise.all(
-    staff.map((s) =>
-      notify({
-        userId: s.userId,
-        type: "contact:new",
-        title: "New contact message",
-        body: `${name}: ${subject}`,
-        metadata: { submissionId: submission.id },
-      })
-    )
-  );
+  await notifyMany({
+    userIds: staff.map((s) => s.userId),
+    type: "contact:new",
+    title: "New contact message",
+    body: `${name}: ${subject}`,
+    metadata: { submissionId: submission.id },
+  });
 
   return { ok: true };
 }
@@ -89,6 +85,7 @@ export async function replyToContactAction(submissionId: string, body: string): 
       title: "ACOB Support replied to your message",
       body: submission.subject,
       metadata: { submissionId },
+      email: false, // the reply email is sent explicitly below
     });
   }
 

@@ -12,6 +12,7 @@ import {
 import { notFound } from "next/navigation";
 
 import { db } from "@/lib/db/client";
+import { getCurrentSession } from "@/lib/auth/session";
 
 type PageProps = {
   params: Promise<{
@@ -102,6 +103,10 @@ export default async function ResourceDetailPage({ params }: PageProps) {
   if (!resource) {
     notFound();
   }
+
+  const session = await getCurrentSession();
+  const purchase = resource.isPaid && session ? await db.resourcePurchase.findFirst({ where: { contentId: resource.id, userId: session.id, status: { in: ["approved", "pending"] } }, orderBy: { createdAt: "desc" } }) : null;
+  const canAccessResource = !resource.isPaid || purchase?.status === "approved";
 
   const relatedResources = await db.content.findMany({
     where: {
@@ -209,7 +214,13 @@ export default async function ResourceDetailPage({ params }: PageProps) {
               </div>
 
               <div className="mt-6 flex flex-wrap gap-3">
-                {resource.fileUrl ? (
+                {resource.isPaid && !canAccessResource ? (
+                  <Link href={purchase?.status === "pending" ? "/dashboard/purchases" : session ? `/resources/${resource.slug}/purchase` : `/login?returnTo=${encodeURIComponent(`/resources/${resource.slug}/purchase`)}`} className="inline-flex items-center gap-2 bg-primary px-5 py-3 text-[10px] font-medium uppercase tracking-[0.1em] text-primary-foreground transition-opacity hover:opacity-85">
+                    {purchase?.status === "pending" ? "Purchase awaiting approval" : `Continue to purchase · ৳${resource.price ? Number(resource.price).toLocaleString("en-BD") : ""}`}
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : null}
+                {resource.fileUrl && canAccessResource ? (
                   <a
                     href={resource.fileUrl}
                     target="_blank"
@@ -221,7 +232,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
                   </a>
                 ) : null}
 
-                {resource.externalUrl ? (
+                {resource.externalUrl && canAccessResource ? (
                   <a
                     href={resource.externalUrl}
                     target="_blank"
@@ -256,7 +267,9 @@ export default async function ResourceDetailPage({ params }: PageProps) {
                 </h2>
               </div>
 
-              {blocks.length > 0 ? (
+              {!canAccessResource ? (
+                <div className="max-w-2xl rounded-xl border border-border bg-elevated p-6"><p className="text-sm font-semibold text-primary">This is a paid resource</p><p className="mt-2 text-sm leading-6 text-secondary">Purchase access to view and download the complete material. Once your payment is verified, it will be available here automatically.</p></div>
+              ) : blocks.length > 0 ? (
                 <div className="max-w-3xl space-y-8">
                   {blocks.map((block, index) => {
                     const lines = block
@@ -360,7 +373,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                {resource.fileUrl ? (
+                {resource.fileUrl && canAccessResource ? (
                   <a
                     href={resource.fileUrl}
                     target="_blank"

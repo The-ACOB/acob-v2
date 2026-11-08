@@ -35,6 +35,8 @@ model User {
   notifications            Notification[]
   paymentsReviewed         OlympiadPayment[]        @relation("PaymentReviewer")
   paymentsMade             OlympiadPayment[]        @relation("PaymentPayer")
+  resourcePurchasesMade    ResourcePurchase[]       @relation("ResourcePurchasePayer")
+  resourcePurchasesReviewed ResourcePurchase[]      @relation("ResourcePurchaseReviewer")
   olympiadRegistrations    OlympiadRegistration[]
   olympiadsCreated         Olympiad[]               @relation("OlympiadCreator")
   organisationTeamMembers  OrganisationTeamMember[] @relation("OrganisationTeamMemberCreator")
@@ -630,8 +632,48 @@ model Content {
   coverImageUrl String?       @map("cover_image_url")
   fileUrl       String?       @map("file_url")
   author        User          @relation("ContentAuthor", fields: [createdBy], references: [id], onDelete: Cascade)
+  isPaid        Boolean       @default(false) @map("is_paid")
+  price         Decimal?      @db.Decimal(10, 2)
+  paymentQrCodeUrl String?    @map("payment_qr_code_url")
+  purchases     ResourcePurchase[]
 
   @@map("content")
+}
+
+model ResourcePurchase {
+  id             String                 @id @default(uuid())
+  contentId      String                 @map("content_id")
+  userId         String                 @map("user_id")
+  amount         Decimal                @db.Decimal(10, 2)
+  method         ResourcePaymentMethod
+  senderNumber   String                 @map("sender_number")
+  transactionId  String                 @map("transaction_id")
+  status         ResourcePurchaseStatus @default(pending)
+  reviewedBy     String?                @map("reviewed_by")
+  reviewedAt     DateTime?              @map("reviewed_at")
+  rejectionReason String?               @map("rejection_reason")
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+  content        Content                @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  payer          User                   @relation("ResourcePurchasePayer", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer       User?                  @relation("ResourcePurchaseReviewer", fields: [reviewedBy], references: [id])
+  @@index([userId, status])
+  @@index([contentId, status])
+  @@unique([transactionId])
+  @@map("resource_purchases")
+}
+
+enum ResourcePaymentMethod {
+  bkash
+  nagad
+  @@map("resource_payment_method")
+}
+
+enum ResourcePurchaseStatus {
+  pending
+  approved
+  rejected
+  @@map("resource_purchase_status")
 }
 
 model CareerListing {

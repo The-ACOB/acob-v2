@@ -150,6 +150,9 @@ export async function createContentAction(
       // Uploaded study guide files
       fileUrl: v.fileUrl || null,
       coverImageUrl: v.coverImageUrl || null,
+      isPaid: kind === "resource" ? Boolean(v.isPaid) : false,
+      price: kind === "resource" && v.isPaid ? String(v.price ?? "0") : null,
+      paymentQrCodeUrl: kind === "resource" && v.isPaid ? (v.paymentQrCodeUrl || null) : null,
 
       createdBy: actor.id,
     },
@@ -208,6 +211,7 @@ export async function updateContentAction(
     select: {
       fileUrl: true,
       coverImageUrl: true,
+      paymentQrCodeUrl: true,
     },
   });
 
@@ -232,6 +236,9 @@ export async function updateContentAction(
       // Save the current file state
       fileUrl: newFileUrl,
       coverImageUrl: newCoverImageUrl,
+      isPaid: kind === "resource" ? Boolean(v.isPaid) : false,
+      price: kind === "resource" && v.isPaid ? String(v.price ?? "0") : null,
+      paymentQrCodeUrl: kind === "resource" && v.isPaid ? (v.paymentQrCodeUrl || null) : null,
     },
   });
 
@@ -251,6 +258,10 @@ export async function updateContentAction(
    */
   if (existing.coverImageUrl && existing.coverImageUrl !== newCoverImageUrl) {
     await deleteBlobSafely(existing.coverImageUrl);
+  }
+  const newQrUrl = kind === "resource" && v.isPaid ? (v.paymentQrCodeUrl || null) : null;
+  if (existing.paymentQrCodeUrl && existing.paymentQrCodeUrl !== newQrUrl) {
+    await deleteBlobSafely(existing.paymentQrCodeUrl);
   }
 
   await recordAudit({

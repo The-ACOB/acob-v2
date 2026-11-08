@@ -12,6 +12,8 @@ export const NOTIFICATION_TYPES = [
   "recommendation_letter:available",
   "approval:requested",
   "approval:completed",
+  "resource:purchase_submitted",
+  "resource:purchase_verified",
   "contact:new",
   "contact:response",
   "support:new_message",

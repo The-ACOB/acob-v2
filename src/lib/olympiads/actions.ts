@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db/client";
 import { requirePermission, AuthError } from "@/lib/authz/guards";
 import { recordAudit } from "@/lib/audit";
-import { notify } from "@/lib/notifications";
+import { notifyMany } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
 import { olympiadSchema, questionSchema } from "./validation";
 import { translateEnglishToBangla } from "@/lib/question-archive/translation";
@@ -255,19 +255,15 @@ export async function publishOlympiadAction(
   if (!isFuture) {
     const staff = await getUsersWithPermission("olympiad:results:view");
 
-    await Promise.all(
-      staff.map((s) =>
-        notify({
-          userId: s.userId,
-          type: "olympiad:published",
-          title: "Olympiad published",
-          body: olympiad.title,
-          metadata: {
-            olympiadId: id,
-          },
-        }),
-      ),
-    );
+    await notifyMany({
+      userIds: staff.map((s) => s.userId),
+      type: "olympiad:published",
+      title: "Olympiad published",
+      body: olympiad.title,
+      metadata: {
+        olympiadId: id,
+      },
+    });
   }
 
   revalidatePath(`/dashboard/olympiads/${id}`);
@@ -1357,23 +1353,19 @@ export async function publishResultsAction(
   /*
    * Notify participants.
    */
-  await Promise.all(
-    ranked.map((attempt) =>
-      notify({
-        userId: attempt.userId,
+  await notifyMany({
+    userIds: ranked.map((attempt) => attempt.userId),
 
-        type: "olympiad:results_published",
+    type: "olympiad:results_published",
 
-        title: "Results published",
+    title: "Results published",
 
-        body: olympiad.title,
+    body: olympiad.title,
 
-        metadata: {
-          olympiadId,
-        },
-      }),
-    ),
-  );
+    metadata: {
+      olympiadId,
+    },
+  });
 
   /*
    * IMPORTANT:

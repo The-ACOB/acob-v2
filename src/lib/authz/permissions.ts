@@ -109,7 +109,7 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
 
   // Payments
   "payment:view":
-    "View Olympiad payment submissions and payment approval records",
+    "View Olympiad and resource payment submissions and approval records",
   "payment:approve": "Approve or reject Olympiad payment submissions",
 
   // Certificates

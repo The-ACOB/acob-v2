@@ -16,12 +16,12 @@ export default async function ResourcesAdminPage() {
   const raw: {
     id: string; title: string; description: string | null; body: string | null;
     externalUrl: string | null; status: "draft" | "published" | "unpublished" | "archived";
-    publishedAt: Date | null;
+    publishedAt: Date | null; fileUrl: string | null; coverImageUrl: string | null; isPaid: boolean; price: { toString(): string } | null; paymentQrCodeUrl: string | null;
   }[] = await db.content.findMany({ where: { kind: "resource" }, orderBy: { createdAt: "desc" } });
 
   const items: ContentRow[] = raw.map((r) => ({
     id: r.id, title: r.title, description: r.description, body: r.body,
-    externalUrl: r.externalUrl, status: r.status,
+    externalUrl: r.externalUrl, fileUrl: r.fileUrl, coverImageUrl: r.coverImageUrl, status: r.status, isPaid: r.isPaid, price: r.price?.toString() ?? null, paymentQrCodeUrl: r.paymentQrCodeUrl,
     publishedAt: r.publishedAt ? r.publishedAt.toISOString() : null,
   }));
 

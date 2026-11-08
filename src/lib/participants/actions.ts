@@ -12,7 +12,7 @@ import {
 } from "@/lib/email";
 import { getSiteUrl } from "@/lib/env";
 import { recordAudit } from "@/lib/audit";
-import { notify } from "@/lib/notifications";
+import { notify, notifyMany } from "@/lib/notifications";
 import { getUsersWithPermission } from "@/lib/authz/resolve-users";
 import {
   registerParticipantSchema,
@@ -383,19 +383,15 @@ export async function requestAmbassadorPromotionAction(
 
   const approvers = await getUsersWithPermission("approval:approve");
 
-  await Promise.all(
-    approvers.map((a) =>
-      notify({
-        userId: a.userId,
-        type: "approval:requested",
-        title: "Ambassador promotion requested",
-        body: "A promotion request is awaiting your review.",
-        metadata: {
-          requestId: request.id,
-        },
-      }),
-    ),
-  );
+  await notifyMany({
+    userIds: approvers.map((a) => a.userId),
+    type: "approval:requested",
+    title: "Ambassador promotion requested",
+    body: "A promotion request is awaiting your review.",
+    metadata: {
+      requestId: request.id,
+    },
+  });
 
   revalidatePath("/dashboard/participants");
 

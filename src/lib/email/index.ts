@@ -44,19 +44,27 @@ export async function sendEmail({
   }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to,
-        subject,
-        html,
-      }),
-    });
+    const request = () =>
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to,
+          subject,
+          html,
+        }),
+      });
+
+    let res = await request();
+    // Resend rate-limits bursts (HTTP 429); wait briefly and retry once.
+    if (res.status === 429) {
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      res = await request();
+    }
 
     const data = await res.json().catch(() => null);
 
@@ -99,6 +107,67 @@ export async function sendEmail({
         error instanceof Error ? error.message : "Unknown email network error",
     };
   }
+}
+
+/**
+ * Sends many emails via Resend's batch endpoint (max 100 per request).
+ * Never throws; returns how many were accepted. Contents are never logged.
+ */
+export async function sendEmailBatch(
+  messages: SendEmailInput[],
+): Promise<{ accepted: number; failed: number }> {
+  const { apiKey, from } = getEmailConfig();
+  if (messages.length === 0) return { accepted: 0, failed: 0 };
+  if (!apiKey) {
+    console.error("[email] Batch not sent: RESEND_API_KEY is not configured.", {
+      count: messages.length,
+    });
+    return { accepted: 0, failed: messages.length };
+  }
+
+  let accepted = 0;
+  let failed = 0;
+
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100);
+    const payload = JSON.stringify(
+      chunk.map((m) => ({ from, to: m.to, subject: m.subject, html: m.html })),
+    );
+    const request = () =>
+      fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: payload,
+      });
+
+    try {
+      let res = await request();
+      if (res.status === 429) {
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+        res = await request();
+      }
+      if (res.ok) {
+        accepted += chunk.length;
+      } else {
+        failed += chunk.length;
+        const data = await res.json().catch(() => null);
+        console.error("[email] Resend batch error:", {
+          status: res.status,
+          message: typeof data?.message === "string" ? data.message : undefined,
+        });
+      }
+    } catch (error) {
+      failed += chunk.length;
+      console.error("[email] Batch network failure:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  return { accepted, failed };
 }
 
 export function verificationEmailHtml(link: string) {

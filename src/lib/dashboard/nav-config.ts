@@ -50,6 +50,12 @@ const NOTIFICATIONS: NavItem = {
   permissions: ["notifications:view"],
 };
 
+const MY_PURCHASES: NavItem = {
+  href: "/dashboard/purchases",
+  label: "My Purchases",
+  icon: CreditCard,
+};
+
 const MY_PROFILE: NavItem = {
   href: "/dashboard/profile",
   label: "My Profile",
@@ -233,7 +239,7 @@ const MESSAGES: NavItem = {
 
 const GENERAL_SECTION: NavSection = {
   label: "General",
-  items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE],
+  items: [OVERVIEW, NOTIFICATIONS, MY_PROFILE, MY_PURCHASES],
 };
 
 const PEOPLE_SECTION: NavSection = {

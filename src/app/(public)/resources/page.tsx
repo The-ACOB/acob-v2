@@ -229,6 +229,7 @@ export default async function ResourcesPage() {
                     {featured.description}
                   </p>
                 ) : null}
+                {featured.isPaid ? <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-accent">Paid resource · ৳{featured.price ? Number(featured.price).toLocaleString("en-BD") : ""}</p> : null}
 
                 {featured.publishedAt ? (
                   <p className="mt-5 text-[10px] uppercase tracking-[0.12em] text-muted">
@@ -246,7 +247,7 @@ export default async function ResourcesPage() {
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
 
-                {featured.fileUrl ? (
+                {featured.fileUrl && !featured.isPaid ? (
                   <a
                     href={featured.fileUrl}
                     target="_blank"
@@ -348,6 +349,7 @@ export default async function ResourcesPage() {
                       </p>
                     ) : null}
 
+                    {resource.isPaid ? <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-accent">Paid · ৳{resource.price ? Number(resource.price).toLocaleString("en-BD") : ""}</p> : null}
                     <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
                       <Link
                         href={`/resources/${resource.slug}`}
@@ -357,7 +359,7 @@ export default async function ResourcesPage() {
                         <ArrowUpRight className="h-3 w-3" />
                       </Link>
 
-                      {resource.fileUrl ? (
+                      {resource.fileUrl && !resource.isPaid ? (
                         <a
                           href={resource.fileUrl}
                           target="_blank"
