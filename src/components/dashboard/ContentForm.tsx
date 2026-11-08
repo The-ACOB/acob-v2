@@ -13,7 +13,9 @@ import type { z } from "zod";
 import type { ActionResult } from "@/lib/auth/actions";
 import { deleteUploadedBlobAction } from "@/lib/content/actions";
 
-type Values = z.infer<typeof contentSchema>;
+// Zod input and output types are different because isPaid has a default.
+type FormInput = z.input<typeof contentSchema>;
+type Values = z.output<typeof contentSchema>;
 
 export function ContentForm({
   defaultValues,
@@ -21,7 +23,7 @@ export function ContentForm({
   onDone,
   kind,
 }: {
-  defaultValues?: Partial<Values>;
+  defaultValues?: Partial<FormInput>;
   kind: (typeof import("@/lib/content/validation").CONTENT_KINDS)[number];
   onSubmit: (values: Values) => Promise<ActionResult>;
   onDone: () => void;
@@ -45,7 +47,7 @@ export function ContentForm({
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({
+  } = useForm<FormInput, unknown, Values>({
     resolver: zodResolver(contentSchema),
     defaultValues: {
       title: defaultValues?.title ?? "",
@@ -205,32 +207,64 @@ export function ContentForm({
     }
   }
 
-
+  // Handle Payment QR Upload
   async function handleQrUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
+
     if (!file) return;
+
     if (!file.type.startsWith("image/")) {
       toast("error", "Invalid file", "Please select a QR image.");
       return;
     }
+
     try {
       setUploadingQr(true);
-      const name = `resource-payment-qr-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
-      const blob = await upload(name, file, { access: "public", handleUploadUrl: "/api/resources/upload" });
+
+      const name = `resource-payment-qr-${Date.now()}-${file.name.replace(
+        /[^a-zA-Z0-9._-]/g,
+        "-",
+      )}`;
+
+      const blob = await upload(name, file, {
+        access: "public",
+        handleUploadUrl: "/api/resources/upload",
+      });
+
       uploadedThisSession.current.add(blob.url);
+
       const previous = paymentQrCodeUrlValue;
-      setValue("paymentQrCodeUrl", blob.url, { shouldDirty: true, shouldValidate: true });
-      if (previous && uploadedThisSession.current.has(previous)) await cleanupSessionUpload(previous);
+
+      setValue("paymentQrCodeUrl", blob.url, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      if (previous && uploadedThisSession.current.has(previous)) {
+        await cleanupSessionUpload(previous);
+      }
+
       toast("success", "QR image uploaded");
     } catch (error) {
-      toast("error", "QR upload failed", error instanceof Error ? error.message : "Could not upload QR image.");
-    } finally { setUploadingQr(false); }
+      toast(
+        "error",
+        "QR upload failed",
+        error instanceof Error ? error.message : "Could not upload QR image.",
+      );
+    } finally {
+      setUploadingQr(false);
+    }
   }
 
   async function handleRemoveQr() {
     const url = paymentQrCodeUrlValue;
-    setValue("paymentQrCodeUrl", "", { shouldDirty: true, shouldValidate: true });
+
+    setValue("paymentQrCodeUrl", "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
     await cleanupSessionUpload(url);
   }
 
@@ -246,7 +280,7 @@ export function ContentForm({
      * If this was uploaded during the current session,
      * delete it immediately.
      *
-     * If it was an existing DB file, leave it alone.
+     * If this was an existing DB file, leave it alone.
      * updateContentAction() will delete it after Save.
      */
     await cleanupSessionUpload(url);
@@ -290,8 +324,10 @@ export function ContentForm({
     onDone();
   }
 
+  // Zod resolver supplies validated output values here.
   const submit = async (values: Values) => {
     setServerError(null);
+
     if (kind === "resource" && !values.isPaid && values.paymentQrCodeUrl) {
       await cleanupSessionUpload(values.paymentQrCodeUrl);
     }
@@ -462,31 +498,79 @@ export function ContentForm({
         </div>
       </div>
 
-
       {/* Paid resource checkout settings */}
       {kind === "resource" ? (
         <section className="rounded-lg border border-border bg-black/20 p-4 space-y-4">
           <label className="flex items-center gap-3 text-sm font-medium text-primary">
-            <input type="checkbox" {...register("isPaid")} className="h-4 w-4 accent-current" />
+            <input
+              type="checkbox"
+              {...register("isPaid")}
+              className="h-4 w-4 accent-current"
+            />
             This is a paid resource
           </label>
+
           {isPaidValue ? (
             <>
-              <FormField label="Price (BDT)" htmlFor="resource-price" error={errors.price?.message as string | undefined}>
-                <input id="resource-price" type="number" min="1" step="0.01" className={fieldClasses} placeholder="e.g. 250" {...register("price", { valueAsNumber: true })} />
+              <FormField
+                label="Price (BDT)"
+                htmlFor="resource-price"
+                error={errors.price?.message as string | undefined}
+              >
+                <input
+                  id="resource-price"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  className={fieldClasses}
+                  placeholder="e.g. 250"
+                  {...register("price", { valueAsNumber: true })}
+                />
               </FormField>
+
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-wider text-secondary font-medium">Payment QR Code</label>
+                <label className="text-xs uppercase tracking-wider text-secondary font-medium">
+                  Payment QR Code
+                </label>
+
                 {paymentQrCodeUrlValue ? (
                   <div className="flex items-center gap-4 rounded-lg border border-border p-3">
-                    <img src={paymentQrCodeUrlValue} alt="Payment QR preview" className="h-28 w-28 rounded bg-white object-contain p-2" />
-                    <div className="min-w-0 flex-1"><p className="text-xs text-success">QR code attached</p><button type="button" onClick={handleRemoveQr} className="mt-2 text-xs text-error underline">Remove QR</button></div>
+                    <img
+                      src={paymentQrCodeUrlValue}
+                      alt="Payment QR preview"
+                      className="h-28 w-28 rounded bg-white object-contain p-2"
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-success">QR code attached</p>
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveQr}
+                        className="mt-2 text-xs text-error underline"
+                      >
+                        Remove QR
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="rounded-lg border-2 border-dashed border-border p-4 text-center">
-                    <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleQrUpload} disabled={uploadingQr || isSubmitting} className="block w-full text-xs text-secondary file:mr-3 file:rounded file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:text-primary" />
-                    <p className="mt-2 text-[10px] text-muted">Upload the QR code for this resource. Each resource keeps its own QR.</p>
-                    {uploadingQr ? <p className="mt-2 text-xs text-accent">Uploading QR…</p> : null}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleQrUpload}
+                      disabled={uploadingQr || isSubmitting}
+                      className="block w-full text-xs text-secondary file:mr-3 file:rounded file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:text-primary"
+                    />
+
+                    <p className="mt-2 text-[10px] text-muted">
+                      Upload the QR code for this resource. Each resource keeps
+                      its own QR.
+                    </p>
+
+                    {uploadingQr ? (
+                      <p className="mt-2 text-xs text-accent">Uploading QR…</p>
+                    ) : null}
                   </div>
                 )}
               </div>
@@ -501,7 +585,9 @@ export function ContentForm({
         <Button
           type="submit"
           variant="primary"
-          disabled={isSubmitting || uploadingPdf || uploadingCover || uploadingQr}
+          disabled={
+            isSubmitting || uploadingPdf || uploadingCover || uploadingQr
+          }
           className="text-xs"
         >
           {isSubmitting ? "Saving…" : "Save"}
@@ -511,7 +597,9 @@ export function ContentForm({
           type="button"
           variant="ghost"
           onClick={handleCancel}
-          disabled={isSubmitting || uploadingPdf || uploadingCover || uploadingQr}
+          disabled={
+            isSubmitting || uploadingPdf || uploadingCover || uploadingQr
+          }
           className="text-xs"
         >
           Cancel
